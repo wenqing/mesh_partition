@@ -8,11 +8,14 @@
   22/08/2004  WW  
 ==========================================================================*/
 
+
 /// Matrix
 #include <iomanip>
 
 #include "matrix_class.h"
-
+#ifdef NewSparseMatrix
+#include "msh_mesh.h"
+#endif
 
 namespace Math_Group{
 // Constructors
@@ -535,7 +538,7 @@ template<class T>  void vec<T>:: resize(const int argSize)
    if(size>0)
    {
 	   delete[] entry;
-       entry = NULL;
+       entry = NULL; 
    }
    size = argSize;
    entry = new T[argSize];
@@ -645,6 +648,90 @@ template<class T>  void vec<T*>:: operator = (const vec<T*>& v)
 #endif
 	for (int i=0; i<size; i++) entry[i] = v.entry[i];
 }
+
+////////////////////////////////////////////////////////////
+//#define NewSparseMatrix
+#ifdef NewSparseMatrix
+/*\!
+   Create sparse matrix table
+   01/2006 WW
+*/
+/*
+SparseTable::SparseTable(CFEMesh *a_mesh, bool symmetry)
+{
+         
+}
+*/
+CSparseMatrix::CSparseMatrix(CFEMesh *a_mesh)
+{
+     
+   
+
+}
+
+
+
+
+
+// 06/2006 WW
+double& CSparseMatrix::operator() (const long i, const long j) const
+{
+ #ifdef gDEBUG    
+    if(i>=Size_row_index||j>=Size_row_index)
+    {
+        cout<<"\n Index exceeds the dimension of the matrix"<<endl;
+        abort();
+    }
+ #endif    
+    long ii, jj, k, new_id, count;
+    ii = i;
+    jj = j;
+    if(symmetry)
+    {
+       if(ii>jj)
+       {
+          k = ii;
+          ii = jj;
+          jj = k; 
+       }       
+    }
+    new_id = row_index_o2new[ii];
+    for (k = 0; k < max_column; k++)
+    {
+       count += new_id;
+       if(entry_column[count]==jj)
+          return entry[count];  // Found the entry  
+	   count += column_size[k]; 
+	}
+    return entry[count]; 
+} 
+
+// 06/2006 WW
+void CSparseMatrix::multiVec(double *vec_aug, const double fac)
+{
+    long i, k, ii, jj, counter;
+    for(i=0; i<dimension; i++)
+    {
+       vec_buffer[i] = fac*vec_aug[i];
+       vec_aug[i] = 0.0;
+    }
+    counter=0;
+    for (k = 0; k < max_column; k++)
+    {
+       for (i = 0; i < column_size[k]; i++)
+       {          
+          ii = row_index[i];  
+          jj=entry_column[counter];
+		  vec_aug[ii] += entry[counter]*vec_buffer[jj];
+          if(symmetry&&(ii!=jj))
+             vec_aug[jj] += entry[counter]*vec_buffer[ii];
+		  counter++;
+       }         
+    }
+}
+#endif
+///////////////////////////////////////////////////////////
+
 
 }// Namespace
 

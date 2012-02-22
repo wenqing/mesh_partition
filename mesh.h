@@ -62,7 +62,7 @@ class Grain
 class Node:public Grain
 {
    public:
-						Node(const int Index):Grain(Index) {}
+      Node(const int Index):Grain(Index) {}
       Node(const int Index, const double x, 
            const double y, const double z=0.0);
       ~Node() {ElementsBelonged.resize(0);}
@@ -84,6 +84,8 @@ class Node:public Grain
       double Z() const {return Coordinate[2];}
       void Coordinates(double *xyz) const
       {  for(int i=0; i<3; i++)  xyz[i] = Coordinate[i];} 
+	  void SetLocalIndex(const long l_index) {local_index = l_index; } 
+	  long GetLocalIndex() const {return local_index;}
      
       // Output
       void Write(ostream& os=cout) const;
@@ -92,6 +94,7 @@ class Node:public Grain
 
    private:
       double Coordinate[3];
+      long local_index; // For domain decomposition
       friend class Edge;
       friend class Elem;
 };
@@ -149,7 +152,14 @@ class Elem:public Grain
       void setNodes(vec<Node*>&  ele_nodes, const bool ReSize=false);
       void getNodes(vec<Node*>&  ele_nodes) 
          { for (int i=0; i< (int) nodes.Size();i++) ele_nodes[i]= nodes[i]; }
-	     // Edges
+      void MarkingNodes(bool merker) 
+	    { for (int i=0; i< (int) nodes.Size();i++) nodes[i]->Marking(merker); }
+      void SetLocalNodeIndex(const int li, const long n_lindex) 
+	     {  nodes[li]->local_index = n_lindex; }
+      long GetLocalNodeIndex(const int li) const 
+	     {  return nodes[li]->local_index; }
+         		   
+     // Edges
       void getEdges(vec<Edge*>&  ele_edges) 
         {for (int i=0; i<nedges; i++) ele_edges[i]= edges[i];} 
       void setEdges(vec<Edge*>&  ele_edges) 

@@ -1329,7 +1329,9 @@ void ConstructDomain(char *fname, const int num_parts)
    int dom;
    int max_dom;
    int k,kk;
-   long i,j,jj;
+   long i,j;
+   int ntags = 3;
+   string deli = " ";
    //
    sprintf(str_buf, "%d",num_parts);
 
@@ -1344,8 +1346,28 @@ void ConstructDomain(char *fname, const int num_parts)
    //namef = ".mesh.epart."; //+str_buf;
    ifstream part_in;
    fstream part_out;
-
    part_out.open(stro, ios::out );
+   // Output for gmsh
+   strcpy(stro,fname);
+   strcat(stro,"_gmsh.msh");
+   fstream gmsh_out;
+   gmsh_out.open(stro, ios::out );
+   //gmsh_out<<"$NOD"<<endl;
+   gmsh_out<<"$MeshFormat\n2 0 8\n$EndMeshFormat\n$Nodes"<<endl;
+   gmsh_out<<NodesVector.size()<<endl;
+   Node *node;
+   for(i=0; i<(long)NodesVector.size(); i++)
+   {
+     gmsh_out<<i+1<<" ";
+     node = NodesVector[i];  
+     gmsh_out<<node->X()<<" ";
+     gmsh_out<<node->Y()<<" ";
+     gmsh_out<<node->Z()<<endl;
+   }
+   //gmsh_out<<"$ENDNOD"<<endl; 
+   //gmsh_out<<"$ELM"<<endl; 
+   gmsh_out<<"$EndNodes\n$Elements"<<endl;
+   gmsh_out<<(long)ElementsVector.size()<<endl; 
    //
    part_in.open(str);
    if(!part_in.is_open())
@@ -1353,15 +1375,40 @@ void ConstructDomain(char *fname, const int num_parts)
        cerr<<("Error: cannot open .epart file . It may not exist !");
        abort();
    } 
+
    max_dom=0;
+   int et;
+   Elem  *elem;
    for(i=0; i<(long)ElementsVector.size(); i++)
    {
       part_in>>dom>>ws;
-	  ElementsVector[i]->setDomainIndex(dom);
+      elem = ElementsVector[i];
+	  elem->setDomainIndex(dom);
 //      ElementsVector[i]->AllocateLocalIndexVector(); 
       if(dom>max_dom) max_dom = dom;
+      // GMSH output
+      switch(elem->getElementType())
+      {
+         case 1: et = 1; break;
+         case 4: et = 2; break;
+         case 2: et = 3; break;
+         case 5: et = 4; break;
+         case 3: et = 5; break;
+         case 6: et = 6; break;
+      }
+      //gmsh_out<<i+1<<" "<<et<<" "<<dom+1<<" "<<dom+1<<" ";
+      gmsh_out<<i+1<<deli<<et<<deli<<ntags<<deli<<elem->getPatchIndex()+1<<deli<<elem->getPatchIndex()+1<<deli<<dom+1<<deli;
+
+
+      //gmsh_out<<elem->getNodesNumber()<<"  ";
+      for(k=0; k<elem->getNodesNumber(); k++)
+        gmsh_out<<elem->getNodeIndex(k)+1<<" ";
+      gmsh_out<<endl;
    }
    max_dom++;
+   //gmsh_out<<"$ENDELM"<<endl; 
+   gmsh_out<<"$EndElements"<<endl;
+   gmsh_out.close();
    part_in.close();
    //
    /*
@@ -1422,28 +1469,35 @@ void ConstructDomain(char *fname, const int num_parts)
 	  nodes_dom.clear(); 
 	  eles_dom.clear();
       for(j=0; j<(long)ElementsVector.size(); j++)
+	  {
+         ele = ElementsVector[j];
+         for(kk=0; kk<ele->getNodesNumber(); kk++)
+		 {
+            ele->SetLocalNodeIndex(kk, -1);
+            ele->AllocateLocalIndexVector();
+            ele->setDomNodeIndex(kk, -1);
+		 }
+      }
+      for(j=0; j<(long)ElementsVector.size(); j++)
       {
          ele = ElementsVector[j]; 
-		 ele->AllocateLocalIndexVector();
+		 //ele->AllocateLocalIndexVector();
 	     if(ele->GetDomainIndex()==k)   
 		 {
             for(kk=0; kk<ele->getNodesNumber(); kk++)
 			{  
                done = false;
-               n_index = ele->getNodeIndex(kk);
-               for(jj=0; jj<(long)nodes_dom.size(); jj++)
+               n_index = ele->GetLocalNodeIndex(kk);
+               if(n_index>-1)
                {
-                  if(n_index==nodes_dom[jj])  
-                  {
-                      ele->setDomNodeIndex(kk, jj);
-                      done = true;
-                      break;
-                  }
+                  ele->setDomNodeIndex(kk, n_index);                    
+                  done = true;
                }
-			   if(!done)
+ 			   if(!done)
 			   { 
 				   ele->setDomNodeIndex(kk, (long)nodes_dom.size()); //For test output
-				   nodes_dom.push_back(n_index);
+                   ele->SetLocalNodeIndex(kk, (long)nodes_dom.size());
+				   nodes_dom.push_back(ele->getNodeIndex(kk));
 			   } 
 			}
             part_out<<ele->GetIndex()<<endl;
