@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{40238F9B-5E7C-4B37-81C5-B7AB8A4FFD32}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
+    <ProjectName>metis2ogs</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -55,9 +56,10 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>MatrixVec;Mesh;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <OutputFile>$(OutDir)partition.exe</OutputFile>
+      <OutputFile>$(OutDir)metis2ogs.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)partition.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -72,9 +74,10 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>MatrixVec;Mesh;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <OutputFile>$(OutDir)partition.exe</OutputFile>
+      <OutputFile>$(OutDir)metis2ogs.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -83,16 +86,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="matrix_class.cpp" />
-    <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="MatrixVec\Matrix.cpp" />
+    <ClCompile Include="MatrixVec\SymMatrix.cpp" />
+    <ClCompile Include="MatrixVec\vec.cpp" />
+    <ClCompile Include="Mesh\Edge.cpp" />
+    <ClCompile Include="Mesh\Elem.cpp" />
+    <ClCompile Include="Mesh\Grain.cpp" />
+    <ClCompile Include="Mesh\Mesh.cpp" />
+    <ClCompile Include="Mesh\Node.cpp" />
     <ClCompile Include="partition.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="matrix_class.h" />
-    <ClInclude Include="mesh.h" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
+    <ClInclude Include="MatrixVec\Matrix.h" />
+    <ClInclude Include="MatrixVec\SymMatrix.h" />
+    <ClInclude Include="MatrixVec\vec.h" />
+    <ClInclude Include="Mesh\Edge.h" />
+    <ClInclude Include="Mesh\Elem.h" />
+    <ClInclude Include="Mesh\Grain.h" />
+    <ClInclude Include="Mesh\Mesh.h" />
+    <ClInclude Include="Mesh\Node.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

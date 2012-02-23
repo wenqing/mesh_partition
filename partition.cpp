@@ -2,26 +2,19 @@
 // compile with: /EHsc
 #include <cmath>
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <string.h>
+#include <string>
+#include <time.h>
 #include <vector>
 
-#include "matrix_class.h"
-#include "mesh.h"
 
-
-
-#include <time.h>
+#include "Mesh.h"
 
 using namespace std;
-
-using Math_Group::SymMatrix;
-using Math_Group::Matrix;
-using Math_Group::Vec;
-using Math_Group::vec;
+using namespace Mesh_Group;
 
 int main(int argc, char* argv[])
 {
@@ -77,6 +70,9 @@ int main(int argc, char* argv[])
       abort();
   }
 
+  Mesh_Group::Mesh *a_mesh = new Mesh();
+
+
   bool rfiMesh = true;
   string line_string;
   getline(rfi_in,line_string); // The first line
@@ -87,14 +83,14 @@ int main(int argc, char* argv[])
   rfi_in.seekg(0L,ios::beg);
 
   if(rfiMesh)
-     ReadGrid(rfi_in);
+     a_mesh->ReadGrid(rfi_in);
   else
-     ReadGridGeoSys(rfi_in);
+     a_mesh->ReadGridGeoSys(rfi_in);
   clock_t start, finish;
   start = clock();
 
-  ConstructGrid(quad);
-  if(aug<0) ConstructDomain(str0, abs(aug));
+  a_mesh->ConstructGrid(quad);  
+  if(aug<0) a_mesh->ConstructDomain(str0, abs(aug));
  
   finish = clock();
   cout<<"CPU time elapsed in deformation process: "
@@ -102,41 +98,11 @@ int main(int argc, char* argv[])
    
   if(aug==2)
   {  
-     rfi_out<<(long)ElementsVector.size()<<" ";
-     int e_type =0;
-	 switch(ElementsVector[0]->getElementType())    
-	 {
-        case 1: cout<<"Not for 1D element"<<endl; abort(); 
-        case 2: e_type =4; break; 
-        case 3: e_type =3; break;  
-        case 4: e_type =1; break;  
-        case 5: e_type =2; break; 
-        case 6: cout<<"Not for prismal element"<<endl; abort(); 
-	 } 
-     rfi_out<<e_type<<endl;
-     for(long i=0; i<(long)ElementsVector.size(); i++)
-        ElementsVector[i]->Write_index(rfi_out);
+     a_mesh->Write2METIS(rfi_out);
   }
 
-  /*
-  rfi_out<<(long)NodesVector.size()<<endl;
-  for(long i=0; i<(long)NodesVector.size(); i++)
-	  NodesVector[i]->Write(rfi_out);
-		
-  rfi_out<<(long)ElementsVector.size()<<endl;
-  for(long i=0; i<(long)ElementsVector.size(); i++)
-  {
-      ElementsVector[i]->WriteIndex(rfi_out);
-       ElementsVector[i]->WriteNeighbors(rfi_out);
-  }
-
-  rfi_out<<(long)EdgeVector.size()<<endl;
-  cout<<"Total edges: " <<(long)EdgeVector.size()<<endl;
-		
-  rfi_out<<(long)SurfaceFaces.size()<<endl;
-  cout<<"Total surface faces: "<<(long)SurfaceFaces.size()<<endl;
-  */
-  Realese();
+  delete a_mesh;
   return 0;
 
 }
+ 
