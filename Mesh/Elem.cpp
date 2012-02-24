@@ -47,7 +47,7 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
    static int faceIndex_loc[10];
    static int edgeIndex_loc[10];
  //  Owner = onwer;
-   n = Owner->GetElementFaceNodes(Face, faceIndex_loc);
+   n = Owner->getElementFaceNodes(Face, faceIndex_loc);
    switch(Owner->ele_Type)
    {
        case 1:  // 1-D bar element
@@ -129,7 +129,7 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
         k = (i+1)%nnodes; 
         for(j=0; j<ne; j++)
         {
-           Owner->GetLocalIndices_EdgeNodes(j, edgeIndex_loc);    
+           Owner->getLocalIndices_EdgeNodes(j, edgeIndex_loc);    
            if( (faceIndex_loc[i]==edgeIndex_loc[0]&&
                 faceIndex_loc[k]==edgeIndex_loc[1])||															
                (faceIndex_loc[i]==edgeIndex_loc[1]&&
@@ -177,12 +177,12 @@ string Elem::getName() const
 }
 
 
-void Elem::SetLocalNodeIndex(const int li, const long n_lindex) 
+void Elem::setLocalNodeIndex(const int li, const long n_lindex) 
 { 
 	nodes[li]->local_index = n_lindex; 
 }
 
-long Elem::GetLocalNodeIndex(const int li) const 
+long Elem::getLocalNodeIndex(const int li) const 
 { 
 	return nodes[li]->local_index; 
 }
@@ -403,13 +403,13 @@ void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
     if(quadratic) SizeV = nnodesHQ;
     if(ReSize)
     {
-       nodes.resize(SizeV);
+        nodes.resize(SizeV);
        	nodes_index.resize(SizeV);
     }
     for (int i=0; i< SizeV;i++)
     {
        nodes[i] = ele_nodes[i];
-      nodes_index[i] = nodes[i]->GetIndex();       
+       nodes_index[i] = nodes[i]->getIndex();       
     }
 }
 
@@ -423,7 +423,7 @@ void Elem::WriteNeighbors(ostream& os) const
     os<<"End neighbors of "<<index<<endl<<endl;;
 }
 //    WW. 06.2005
-void  Elem::GetLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
+void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
 {
 	switch(ele_Type)
 	{
@@ -485,7 +485,7 @@ Return: number of nodes of a face
 Programing:
 06/2004 WW  
 **************************************************************************/
-int Elem::GetElementFaces1D(int *FaceNode)
+int Elem::getElementFaces1D(int *FaceNode)
 {
     FaceNode[0] = 0;
     FaceNode[1] = 1;
@@ -502,7 +502,7 @@ Return: number of nodes of a face
 Programing:
 09/2004 WW  
 **************************************************************************/
-int Elem::GetElementFacesTri(const int Face, int *FaceNode)
+int Elem::getElementFacesTri(const int Face, int *FaceNode)
 {
 	if(!quadratic)
     {
@@ -530,7 +530,7 @@ Return: number of nodes of a face
 Programing:
 09/2004 WW  
 **************************************************************************/
-int Elem::GetElementFacesQuad(const int Face, int *FaceNode)
+int Elem::getElementFacesQuad(const int Face, int *FaceNode)
 {
     if(!quadratic)
     {
@@ -558,7 +558,7 @@ Return: number of nodes of a face
 Programing:
 09/2004 WW  
 **************************************************************************/
-int Elem::GetElementFacesHex(const int Face, int *FaceNode)
+int Elem::getElementFacesHex(const int Face, int *FaceNode)
 {
    int nn=4, k = 0;
    if(quadratic) nn = 8;
@@ -651,7 +651,7 @@ Return: number of nodes of a face
 Programing:
 09/2004 WW  
 **************************************************************************/
-int Elem::GetElementFacesTet(const int Face, int *FaceNode)
+int Elem::getElementFacesTet(const int Face, int *FaceNode)
 {
    int nn=3;
    if(quadratic) nn =6;
@@ -718,7 +718,7 @@ Return: number of nodes of a face
 Programing:
 09/2004 WW  
 **************************************************************************/
-int Elem::GetElementFacesPri(const int Face, int *FaceNode)
+int Elem::getElementFacesPri(const int Face, int *FaceNode)
 {
    int nn=3, k = 0;
    switch(Face)
@@ -808,27 +808,27 @@ Augs.:
 Programing:
 09/2004 WW  
 **************************************************************************/
-int Elem::GetElementFaceNodes(const int Face, int *FacesNode)
+int Elem::getElementFaceNodes(const int Face, int *FacesNode)
 {
    switch(ele_Type)
    {
        case 1:  // 1-D bar element
-           return GetElementFaces1D(FacesNode);
+           return getElementFaces1D(FacesNode);
            break;          
        case 2: // 2-D quadrilateral element
-           return GetElementFacesQuad(Face, FacesNode);
+           return getElementFacesQuad(Face, FacesNode);
            break;           
        case 3: // 3-D hexahedral element 
-           return GetElementFacesHex(Face, FacesNode);
+           return getElementFacesHex(Face, FacesNode);
            break;           
        case 4:  // 2-D triagular element 
-           return GetElementFacesTri(Face, FacesNode);
+           return getElementFacesTri(Face, FacesNode);
            break;           
        case 5:  // 3-D tetrahedral element 
-           return GetElementFacesTet(Face, FacesNode);
+           return getElementFacesTet(Face, FacesNode);
            break;           
        case 6: 
-           return GetElementFacesPri(Face, FacesNode);
+           return getElementFacesPri(Face, FacesNode);
            break; // 3-D prismatic element 
     }
     return 0;

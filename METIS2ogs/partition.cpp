@@ -2,9 +2,10 @@
 // compile with: /EHsc
 #include <cmath>
 
-//#include <stdio.h>
+
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <string>
 #include <time.h>
@@ -16,58 +17,154 @@
 using namespace std;
 using namespace Mesh_Group;
 
+
+void Version()
+{  
+  cout<<"\nOpenGeoSys interface to METIS"<<endl;
+  cout<<"V2.0"<<endl;
+  cout<<"Written by wenqing.wang@ufz.de. 2012"<<endl<<endl;
+}
+void OptionList()
+{ 
+  string s_intro = "The task of this tool is twofold:" 
+	             " to convert ogs mesh file into METIS input file for domain decomposition,"
+                  " and to use the METIS domain decomposition data to partition"
+				  "the ogs finite element meshes for parallel computing.\n"
+				  "Note: input mesh file must only contain linear elements";
+  cout << s_intro<<endl<<endl;
+  cout << "Tasks:\n  --version\n  --help\n  --ogs2metis\n  --metis2ogs\n"<<endl;
+  cout << "Option for --metis2ogs task:"<<endl;
+  cout << "  -q           generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
+  cout << "  -np[number]  Number of partitions. There must be no space between np and number"<<endl;
+  cout << "  -e           partition by element (non overlapped subdomain)"<<endl;
+  cout << "  -n           partition by node (overlapped subdomain)"<<endl;
+}
+
+void FindFileNameInCommand(stringstream &ss, string &fname)
+{
+  while(!ss.eof())
+  {
+      ss>>fname;
+      if(   !(fname.find("-")!=string::npos || fname.find("--")!=string::npos) )
+      {
+           return; 
+      } 
+  }
+}
+
+enum Task {metis2ogs, ogs2metis};
+enum PartType {by_element, by_node};
+
 int main(int argc, char* argv[])
 {
-  ifstream rfi_in;
-  fstream rfi_out;
+  ifstream infile;
+  fstream ofile;
+  stringstream ss;
 
+  Task this_task;
+  PartType part_type = by_node;
 
-  const int MAX_ZEILE = 1028; 
-  char str0[MAX_ZEILE];
-  char str1[MAX_ZEILE];
-  char str2[MAX_ZEILE];
   bool quad = false;
-  int aug=0;
-  //ios::pos_type position;
- 
-  cout<<"\t|=====================================| \n"<<endl;
-  cout<<"\t|     Grid partition converter        | \n"<<endl;
-  cout<<"\t|          (From METIS)               | \n"<<endl;
-  cout<<"\t|                                     | \n"<<endl;
-  cout<<"\t|    University of Tuebingen (WW@ZAG) | \n"<<endl;
-  cout<<"\t|                                     | \n"<<endl;
-  cout<<"\t|    File name (no extension)         | \n"<<endl;
-  cout<<"\t|    Integer:                         | \n"<<endl;
-  cout<<"\t|      0: Linear, do not convert      | \n"<<endl;
-  cout<<"\t|      1: Quadratic, do not convert   | \n"<<endl;
-  cout<<"\t|      2: Write METIS element data    | \n"<<endl;
-  cout<<"\t|     -n: Negative non-zero number    | \n"<<endl;
-  cout<<"\t|         Convert! n: number of parts.| \n"<<endl;
-  cout<<"\t|=====================================| \n"<<endl;
-  cout<<"\tInput file name: ";
 
+  //ios::pos_type position;
+
+  string s_buff;
+  string fname;
+
+  int nparts = 1; 
+
+  Version();
   if(argc>1) 
   {
-      strcpy(str1,argv[1]);
-      strcpy(str2,argv[2]);
+      for(int i=0; i<argc; i++)
+	  {
+          s_buff = argv[i];
+          if(s_buff.find("-e")!=string::npos)
+             part_type = by_element;
+          else if(s_buff.find("-n")!=string::npos)
+             part_type = by_node;
+
+          if(s_buff.find("-q")!=string::npos) 
+             quad = true; 
+		   
+		  // Number of partitions
+		  if(s_buff.find("-np")!=string::npos) 
+		  {
+             size_t pos;
+			 pos = s_buff.find_first_of("p");
+			 s_buff = s_buff.substr(pos+1);
+			 nparts = atoi(s_buff.c_str());
+		  }    
+
+
+          if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
+		  {
+              fname = s_buff;
+		  }
+                             
+	  }
   }
-  else 
-    scanf(" %s  %s%*[^\n]%*c",str1, str2);
+  else //terminal
+  {
+    OptionList();
+    cout<<"\nInput task, options and file name (non extension):\n ";
+   
+	getline(cin, s_buff);
+	ss.str(s_buff);
+    if(s_buff.find("ogs2metis")!=string::npos)
+	{ 
+       this_task = ogs2metis; 
+       if(s_buff.find("-e")!=string::npos || s_buff.find("-n")!=string::npos||s_buff.find("-q")!=string::npos)
+	   { 
+          cout<<"Warning: option is not needed for this task"<<endl; 
+       }  
 
-  aug = atoi(str2);
-  if(aug==1) quad = true;
+       FindFileNameInCommand(ss, fname);
+	}   
+    else if(s_buff.find("metis2ogs")!=string::npos)
+	{ 
+       this_task = metis2ogs; 
+       if(s_buff.find("-e")!=string::npos)
+          part_type = by_element;
+       else if(s_buff.find("-n")!=string::npos)
+          part_type = by_node;
 
-  strcpy(str0,str1);
-  strcpy(str2,str1);
-  strcat(str1,".msh");
-  strcat(str2,".mesh");
+       if(s_buff.find("-q")!=string::npos)
+	   { 
+          quad = true; 
+       }
 
-  rfi_in.open(str1);
-  if(aug>0) rfi_out.open(str2, ios::out );
-  if(!rfi_in.is_open())
+	   // Find name
+       FindFileNameInCommand(ss, fname);
+	   ss.clear();
+
+	   // Find partition number
+       ss.str(s_buff);
+       while(!ss.eof())
+       {
+           ss>>s_buff;
+           if(s_buff.find("-np")!=string::npos)
+		   {
+              size_t pos;
+			  pos = s_buff.find_first_of("p");
+              s_buff = s_buff.substr(pos+1);
+              nparts = atoi(s_buff.c_str());
+              break;
+		   }
+
+       }
+
+	}   
+	ss.clear();
+    
+  }
+    
+
+  infile.open(fname+".msh");
+  if(!infile.is_open())
   {
       cerr<<("Error: cannot open msh file . It may not exist !");
-      abort();
+      exit(1);
   }
 
   Mesh_Group::Mesh *a_mesh = new Mesh();
@@ -75,30 +172,42 @@ int main(int argc, char* argv[])
 
   bool rfiMesh = true;
   string line_string;
-  getline(rfi_in,line_string); // The first line
+  getline(infile,line_string); // The first line
   if(line_string.find("#FEM_MSH")!=string::npos)
     rfiMesh = false;
   if(line_string.find("GeoSys-MSH")!=string::npos) 
     rfiMesh = false;
-  rfi_in.seekg(0L,ios::beg);
+  infile.seekg(0L,ios::beg);
 
   if(rfiMesh)
-     a_mesh->ReadGrid(rfi_in);
+     a_mesh->ReadGrid(infile);
   else
-     a_mesh->ReadGridGeoSys(rfi_in);
+     a_mesh->ReadGridGeoSys(infile);
   clock_t start, finish;
   start = clock();
 
-  a_mesh->ConstructGrid(quad);  
-  if(aug<0) a_mesh->ConstructDomain(str0, abs(aug));
+  a_mesh->ConstructGrid();  
+
  
   finish = clock();
   cout<<"CPU time elapsed in deformation process: "
       <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
    
-  if(aug==2)
-  {  
-     a_mesh->Write2METIS(rfi_out);
+  switch(this_task)
+  {
+     case ogs2metis:
+        ofile.open(fname+".mesh", ios::out );         
+        a_mesh->Write2METIS(ofile);
+        break;
+	 case metis2ogs:
+        if(quad)
+			a_mesh->GenerateHighOrderNodes();
+        if(part_type == by_element)
+            a_mesh->ConstructDomain(fname.c_str(), nparts);
+		//else if(part_type == by_node)
+        break;
+	 default:
+        break;
   }
 
   delete a_mesh;

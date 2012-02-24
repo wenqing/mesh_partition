@@ -26,8 +26,11 @@ class Edge:public Grain
       // Access members
       void setNodes( Math_Group::vec<Node*>& Nodes)
         { for(int i=0; i<3; i++)  nodes_of_edges[i] = Nodes[i]; }
+      void setNode(const int index,  Node *aNode)
+        { nodes_of_edges[index] = aNode; }
       void getNodes( Math_Group::vec<Node*>& Nodes) 
         { for(int i=0; i<3; i++)  Nodes[i] = nodes_of_edges[i]; }										
+      Node* getNode(const int l_index) {return nodes_of_edges[l_index];} 
       // Operator
       void operator = (Edge& edg);
       bool operator == (Edge& edg);

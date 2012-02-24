@@ -18,22 +18,34 @@ using namespace std;
 using namespace Math_Group;
 
 
+Mesh::Mesh(bool quad)
+{
+   useQuadratic = quad;
+   coordinate_system = 1;
+   axisymmetry=false;
+   max_ele_dim = 0; 
+
+}
+
 Mesh::~Mesh()
 {
-			long i;
-			for(i=0; i<(long)NodesVector.size(); i++)
-     delete NodesVector[i];
-			NodesVector.clear();
-			for(i=0; i<(long)EdgeVector.size(); i++)
-     delete EdgeVector[i];
-			EdgeVector.clear();
-			for(i=0; i<(long)SurfaceFaces.size(); i++)
-     delete SurfaceFaces[i];
-			SurfaceFaces.clear();
-
-			for(i=0; i<(long)ElementsVector.size(); i++)
-     delete ElementsVector[i];
-			ElementsVector.clear();
+  long i;
+  // Nodes
+  for(i=0; i<(long)node_vector.size(); i++)
+    delete node_vector[i];
+  node_vector.clear();
+  // Edges
+  for(i=0; i<(long)edge_vector.size(); i++)
+     delete edge_vector[i];
+  edge_vector.clear();
+  // Surface faces
+  for(i=0; i<(long)face_vector.size(); i++)
+     delete face_vector[i];
+  face_vector.clear();
+  // Element
+  for(i=0; i<(long)elem_vector.size(); i++)
+     delete elem_vector[i];
+  elem_vector.clear();
 }
 
 
@@ -61,7 +73,7 @@ void Mesh::ReadGrid(istream& is)
    {
       is>>ibuff>>x>>y>>z>>ws;
       Node* newNode = new Node(ibuff,x,y,z);
-      NodesVector.push_back(newNode);            
+      node_vector.push_back(newNode);            
       counter++;
    }
    if(counter!=nn)
@@ -78,7 +90,7 @@ void Mesh::ReadGrid(istream& is)
    { 
       Elem* newElem = new Elem(i);
       newElem->Read(is);
-      ElementsVector.push_back(newElem);           
+      elem_vector.push_back(newElem);           
       counter++;
    }     
    if(counter!=ne)
@@ -92,14 +104,96 @@ void Mesh::ReadGrid(istream& is)
 
 // Construct grid
 // 
-void Mesh::ConstructGrid( const bool quadratic)
+/**************************************************************************
+ConnectedNodes
+**************************************************************************/
+void Mesh::ConnectedNodes(bool quadratic)
+{
+  int i, j,l, k, n;
+  Node* m_nod = NULL;
+  Elem* m_ele = NULL;
+  bool exist = false;
+  //----------------------------------------------------------------------
+  for(i=0;i<(long)node_vector.size();i++){
+    m_nod = node_vector[i];
+    for(j=0;j<(int)m_nod->ElementsRelated.size();j++){
+      m_ele = elem_vector[m_nod->ElementsRelated[j]];
+      for(l=0;l<m_ele->getNodesNumber(quadratic);l++){
+          exist = false;
+          for(k=0;k<(int)m_nod->NodesRelated.size();k++) 
+          {
+             if(m_nod->NodesRelated[k]==m_ele->nodes_index[l])
+             {
+                 exist = true;
+                 break;
+             }
+          }
+          if(!exist) 
+             m_nod->NodesRelated.push_back(m_ele->nodes_index[l]);      
+      }
+    }
+  }
+  for(i=0;i<(long)node_vector.size();i++){
+    m_nod = node_vector[i];
+    j = (int)m_nod->NodesRelated.size();
+    for(k=0; k<j; k++)
+    {            
+       for(l=k; l<j; l++)
+       {
+          if(m_nod->NodesRelated[l]<m_nod->NodesRelated[k])
+          {
+             n = m_nod->NodesRelated[k];
+             m_nod->NodesRelated[k] = m_nod->NodesRelated[l];
+             m_nod->NodesRelated[l] = n;
+          }
+       }     
+    }
+        
+  }
+}
+
+/**************************************************************************
+ConnectedElements2Node
+**************************************************************************/
+void Mesh::ConnectedElements2Node(bool quadratic)
+{
+   long i, j, e, ni;
+   Elem* thisElem0=NULL;
+   Node * node = NULL;
+   bool done = false;
+   // set neighbors of node
+   for(e=0; e<(long)node_vector.size(); e++)
+     node_vector[e]->ElementsRelated.clear();
+   for(e=0; e<(long)elem_vector.size(); e++)
+   {
+      thisElem0 = elem_vector[e];   
+      if(!thisElem0->getStatus()) continue;      // Not marked for use
+      for(i=0; i<thisElem0->getNodesNumber(quadratic); i++)
+      {
+          done = false;
+          ni = thisElem0->getNodeIndex(i);
+          node = node_vector[ni];
+          for(j=0; j<(int)node->ElementsRelated.size(); j++)
+          {
+            if(e==node->ElementsRelated[j])
+            {
+              done = true;
+              break;
+            } 
+          }
+          if(!done)  
+            node->ElementsRelated.push_back(e);
+      }
+   }
+}
+void Mesh::ConstructGrid()
 {
    int counter;	 
    int i, j, k, ii, jj, m0, m, n0, n;
-			int nnodes0, nedges0, nedges;
+   int nnodes0, nedges0, nedges;
    long e, ei, ee,  e_size,  e_size_l;
    bool done;
-   double x0,y0,z0;
+   double x_sum,y_sum,z_sum;
 
    int edgeIndex_loc0[2];
    int edgeIndex_loc[2];
@@ -119,64 +213,53 @@ void Mesh::ConstructGrid( const bool quadratic)
    Elem* thisElem0=NULL;
    Elem* thisElem=NULL;
 
+   clock_t start, finish;
+   start = clock();
+
    //Elem->nodes not initialized
 
-   e_size = (long)ElementsVector.size();  
+   e_size = (long)elem_vector.size();  
+   NodesNumber_Linear= (long)node_vector.size();
+
    Edge_Orientation = 1;
+   //----------------------------------------------------------------------
+   // set neighbors of node
+   ConnectedElements2Node();
+   //----------------------------------------------------------------------
 
-   // Set neighbors
-   for(e=0; e<e_size; e++)
-   {
-       thisElem0 = ElementsVector[e];   
-       thisElem0->getNodeIndeces(node_index_glb0);
-       for(i=0; i<thisElem0->getNodesNumber(); i++)
-       {
-          done = false;
-          for(j=0; j<(int)NodesVector[node_index_glb0[i]]
-					         ->ElementsBelonged.size(); j++)
-          {
-            if(e==NodesVector[node_index_glb0[i]]
-                            ->ElementsBelonged[j])
-              done = true;
-              break;
-          }
-          if(!done)  
-          NodesVector[node_index_glb0[i]]->ElementsBelonged.push_back(e);
-      }
-   }
-
+  //----------------------------------------------------------------------
    // Compute neighbors and edges
    for(e=0; e<e_size; e++)
    {
-       thisElem0 = ElementsVector[e];   
-       nnodes0 = thisElem0->getNodesNumber(); // Number of nodes for linear element
+       thisElem0 = elem_vector[e];   
+       nnodes0 = thisElem0->nnodes; // Number of nodes for linear element
        thisElem0->getNodeIndeces(node_index_glb0);
        thisElem0->getNeighbors(Neighbors0);
        for(i=0; i<nnodes0; i++) // Nodes
-         e_nodes0[i] = NodesVector[node_index_glb0[i]];  
+         e_nodes0[i] = node_vector[node_index_glb0[i]];  
        m0 = thisElem0->getFacesNumber();
-	      // neighbors
+	   // neighbors
        for(i=0; i<m0; i++) // Faces
        {
           if(Neighbors0[i])
                continue;
-          n0 = thisElem0->GetElementFaceNodes(i, faceIndex_loc0);
+          n0 = thisElem0->getElementFaceNodes(i, faceIndex_loc0);
           done = false;  
           for(k=0;k<n0;k++)
           {    
-             e_size_l = (long)e_nodes0[faceIndex_loc0[k]]->ElementsBelonged.size();         
+             e_size_l = (long)e_nodes0[faceIndex_loc0[k]]->ElementsRelated.size();         
              for(ei=0; ei<e_size_l; ei++)
              {
-                ee = e_nodes0[faceIndex_loc0[k]]->ElementsBelonged[ei];   
+                ee = e_nodes0[faceIndex_loc0[k]]->ElementsRelated[ei];   
                 if(ee==e) continue;
-                thisElem = ElementsVector[ee];   
+                thisElem = elem_vector[ee];   
                 thisElem->getNodeIndeces(node_index_glb);
                 thisElem->getNeighbors(Neighbors);
                 m = thisElem->getFacesNumber();
 
                 for(ii=0; ii<m; ii++) // Faces
                 {
-                   n = thisElem->GetElementFaceNodes(ii, faceIndex_loc);
+                   n = thisElem->getElementFaceNodes(ii, faceIndex_loc);
                    if(n0!=n) continue;
                    counter = 0;
                    for(j=0; j<n0; j++) 
@@ -206,30 +289,31 @@ void Mesh::ConstructGrid( const bool quadratic)
           }
        }
        thisElem0->setNeighbors(Neighbors0);						
-       // 
+       
+       // --------------------------------
        // Edges
        nedges0 = thisElem0->getEdgesNumber();
        thisElem0->getEdges(Edges0);
        for(i=0; i<nedges0; i++)
        { 
-          thisElem0->GetLocalIndices_EdgeNodes(i, edgeIndex_loc0);    
+          thisElem0->getLocalIndices_EdgeNodes(i, edgeIndex_loc0);    
           // Check neighbors 
           done = false; 
           for(k=0;k<2;k++)
           {    
-             e_size_l = (long)e_nodes0[edgeIndex_loc0[k]]->ElementsBelonged.size();         
+             e_size_l = (long)e_nodes0[edgeIndex_loc0[k]]->ElementsRelated.size();         
              for(ei=0; ei<e_size_l; ei++)
              {
-                ee = e_nodes0[edgeIndex_loc0[k]]->ElementsBelonged[ei];   
+                ee = e_nodes0[edgeIndex_loc0[k]]->ElementsRelated[ei];   
                 if(ee==e) continue;
-                thisElem = ElementsVector[ee];                   
+                thisElem = elem_vector[ee];                   
                 thisElem->getNodeIndeces(node_index_glb);
                 nedges = thisElem->getEdgesNumber();
                 thisElem->getEdges(Edges);
                 // Edges of neighbors
                 for(ii=0; ii<nedges; ii++)
                 { 
-                    thisElem->GetLocalIndices_EdgeNodes(ii, edgeIndex_loc);
+                    thisElem->getLocalIndices_EdgeNodes(ii, edgeIndex_loc);
                     if((  node_index_glb0[edgeIndex_loc0[0]]==node_index_glb[edgeIndex_loc[0]]
                         &&node_index_glb0[edgeIndex_loc0[1]]==node_index_glb[edgeIndex_loc[1]])
 				                 ||(  node_index_glb0[edgeIndex_loc0[0]]==node_index_glb[edgeIndex_loc[1]]
@@ -239,15 +323,9 @@ void Mesh::ConstructGrid( const bool quadratic)
                          {
                             Edges0[i] = Edges[ii]; 
                             Edges[ii]->getNodes(e_edgeNodes); 
-                            if(  node_index_glb0[edgeIndex_loc0[0]]==e_edgeNodes[1]->GetIndex()
-                             && node_index_glb0[edgeIndex_loc0[1]]==e_edgeNodes[0]->GetIndex())
+                            if(  node_index_glb0[edgeIndex_loc0[0]]==e_edgeNodes[1]->getIndex()
+                             && node_index_glb0[edgeIndex_loc0[1]]==e_edgeNodes[0]->getIndex())
 			                             Edge_Orientation[i] = -1; 
-                            if(quadratic)  // Get middle node
-                            {
-                               node_index_glb0[nnodes0] = e_edgeNodes[2]->GetIndex();
-                               e_nodes0[nnodes0] = e_edgeNodes[2];
-                               nnodes0++;
-                            }
                             done = true;
                             break;
                         }
@@ -259,58 +337,46 @@ void Mesh::ConstructGrid( const bool quadratic)
           }//for(k=0;k<2;k++)
           if(!done) // new edges and new node
           {
-              Edges0[i] = new Edge((long)EdgeVector.size()); 
-              Edges0[i]->SetOrder(quadratic); 
+              Edges0[i] = new Edge((long)edge_vector.size()); 
+              Edges0[i]->setOrder(false); 
               e_edgeNodes0[0] = e_nodes0[edgeIndex_loc0[0]];
               e_edgeNodes0[1] = e_nodes0[edgeIndex_loc0[1]];
-              if(quadratic)  // new node: middle point of edges
-              {
-                  e_edgeNodes0[2] = new Node((long)NodesVector.size());
-                  e_edgeNodes0[2]->setX(0.5*(e_edgeNodes0[0]->X()+e_edgeNodes0[1]->X()));                
-                  e_edgeNodes0[2]->setY(0.5*(e_edgeNodes0[0]->Y()+e_edgeNodes0[1]->Y()));                
-                  e_edgeNodes0[2]->setZ(0.5*(e_edgeNodes0[0]->Z()+e_edgeNodes0[1]->Z()));    
-                  NodesVector.push_back(e_edgeNodes0[2]);
-                  node_index_glb0[nnodes0] = e_edgeNodes0[2]->GetIndex();
-                  e_nodes0[nnodes0] = e_edgeNodes0[2];
-                  nnodes0++;
-              }
+              e_edgeNodes0[2] = NULL;
              Edges0[i]->setNodes(e_edgeNodes0); 
-             EdgeVector.push_back(Edges0[i]);		               
+             edge_vector.push_back(Edges0[i]);		               
           } // new edges
    	  } //  for(i=0; i<nedges0; i++)
       //
-      if(quadratic&&thisElem0->getElementType()==2) // Quadrilateral
-      {
-         x0=y0=z0=0.0;
-         Node* newNode = new Node((long)NodesVector.size());
-         e_nodes0[nnodes0] = newNode;
-         nnodes0 = thisElem0->getNodesNumber();
-         for(i=0; i<nnodes0; i++) // Nodes
-         {
-            x0 += e_nodes0[i]->X();	
-            y0 += e_nodes0[i]->Y();	
-            z0 += e_nodes0[i]->Z();	
-         }         
-         x0 /= (double)nnodes0;
-         y0 /= (double)nnodes0;
-         z0 /= (double)nnodes0;
-         newNode->setX(x0);
-         newNode->setY(y0);
-         newNode->setZ(z0);
-         NodesVector.push_back(newNode);         
-      }     
-      // Set edges and nodes
-      thisElem0->SetOrder(quadratic);
+      // set edges and nodes
+      thisElem0->setOrder(false);
       thisElem0->setEdges_Orientation(Edge_Orientation); 
       thisElem0->setEdges(Edges0); 
       // Resize is true
       thisElem0->setNodes(e_nodes0, true);						
    }// Over elements
-
-   // Set faces on surfaces
+   // set faces on surfaces and others
+   msh_no_line=0;  // Should be members of mesh
+   msh_no_quad=0;
+   msh_no_hexs=0;
+   msh_no_tris=0;
+   msh_no_tets=0;
+   msh_no_pris=0;
    for(e=0; e<e_size; e++)
    {
-       thisElem0 = ElementsVector[e];   
+       thisElem0 = elem_vector[e];   
+	   switch(thisElem0->getElementType())
+	   {
+	      case 1: msh_no_line++; break;
+	      case 2: msh_no_quad++; break;
+	      case 3: msh_no_hexs++; break;
+	      case 4: msh_no_tris++; break;
+	      case 5: msh_no_tets++; break;
+	      case 6: msh_no_pris++; break;
+	   }
+       // Compute volume meanwhile
+	   //thisElem0->ComputeVolume();
+       
+	   if(thisElem0->getElementType()==1) continue; // line element  
        thisElem0->getNodeIndeces(node_index_glb0);
        thisElem0->getNeighbors(Neighbors0);
        m0 = thisElem0->getFacesNumber();
@@ -320,16 +386,221 @@ void Mesh::ConstructGrid( const bool quadratic)
        {		  
           if(Neighbors0[i])
              continue;
-          Elem* newFace = new Elem((long)SurfaceFaces.size(), thisElem0, i);
-          SurfaceFaces.push_back(newFace);
+          Elem* newFace = new Elem((long)face_vector.size(), thisElem0, i);
+//          thisElem0->boundary_type='B';
+		  thisElem0->no_faces_on_surface++;
+          face_vector.push_back(newFace);
           Neighbors0[i] = newFace;        
        }
-       thisElem0->setNeighbors(Neighbors0);						
+       thisElem0->setNeighbors(Neighbors0);		
+
    }
-   NodesNumber_Quadratic= (long)NodesVector.size(); 
+   NodesNumber_Quadratic= (long)node_vector.size();
+   if((msh_no_hexs+msh_no_tets+msh_no_pris)>0) max_ele_dim=3;
+   else if((msh_no_quad+msh_no_tris)>0) max_ele_dim=2;
+   else max_ele_dim=1;
+   //----------------------------------------------------------------------
+   // Node information 
+   // 1. Default node index <---> eqs index relationship
+   // 2. Coordiate system flag
+   x_sum=0.0;
+   y_sum=0.0;
+   z_sum=0.0;
+   for(e=0; e<(long)node_vector.size(); e++)
+   {
+	   x_sum += fabs(node_vector[e]->X());
+	   y_sum += fabs(node_vector[e]->Y());
+	   z_sum += fabs(node_vector[e]->Z());
+   }
+   if(x_sum>0.0&&y_sum<DBL_MIN&&z_sum<DBL_MIN)
+      coordinate_system = 10;
+   else if(y_sum>0.0&&x_sum<DBL_MIN&&z_sum<DBL_MIN)
+      coordinate_system = 11;
+   else if(z_sum>0.0&&x_sum<DBL_MIN&&y_sum<DBL_MIN)
+      coordinate_system = 12;
+   else if(x_sum>0.0&&y_sum>0.0&&z_sum<DBL_MIN)
+      coordinate_system = 21;
+   else if(x_sum>0.0&&z_sum>0.0&&y_sum<DBL_MIN)
+      coordinate_system = 22;
+   else if(x_sum>0.0&&y_sum>0.0&&z_sum>0.0)
+      coordinate_system = 32;
+   /*  // 23.05.2008. WW. Futher test is needed
+   // 1D in 2D
+   if(msh_no_line>0)   // 
+   {
+     if(x_sum>0.0&&y_sum>0.0&&z_sum<DBL_MIN)
+        coordinate_system = 22;
+     if(x_sum>0.0&&z_sum>0.0&&y_sum<DBL_MIN)  
+        coordinate_system = 22;
+   }
+   */
+   //----------------------------------------------------------------------
+
+   // For sparse matrix 
+   ConnectedNodes(false);
+   //
+   e_nodes0.resize(0);
+   node_index_glb.resize(0);
+   node_index_glb0.resize(0);
+   Edge_Orientation.resize(0);
+   Edges.resize(0);
+   Edges0.resize(0);
+   Neighbors.resize(0);
+   Neighbors0.resize(0);
+   e_edgeNodes0.resize(0);
+   e_edgeNodes.resize(0);
+
+   finish = clock();
+   cout<<"\n\tCPU time elapsed in constructing topology of grids: "
+      <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
+
 }
 
-// Read grid for test purpose
+/**************************************************************************
+Programing:
+07/2007 WW Implementation
+**************************************************************************/
+void Mesh::GenerateHighOrderNodes()
+{
+   int i, k, ii;
+   int nnodes0, nedges0, nedges;
+   long e, ei, ee,  e_size,  e_size_l;
+   int edgeIndex_loc0[2];
+   bool done;
+   double x0,y0,z0;
+
+   clock_t start, finish;
+   start = clock();
+
+   //
+   Node *aNode=NULL;
+   vec<Node*> e_nodes0(20);
+   Elem *thisElem0=NULL;
+   Elem *thisElem=NULL;
+   Edge *thisEdge0=NULL;
+   Edge *thisEdge=NULL;
+   //----------------------------------------------------------------------
+   // Loop over elements
+   e_size = (long)elem_vector.size();  
+   for(e=0; e<e_size; e++)
+   {
+      thisElem0 = elem_vector[e];   
+      nnodes0 = thisElem0->nnodes; // Number of nodes for linear element
+//      thisElem0->GetNodeIndeces(node_index_glb0);
+      for(i=0; i<nnodes0; i++) // Nodes
+        e_nodes0[i] = thisElem0->getNode(i);  
+      // --------------------------------
+      // Edges
+      nedges0 = thisElem0->getEdgesNumber();
+      // Check if there is any neighbor that has new middle points
+      for(i=0; i<nedges0; i++)
+      { 
+          thisEdge0 = thisElem0->getEdge(i);    
+          thisElem0->getLocalIndices_EdgeNodes(i, edgeIndex_loc0);    
+          // Check neighbors 
+          done = false; 
+          for(k=0;k<2;k++)
+          {    
+             e_size_l = (long)e_nodes0[edgeIndex_loc0[k]]->ElementsRelated.size();         
+             for(ei=0; ei<e_size_l; ei++)
+             {
+                ee = e_nodes0[edgeIndex_loc0[k]]->ElementsRelated[ei];   
+                if(ee==e) continue;
+                thisElem = elem_vector[ee];                   
+                nedges = thisElem->getEdgesNumber();
+                // Edges of neighbors
+                for(ii=0; ii<nedges; ii++)
+                { 
+                   thisEdge = thisElem->getEdge(ii);
+                   if(*thisEdge0==*thisEdge)
+                   {
+                      aNode = thisEdge->getNode(2); 
+                      if(aNode) // The middle point exist
+                      {
+                         e_nodes0[nnodes0] = aNode;
+                         nnodes0++;
+                         done = true; 
+                         break;                   
+                      }  
+                   }
+                } //  for(ii=0; ii<nedges; ii++)
+                if(done) break;
+             } // for(ei=0; ei<e_size_l; ei++)
+             if(done) break;
+          }//for(k=0;k<2;k++)
+         if(!done)
+         {
+            aNode = new Node((long)node_vector.size());
+            aNode->setX(0.5*(thisEdge0->getNode(0)->X()+thisEdge0->getNode(1)->X()));                
+            aNode->setY(0.5*(thisEdge0->getNode(0)->Y()+thisEdge0->getNode(1)->Y()));                
+            aNode->setZ(0.5*(thisEdge0->getNode(0)->Z()+thisEdge0->getNode(1)->Z()));    
+            e_nodes0[nnodes0] = aNode;
+            thisEdge0->setNode(2, aNode);
+            nnodes0++; 
+            node_vector.push_back(aNode);
+         }
+   	  } //  for(i=0; i<nedges0; i++)
+      // No neighors or no neighbor has new middle point     
+      //
+      if(thisElem0->getElementType()==2) // Quadrilateral
+      {
+         x0=y0=z0=0.0;
+         aNode = new Node((long)node_vector.size());
+         e_nodes0[nnodes0] = aNode;
+         nnodes0 = thisElem0->nnodes;
+         for(i=0; i<nnodes0; i++) // Nodes
+         {
+            x0 += e_nodes0[i]->X();	
+            y0 += e_nodes0[i]->Y();	
+            z0 += e_nodes0[i]->Z();	
+         }         
+         x0 /= (double)nnodes0;
+         y0 /= (double)nnodes0;
+         z0 /= (double)nnodes0;
+         aNode->setX(x0);
+         aNode->setY(y0);
+         aNode->setZ(z0);
+         node_vector.push_back(aNode);         
+      }     
+      // Set edges and nodes
+      thisElem0->setOrder(true);
+      // Resize is true
+      thisElem0->setNodes(e_nodes0, true);		
+   }// Over elements
+   //
+   NodesNumber_Quadratic= (long)node_vector.size();
+   for(e=0; e<e_size; e++)
+   {
+      thisElem0 = elem_vector[e];   
+      for(i=thisElem0->nnodes; i<thisElem0->nnodesHQ; i++)
+      {
+         done = false;
+         aNode = thisElem0->getNode(i);
+         for(k=0; k<(int)aNode->ElementsRelated.size(); k++)
+         {
+            if(e==aNode->ElementsRelated[k])
+            {
+               done = true;
+               break;
+            }
+         }
+         if(!done)  
+            aNode->ElementsRelated.push_back(e);
+     }
+  }
+
+   // For sparse matrix 
+   ConnectedNodes(true);
+   //ConnectedElements2Node(true);
+   //  
+   e_nodes0.resize(0);
+
+
+   finish = clock();
+   cout<<"\n\tCPU time elapsed in generating high oder elements: "
+      <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
+
+}
 void Mesh::ReadGridGeoSys(istream& is)
 {
   string sub_line;
@@ -366,7 +637,7 @@ void Mesh::ReadGridGeoSys(istream& is)
       for(i=0;i<no_nodes;i++){
          is>>ibuff>>x>>y>>z>>ws;
          newNode = new Node(ibuff,x,y,z);
-         NodesVector.push_back(newNode);            
+         node_vector.push_back(newNode);            
       }
       continue;
     }
@@ -376,7 +647,7 @@ void Mesh::ReadGridGeoSys(istream& is)
       for(i=0;i<no_elements;i++){
          newElem = new Elem(i);
          newElem->Read(is, 0);
-		 ElementsVector.push_back(newElem);
+		 elem_vector.push_back(newElem);
       }
       continue;
     }
@@ -385,7 +656,7 @@ void Mesh::ReadGridGeoSys(istream& is)
 }
 
 
-void Mesh::ConstructDomain(char *fname, const int num_parts)
+void Mesh::ConstructDomain(const char *fname, const int num_parts)
 {
    char str[1028];
    char stro[1028];
@@ -418,12 +689,12 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
    gmsh_out.open(stro, ios::out );
    //gmsh_out<<"$NOD"<<endl;
    gmsh_out<<"$MeshFormat\n2 0 8\n$EndMeshFormat\n$Nodes"<<endl;
-   gmsh_out<<NodesVector.size()<<endl;
+   gmsh_out<<node_vector.size()<<endl;
    Node *node;
-   for(i=0; i<(long)NodesVector.size(); i++)
+   for(i=0; i<(long)node_vector.size(); i++)
    {
      gmsh_out<<i+1<<" ";
-     node = NodesVector[i];  
+     node = node_vector[i];  
      gmsh_out<<node->X()<<" ";
      gmsh_out<<node->Y()<<" ";
      gmsh_out<<node->Z()<<endl;
@@ -431,7 +702,7 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
    //gmsh_out<<"$ENDNOD"<<endl; 
    //gmsh_out<<"$ELM"<<endl; 
    gmsh_out<<"$EndNodes\n$Elements"<<endl;
-   gmsh_out<<(long)ElementsVector.size()<<endl; 
+   gmsh_out<<(long)elem_vector.size()<<endl; 
    //
    part_in.open(str);
    if(!part_in.is_open())
@@ -443,12 +714,12 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
    max_dom=0;
    int et;
    Elem  *elem;
-   for(i=0; i<(long)ElementsVector.size(); i++)
+   for(i=0; i<(long)elem_vector.size(); i++)
    {
       part_in>>dom>>ws;
-      elem = ElementsVector[i];
+      elem = elem_vector[i];
 	  elem->setDomainIndex(dom);
-//      ElementsVector[i]->AllocateLocalIndexVector(); 
+//      elem_vector[i]->AllocateLocalIndexVector(); 
       if(dom>max_dom) max_dom = dom;
       // GMSH output
       switch(elem->getElementType())
@@ -486,7 +757,7 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
        cerr<<("Error: cannot open .npart file . It may not exist !");
        abort();
    } 
-   for(i=0; i<(long)NodesVector.size(); i++)
+   for(i=0; i<(long)node_vector.size(); i++)
    {
       npart_in>>dom>>ws;
 	  node_dom.push_back(dom);
@@ -500,13 +771,13 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
    {
       ele_dom[k]=0;
       //nod_dom[k]=0;
-      for(j=0; j<(long)ElementsVector.size(); j++)
+      for(j=0; j<(long)elem_vector.size(); j++)
       {
-	     if(ElementsVector[j]->GetDomainIndex()==k)
+	     if(elem_vector[j]->getDomainIndex()==k)
              ele_dom[k] += 1;
       } 
       /*
-      for(j=0; j<(long)NodesVector.size(); j++)
+      for(j=0; j<(long)node_vector.size(); j++)
       {
 	     if(node_dom[j]==k)
              nod_dom[k] += 1;
@@ -532,26 +803,26 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
 	  part_out<<"$ELEMENTS "<<ele_dom[k]<<endl; 
 	  nodes_dom.clear(); 
 	  eles_dom.clear();
-      for(j=0; j<(long)ElementsVector.size(); j++)
+      for(j=0; j<(long)elem_vector.size(); j++)
 	  {
-         ele = ElementsVector[j];
+         ele = elem_vector[j];
          for(kk=0; kk<ele->getNodesNumber(); kk++)
 		 {
-            ele->SetLocalNodeIndex(kk, -1);
+            ele->setLocalNodeIndex(kk, -1);
             ele->AllocateLocalIndexVector();
             ele->setDomNodeIndex(kk, -1);
 		 }
       }
-      for(j=0; j<(long)ElementsVector.size(); j++)
+      for(j=0; j<(long)elem_vector.size(); j++)
       {
-         ele = ElementsVector[j]; 
+         ele = elem_vector[j]; 
 		 //ele->AllocateLocalIndexVector();
-	     if(ele->GetDomainIndex()==k)   
+	     if(ele->getDomainIndex()==k)   
 		 {
             for(kk=0; kk<ele->getNodesNumber(); kk++)
 			{  
                done = false;
-               n_index = ele->GetLocalNodeIndex(kk);
+               n_index = ele->getLocalNodeIndex(kk);
                if(n_index>-1)
                {
                   ele->setDomNodeIndex(kk, n_index);                    
@@ -560,12 +831,12 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
  			   if(!done)
 			   { 
 				   ele->setDomNodeIndex(kk, (long)nodes_dom.size()); //For test output
-                   ele->SetLocalNodeIndex(kk, (long)nodes_dom.size());
+                   ele->setLocalNodeIndex(kk, (long)nodes_dom.size());
 				   nodes_dom.push_back(ele->getNodeIndex(kk));
 			   } 
 			}
-            part_out<<ele->GetIndex()<<endl;
-			eles_dom.push_back(ele->GetIndex()); //TEST OUT
+            part_out<<ele->getIndex()<<endl;
+			eles_dom.push_back(ele->getIndex()); //TEST OUT
 		 }
       }        
 	  part_out<<"$NODES_INNER "<<(long)nodes_dom.size()<<endl;
@@ -573,10 +844,10 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
           part_out<<nodes_dom[j]<<endl;
       /*
 	  part_out<<"$NODES_INNER "<<nod_dom[k]<<endl;
-      for(j=0; j<(long)NodesVector.size(); j++)
+      for(j=0; j<(long)node_vector.size(); j++)
       {
 	     if(node_dom[j]==k)
-            part_out<<NodesVector[j]->GetIndex()<<endl;
+            part_out<<node_vector[j]->GetIndex()<<endl;
       } 
 	  */
       //TEST OUT
@@ -594,7 +865,7 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
       test_out<<"0 "<<(long)nodes_dom.size()<<" "<<(long)eles_dom.size()<<endl;
       for(j=0; j<(long)nodes_dom.size(); j++)
 	  {
-          nod = NodesVector[nodes_dom[j]];
+          nod = node_vector[nodes_dom[j]];
         //GMSH  test_out<<j+1<<"  "
           test_out<<j<<"  "
                   << nod->X()<<"  "<< nod->Y()<<"  "<< nod->Z() <<endl;
@@ -604,7 +875,7 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
 	  //GMSG test_out<<(long)eles_dom.size()<<endl;
       for(j=0; j<(long)eles_dom.size(); j++)
 	  {
-          ele = ElementsVector[eles_dom[j]]; 
+          ele = elem_vector[eles_dom[j]]; 
           /* //GMSH
           test_out<<j+1<<"  ";
           int e_t=1;       
@@ -624,7 +895,7 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
           */
 		  test_out<<j<<"  "<<ele->getPatchIndex()<<" "<<ele->getName()<<" ";
           for(kk=0; kk<ele->getNodesNumber(); kk++)
-             test_out<< ele->GetDomNodeIndex(kk)<<" ";
+             test_out<< ele->getDomNodeIndex(kk)<<" ";
           test_out<<endl;
 	  }
      //GMSH test_out<<"$ENDELE"<<endl;
@@ -642,9 +913,9 @@ void Mesh::ConstructDomain(char *fname, const int num_parts)
 
 void Mesh::Write2METIS(ostream& os)
 {
-	 os<<(long)ElementsVector.size()<<" ";
+	 os<<(long)elem_vector.size()<<" ";
      int e_type =0;
-	 switch(ElementsVector[0]->getElementType())    
+	 switch(elem_vector[0]->getElementType())    
 	 {
         case 1: cout<<"Not for 1D element"<<endl; abort(); 
         case 2: e_type =4; break; 
@@ -654,8 +925,8 @@ void Mesh::Write2METIS(ostream& os)
         case 6: cout<<"Not for prismal element"<<endl; abort(); 
 	 } 
      os<<e_type<<endl;
-     for(long i=0; i<(long)ElementsVector.size(); i++)
-        ElementsVector[i]->Write_index(os);
+     for(long i=0; i<(long)elem_vector.size(); i++)
+        elem_vector[i]->Write_index(os);
 }
 
 }//end namespace

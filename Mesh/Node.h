@@ -14,6 +14,7 @@ namespace Mesh_Group
 {
 class Edge;
 class Elem;
+class Mesh;
 
 //2.  Node declaration
 class Node:public Grain
@@ -29,7 +30,7 @@ class Node:public Grain
 	   {
           delete [] Coordinate;
 		  Coordinate = NULL;
-		  ElementsBelonged.resize(0);
+		  ElementsRelated.resize(0);
 	   }
 
       // Operator
@@ -47,24 +48,27 @@ class Node:public Grain
       double X() const {return Coordinate[0];}
       double Y() const {return Coordinate[1];}
       double Z() const {return Coordinate[2];}
-      void Coordinates(double *xyz) const
-      { 
-         for(int i=0; i<3; i++)  xyz[i] = Coordinate[i];
+      double *getCoordinates() const
+      {  
+		  return  Coordinate;
 	  } 
 
-	  void SetLocalIndex(const long l_index) {local_index = l_index; } 
-	  long GetLocalIndex() const {return local_index;}
+	  void setLocalIndex(const long l_index) {local_index = l_index; } 
+	  long getLocalIndex() const {return local_index;}
      
       // Output
       void Write(std::ostream& os = std::cout) const;
 
-      std::vector<long>  ElementsBelonged;
 
    private:
       double *Coordinate;
       long local_index; // For domain decomposition
-      friend class Edge;
-      friend class Elem;
+      std::vector<long>  ElementsRelated;
+      std::vector<long>  NodesRelated;
+      friend class Mesh_Group::Edge;
+      friend class Mesh_Group::Elem;
+	  friend class Mesh_Group::Mesh;
+
 };
 
 } 

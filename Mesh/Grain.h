@@ -27,11 +27,11 @@ class Grain
 
       // Set members
       void secBC(const char BC_type) {boundayC = BC_type;}
-      void SetOrder(const bool order) {quadratic = order;}
+      void setOrder(const bool order) {quadratic = order;}
       void Marking(const bool state) {mark = state;}
       // Get members
-      long GetIndex() const {return index;} 
-      bool GetStatus() const {return mark;}
+      long getIndex() const {return index;} 
+      bool getStatus() const {return mark;}
       bool Dirichlet() const  { return (BCType(boundayC) == DIRCHLET); }
       bool Neumann()   const  { return (BCType(boundayC) == NEUMANN);   }
       bool Cauchy ()   const  { return (BCType(boundayC) == CAUCHY);    }

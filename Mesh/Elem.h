@@ -17,6 +17,8 @@ namespace Mesh_Group
 {
 class Node;
 class Edge;
+class Mesh;
+
 //3.  Element declaration
 class Elem:public Grain
 {
@@ -32,6 +34,7 @@ class Elem:public Grain
 
       // Access to members
       int getNodesNumber() const {return nnodes;}
+      int getNodesNumber(bool quad) const  {if(quad) return nnodesHQ; else return nnodes;}
       int getNodesNumberHQ() const {return nnodesHQ;}
       int getEdgesNumber() const{return nedges;}
       int getFacesNumber() const {return nfaces;}
@@ -51,15 +54,18 @@ class Elem:public Grain
       void setNodes(Math_Group::vec<Node*>&  ele_nodes, const bool ReSize=false);
       void getNodes(Math_Group::vec<Node*>&  ele_nodes) 
          { for (int i=0; i< (int) nodes.Size();i++) ele_nodes[i]= nodes[i]; }
+      Node* getNode(const int i)  {return nodes[i];}
       void MarkingNodes(bool merker);
 	  //
-      void SetLocalNodeIndex(const int li, const long n_lindex); 
+      void setLocalNodeIndex(const int li, const long n_lindex); 
       //
-	  long GetLocalNodeIndex(const int li) const; 
+	  long getLocalNodeIndex(const int li) const; 
          		   
      // Edges
       void getEdges(Math_Group::vec<Edge*>&  ele_edges) 
         {for (int i=0; i<nedges; i++) ele_edges[i]= edges[i];} 
+      Edge* getEdge(const int index) 
+        {return edges[index];} 
       void setEdges(Math_Group::vec<Edge*>&  ele_edges) 
         {for (int i=0; i<nedges; i++) edges[i]= ele_edges[i];} 
 						
@@ -73,17 +79,17 @@ class Elem:public Grain
       void getNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)  
          {for (int i=0; i< nfaces;i++) ele_neighbors[i]= neighbors[i];} 
       //Domain partition
-      long GetDomNodeIndex(const int loc_index) { return locnodes_index[loc_index];}
+      long getDomNodeIndex(const int loc_index) { return locnodes_index[loc_index];}
 	  void setDomNodeIndex(const int loc_index, const long dom_nindex) { locnodes_index[loc_index]=dom_nindex;}
       void AllocateLocalIndexVector() {locnodes_index.resize(nodes_index.Size());}
       void setDomainIndex(const int dom) {sub_dom = dom;} 
-      int GetDomainIndex() const { return sub_dom;} 
+      int getDomainIndex() const { return sub_dom;} 
       // Local indicis
-      void GetLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes);
-      int GetElementFaceNodes(const int Face, int *FacesNode);
+      void getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes);
+      int getElementFaceNodes(const int Face, int *FacesNode);
 
  
-      int GetFaceType();
+      int getFaceType();
       
       // Output
       void Read(std::istream& is = std::cin, int fileType=1);
@@ -98,6 +104,7 @@ class Elem:public Grain
       int nfaces;
       int nedges;
       int sub_dom;
+      int no_faces_on_surface;
 	  //
       double Volume;
       Math_Group::SymMatrix Jacobian;     
@@ -115,12 +122,14 @@ class Elem:public Grain
       //vec<Elem*>  sons;
 
       // Private methods
-      int GetElementFaces1D(int *FaceNode);
-      int GetElementFacesTri(const int Face, int *FaceNode);
-      int GetElementFacesQuad(const int Face, int *FaceNode);
-      int GetElementFacesHex(const int Face, int *FaceNode);
-      int GetElementFacesTet(const int Face, int *FaceNode);
-      int GetElementFacesPri(const int Face, int *FaceNode);
+      int getElementFaces1D(int *FaceNode);
+      int getElementFacesTri(const int Face, int *FaceNode);
+      int getElementFacesQuad(const int Face, int *FaceNode);
+      int getElementFacesHex(const int Face, int *FaceNode);
+      int getElementFacesTet(const int Face, int *FaceNode);
+      int getElementFacesPri(const int Face, int *FaceNode);
+
+	  friend class Mesh;
 
 };
 
