@@ -804,6 +804,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
    long i,j;
    int ntags = 3;
    string deli = " ";
+
+   Node *a_node = NULL;
+   Elem *a_elem = NULL;
    //
    sprintf(str_buf, "%d",num_parts);
 
@@ -819,6 +822,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
        cerr<<("Error: cannot open .npart file . It may not exist !");
        exit(1);
    } 
+
 
    list <vector<long>> sub_dom_nodes(num_parts); 
    list<vector<long>>::iterator itr_subd_list0 = sub_dom_nodes.begin();
@@ -863,12 +867,12 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
        /// Find the elements in this subdomain.
 	   for(j=0; j<size_sbd_nodes; j++)
 	   {
-           Node *a_node = node_vector[sbd_nodes[j]]; 
+           a_node = node_vector[sbd_nodes[j]]; 
            
            // Search the elements connected to this nodes
 		   for(k=0; k<a_node->ElementsRelated.size(); k++)
 		   {
-               Elem *a_elem = elem_vector[a_node->ElementsRelated[k]];
+               a_elem = elem_vector[a_node->ElementsRelated[k]];
 
 			   // If checked
 			   if(a_elem->getStatus())
@@ -903,23 +907,42 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
            
 	   }
 
-       // Make output of this subdomain
+       // Make output of this subdomain for simulation
 	   sprintf(str_buf, "%d", counter);
        counter++;
 
-       string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"subdomains.msh";
+       string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"_subdomains.msh";
     
 	   fstream os_subd(name_f.c_str(), ios::out );
 
-	   os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
-       os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
+	   //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
+       //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
+       //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
+       os_subd<<"Nodes   Elements  Ghost elements"<<endl; 
+       os_subd<<size_sbd_nodes<<deli<<in_subdom_elements.size()
+		      <<deli<<ghost_subdom_elements.size()<<endl;
+
+	   //os_subd<<"Nodes"<<endl;
        for(j=0; j<size_sbd_nodes; j++)
 		   node_vector[sbd_nodes[j]]->Write(os_subd);
 
-	   os_subd<<" $ELEMENTS\n"<<in_subdom_elements.size()<<endl;
+	   //os_subd<<"Elements"<<endl;
 	   for(j=0; j<in_subdom_elements.size(); j++)
 		   in_subdom_elements[j]->WriteGSmsh(os_subd);
-	   os_subd<<"#STOP"<<endl;
+	  
+	   //os_subd<<"Ghost elements"<<endl;
+	   for(j=0; j<ghost_subdom_elements.size(); j++)
+	   {
+           a_elem = ghost_subdom_elements[j];
+		   a_elem->WriteGSmsh(os_subd);
+		   for(kk=0; kk<a_elem->ghost_nodes.Size(); kk++)
+		   {
+              os_subd<<a_elem->ghost_nodes[kk]<<deli;  
+		   }
+		   os_subd<<endl;
+	   }
+	 
+
    }
  
  
