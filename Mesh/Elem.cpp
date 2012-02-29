@@ -37,6 +37,7 @@ Elem::~Elem()
    nodes.resize(0);
    edges.resize(0);
    neighbors.resize(0);
+   ghost_nodes.resize(0);
 }
 
 //    WW. 06.2005
@@ -367,6 +368,70 @@ void Elem::Read(istream& is, int fileType)
     edges[i] = NULL;
 	edges_orientation[i] = 1;
   }
+}
+//  WW. 03.2009
+void Elem::WriteGmsh(ostream& os) const
+{
+   //int igeo=14;
+   int ipart=0;
+   int et=1;
+   int ntags=3;
+   string deli = " ";
+
+   int nn = nnodes;
+   if(quadratic)
+   {
+      nn = nnodesHQ;
+      switch(ele_Type)
+      {
+        case 1: et = 8; break;    //Line
+        case 2: et = 10; break;    //Quad
+        case 3: et = 12; break;    //Hex
+        case 4: et = 9; break;    //Tri
+        case 5: et = 11; break;    //Tet
+        case 6: et = 18; break;    //Pris
+      }
+   }
+   else
+   {
+      switch(ele_Type)
+      {
+        case 1: et = 1; break;    //Line
+        case 2: et = 3; break;    //Quad
+        case 3: et = 5; break;    //Hex
+        case 4: et = 2; break;    //Tri
+        case 5: et = 4; break;    //Tet
+        case 6: et = 6; break;    //Pris
+      }
+   }
+   os<<index+1<<deli<<et<<deli<<ntags<<deli<<PatchIndex+1<<deli<<PatchIndex+1<<deli<<ipart<<deli;
+   for(int i=0; i<nn; i++)
+   os<<nodes_index[i]+1<<deli;
+   os<<endl;
+}
+
+//  WW. 03.2009
+void Elem::WriteGSmsh(ostream& os) const
+{
+   string ename;
+   string deli = " ";
+
+   switch(ele_Type)
+   {
+     case 1: ename = "line"; break;
+     case 2: ename = "quad"; break;
+     case 3: ename = "hex"; break;
+     case 4: ename = "tri"; break;
+     case 5: ename = "tet"; break;
+     case 6: ename = "pris"; break;
+   }
+   os<<index<<deli<<PatchIndex<<deli<<ename<<deli;
+   for(int i=0; i<nnodes; i++)
+   {
+//      nodes_index[i] = nodes[i]->getIndex();
+      os<<nodes[i]->getIndex()<<deli;
+   }
+   os<<endl;
 }
 //    WW. 06.2005
 void Elem::WriteIndex(ostream& os) const

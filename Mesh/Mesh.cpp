@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <limits>
+#include <list>
 
 #include "Node.h"
 #include "Edge.h"
@@ -48,59 +49,6 @@ Mesh::~Mesh()
   elem_vector.clear();
 }
 
-
-// Read grid for test purpose
-void Mesh::ReadGrid(istream& is)
-{
-   long i, ne, nn, counter;
-   int ibuff;
-   double x,y,z;
-   string buffer;
-//   is.seekg(position);
-   // Read description
-   is>>buffer>>ws;
-   // Read numbers of nodes and elements
-   is>>ibuff>>nn>>ne>>ws;
-   if(nn==0||ne==0)
-   {
-       cout<<"Error: number of elements or nodes is zero"<<endl;
-       abort();
-   }
-   
-   // Read Nodes
-   counter = 0;
-   for(i=0; i<nn; i++)
-   {
-      is>>ibuff>>x>>y>>z>>ws;
-      Node* newNode = new Node(ibuff,x,y,z);
-      node_vector.push_back(newNode);            
-      counter++;
-   }
-   if(counter!=nn)
-   {
-       cout<<"Error: number nodes do not match"<<endl;
-       abort();
-   }
-   NodesNumber_Linear = nn;
-   NodesNumber_Quadratic = nn;
-      
-   // Read Elements
-   counter = 0;
-   for(i=0; i<ne; i++)
-   { 
-      Elem* newElem = new Elem(i);
-      newElem->Read(is);
-      elem_vector.push_back(newElem);           
-      counter++;
-   }     
-   if(counter!=ne)
-   {
-       cout<<"Error: number elements do not match"<<endl;
-       abort();
-   }
-
-//   position = is.tellg();
-}
 
 // Construct grid
 // 
@@ -601,65 +549,12 @@ void Mesh::GenerateHighOrderNodes()
       <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
 
 }
-void Mesh::ReadGridGeoSys(istream& is)
-{
-  string sub_line;
-  string line_string;
-  bool new_keyword = false;
-  string hash("#");
-  string sub_string,sub_string1;
-  long i, ibuff;
-  long no_elements;
-  long no_nodes;
-  double x,y,z;
-  Node* newNode = NULL;
-  Elem* newElem = NULL;
-  //========================================================================
-  // Keyword loop
-  while (!new_keyword) {
-    //if(!GetLineFromFile(line,fem_file)) 
-    //  break;
-    //line_string = line;
-    getline(is, line_string);
-    if(is.fail()) 
-      break;
-    /*	 
-    if(line_string.find(hash)!=string::npos)
-	{
-      new_keyword = true;
-      break;
-    }
-    */
-    //....................................................................
-    //....................................................................
-    if(line_string.find("$NODES")!=string::npos) { // subkeyword found
-      is  >> no_nodes>>ws;
-      for(i=0;i<no_nodes;i++){
-         is>>ibuff>>x>>y>>z>>ws;
-         newNode = new Node(ibuff,x,y,z);
-         node_vector.push_back(newNode);            
-      }
-      continue;
-    }
-    //....................................................................
-    if(line_string.find("$ELEMENTS")!=string::npos) { // subkeyword found
-      is >> no_elements>>ws;
-      for(i=0;i<no_elements;i++){
-         newElem = new Elem(i);
-         newElem->Read(is, 0);
-		 elem_vector.push_back(newElem);
-      }
-      continue;
-    }
-  }
-  //========================================================================
-}
 
 
-void Mesh::ConstructDomain(const char *fname, const int num_parts)
+void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_parts)
 {
-   char str[1028];
-   char stro[1028];
+   string str;
+   string stro;
    char str_buf[3];
    int dom;
    int max_dom;
@@ -670,21 +565,18 @@ void Mesh::ConstructDomain(const char *fname, const int num_parts)
    //
    sprintf(str_buf, "%d",num_parts);
 
-   /////////////////vector<int> node_dom;
-   strcpy(str,fname);
-   strcpy(stro,fname);
-   strcat(str,".mesh.epart.");
-   strcat(str,str_buf);
-   strcat(stro,".");
-   strcat(stro,str_buf);
-   strcat(stro,"ddc");
+
+   string s_nparts = str_buf;
+   str = fname + ".mesh.epart." + str_buf;
+   stro = fname + "." + str_buf +"ddc";
+
    //namef = ".mesh.epart."; //+str_buf;
    ifstream part_in;
    fstream part_out;
    part_out.open(stro, ios::out );
    // Output for gmsh
-   strcpy(stro,fname);
-   strcat(stro,"_gmsh.msh");
+ 
+   stro = fname + "_gmsh.msh";
    fstream gmsh_out;
    gmsh_out.open(stro, ios::out );
    //gmsh_out<<"$NOD"<<endl;
@@ -746,24 +638,7 @@ void Mesh::ConstructDomain(const char *fname, const int num_parts)
    gmsh_out.close();
    part_in.close();
    //
-   /*
-   strcpy(str,fname);
-   strcat(str,".npart");
-   ifstream npart_in;
-
-   npart_in.open(str);
-   if(!npart_in.is_open())
-   {
-       cerr<<("Error: cannot open .npart file . It may not exist !");
-       abort();
-   } 
-   for(i=0; i<(long)node_vector.size(); i++)
-   {
-      npart_in>>dom>>ws;
-	  node_dom.push_back(dom);
-   }
-   npart_in.close();
-   */
+ 
    //Output ddc file
    // long *nod_dom = new long[max_dom];
    long *ele_dom = new long[max_dom];
@@ -851,11 +726,10 @@ void Mesh::ConstructDomain(const char *fname, const int num_parts)
       } 
 	  */
       //TEST OUT
-      itoa(k,stro, 10);
-      strcpy(str,fname);
-      string aa = str;
-      string bb= stro;
-      string name_f = aa+bb+".msh";
+
+      sprintf(str_buf, "%d",k);
+
+      string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"subdomains.msh";
       fstream test_out;
       test_out.open(name_f.c_str(), ios::out );
 
@@ -911,22 +785,285 @@ void Mesh::ConstructDomain(const char *fname, const int num_parts)
    //delete nod_dom;
 }
 
+/*!
+\brief void Mesh::ConstructSubDomain_by_Nodes
+
+Partition a mesh ny nodes
+
+02.2012 WW
+*/
+
+void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, const bool is_quad)
+{
+
+   string f_iparts;
+   string o_part_msh;
+   char str_buf[3];
+   int dom;
+   int k,kk;
+   long i,j;
+   int ntags = 3;
+   string deli = " ";
+   //
+   sprintf(str_buf, "%d",num_parts);
+
+
+   string s_nparts = str_buf;
+   f_iparts = fname + ".mesh.npart." + str_buf;
+   //o_part_msh = fname + "." + str_buf +"mesh";
+
+   vector<long> node_dom;
+   ifstream npart_in(f_iparts.c_str());
+   if(!npart_in.is_open())
+   {
+       cerr<<("Error: cannot open .npart file . It may not exist !");
+       exit(1);
+   } 
+
+   list <vector<long>> sub_dom_nodes(num_parts); 
+   list<vector<long>>::iterator itr_subd_list0 = sub_dom_nodes.begin();
+   list<vector<long>>::iterator itr_subd_list;
+
+   for(i=0; i<(long)node_vector.size(); i++)
+   {
+      npart_in>>dom>>ws;
+
+	  itr_subd_list = itr_subd_list0; 
+	  std::advance(itr_subd_list, dom);
+	  	
+      (*itr_subd_list).push_back(i);  
+   }
+   npart_in.close();
+
+   list<vector<long>>::iterator iter;
+
+   iter=itr_subd_list0;
+   
+   int counter = 0;
+   for(iter=itr_subd_list0; iter!=sub_dom_nodes.end(); iter++)
+   {
+       vector<long> sbd_nodes = *iter;
+       long size_sbd_nodes = (long)sbd_nodes.size();
+
+	   vector<Elem*> in_subdom_elements;
+	   vector<Elem*> ghost_subdom_elements;
+
+	   // Un-making all nodes and elements of the whole mesh 
+       for(j=0; j<(long)node_vector.size(); j++)
+          node_vector[j]->Marking(false);
+       for(j=0; j<(long)elem_vector.size(); j++)
+          elem_vector[j]->Marking(false);
+	   // Only select nodes in this subdomain
+	   for(j=0; j<size_sbd_nodes; j++)
+	   {
+		   node_vector[sbd_nodes[j]]->Marking(true);            
+	   }
+
+
+       /// Find the elements in this subdomain.
+	   for(j=0; j<size_sbd_nodes; j++)
+	   {
+           Node *a_node = node_vector[sbd_nodes[j]]; 
+           
+           // Search the elements connected to this nodes
+		   for(k=0; k<a_node->ElementsRelated.size(); k++)
+		   {
+               Elem *a_elem = elem_vector[a_node->ElementsRelated[k]];
+
+			   // If checked
+			   if(a_elem->getStatus())
+                  continue;
+
+               
+			   vector<int> g_nodes; // Nodes in ghost elements
+			   for(kk=0; kk<a_elem->getNodesNumber(); kk++)
+			   {                
+				   if(!(a_elem->getNode(kk)->getStatus()))   
+                     g_nodes.push_back(kk);
+			   }
+                  
+               // All nodes of this element are inside this subdomain
+			   if(g_nodes.size() == 0)
+			   {
+				   in_subdom_elements.push_back(a_elem);
+			   }
+			   else
+			   {
+				   ghost_subdom_elements.push_back(a_elem);
+				   a_elem->ghost_nodes.resize((int)g_nodes.size());
+                 
+                   for(kk=0; kk<g_nodes.size(); kk++)
+					   a_elem->ghost_nodes[kk] = g_nodes[kk];
+			   }
+
+
+			   a_elem->Marking(true);
+
+		   }
+           
+	   }
+
+       // Make output of this subdomain
+	   sprintf(str_buf, "%d", counter);
+       counter++;
+
+       string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"subdomains.msh";
+    
+	   fstream os_subd(name_f.c_str(), ios::out );
+
+	   os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
+       os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
+       for(j=0; j<size_sbd_nodes; j++)
+		   node_vector[sbd_nodes[j]]->Write(os_subd);
+
+	   os_subd<<" $ELEMENTS\n"<<in_subdom_elements.size()<<endl;
+	   for(j=0; j<in_subdom_elements.size(); j++)
+		   in_subdom_elements[j]->WriteGSmsh(os_subd);
+	   os_subd<<"#STOP"<<endl;
+   }
+ 
+ 
+}
+
+
 void Mesh::Write2METIS(ostream& os)
 {
 	 os<<(long)elem_vector.size()<<" ";
      int e_type =0;
 	 switch(elem_vector[0]->getElementType())    
 	 {
-        case 1: cout<<"Not for 1D element"<<endl; abort(); 
-        case 2: e_type =4; break; 
-        case 3: e_type =3; break;  
-        case 4: e_type =1; break;  
-        case 5: e_type =2; break; 
+        case 1: 
+			cout<<"Not for 1D element"<<endl;
+			exit(1); 
+        case 2: 
+			e_type =4; 
+			break; 
+        case 3: 
+			e_type =3; 
+			break;  
+        case 4: 
+			e_type =1; 
+			break;  
+        case 5: 
+			e_type =2; 
+			break; 
         case 6: cout<<"Not for prismal element"<<endl; abort(); 
 	 } 
      os<<e_type<<endl;
      for(long i=0; i<(long)elem_vector.size(); i++)
         elem_vector[i]->Write_index(os);
+}
+
+
+
+// Read grid for test purpose
+void Mesh::ReadGrid(istream& is)
+{
+   long i, ne, nn, counter;
+   int ibuff;
+   double x,y,z;
+   string buffer;
+//   is.seekg(position);
+   // Read description
+   is>>buffer>>ws;
+   // Read numbers of nodes and elements
+   is>>ibuff>>nn>>ne>>ws;
+   if(nn==0||ne==0)
+   {
+       cout<<"Error: number of elements or nodes is zero"<<endl;
+       abort();
+   }
+   
+   // Read Nodes
+   counter = 0;
+   for(i=0; i<nn; i++)
+   {
+      is>>ibuff>>x>>y>>z>>ws;
+      Node* newNode = new Node(ibuff,x,y,z);
+      node_vector.push_back(newNode);            
+      counter++;
+   }
+   if(counter!=nn)
+   {
+       cout<<"Error: number nodes do not match"<<endl;
+       abort();
+   }
+   NodesNumber_Linear = nn;
+   NodesNumber_Quadratic = nn;
+      
+   // Read Elements
+   counter = 0;
+   for(i=0; i<ne; i++)
+   { 
+      Elem* newElem = new Elem(i);
+      newElem->Read(is);
+	  newElem->Marking(true);
+      elem_vector.push_back(newElem);           
+      counter++;
+   }     
+   if(counter!=ne)
+   {
+       cout<<"Error: number elements do not match"<<endl;
+       abort();
+   }
+
+//   position = is.tellg();
+}
+
+
+void Mesh::ReadGridGeoSys(istream& is)
+{
+  string sub_line;
+  string line_string;
+  bool new_keyword = false;
+  string hash("#");
+  string sub_string,sub_string1;
+  long i, ibuff;
+  long no_elements;
+  long no_nodes;
+  double x,y,z;
+  Node* newNode = NULL;
+  Elem* newElem = NULL;
+  //========================================================================
+  // Keyword loop
+  while (!new_keyword) {
+    //if(!GetLineFromFile(line,fem_file)) 
+    //  break;
+    //line_string = line;
+    getline(is, line_string);
+    if(is.fail()) 
+      break;
+    /*	 
+    if(line_string.find(hash)!=string::npos)
+	{
+      new_keyword = true;
+      break;
+    }
+    */
+    //....................................................................
+    //....................................................................
+    if(line_string.find("$NODES")!=string::npos) { // subkeyword found
+      is  >> no_nodes>>ws;
+      for(i=0;i<no_nodes;i++){
+         is>>ibuff>>x>>y>>z>>ws;
+         newNode = new Node(ibuff,x,y,z);
+         node_vector.push_back(newNode);            
+      }
+      continue;
+    }
+    //....................................................................
+    if(line_string.find("$ELEMENTS")!=string::npos) { // subkeyword found
+      is >> no_elements>>ws;
+      for(i=0;i<no_elements;i++){
+         newElem = new Elem(i);
+         newElem->Read(is, 0);
+         newElem->Marking(true);
+		 elem_vector.push_back(newElem);
+      }
+      continue;
+    }
+  }
+  //========================================================================
 }
 
 }//end namespace

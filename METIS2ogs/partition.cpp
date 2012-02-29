@@ -70,8 +70,10 @@ int main(int argc, char* argv[])
 
   string s_buff;
   string fname;
+  string fpath;
 
   int nparts = 1; 
+  string str_nparts;
 
   Version();
   if(argc>1) 
@@ -94,7 +96,28 @@ int main(int argc, char* argv[])
 			 pos = s_buff.find_first_of("p");
 			 s_buff = s_buff.substr(pos+1);
 			 nparts = atoi(s_buff.c_str());
+			 str_nparts = s_buff;
 		  }    
+
+          if(s_buff.find("ogs2metis")!=string::npos)
+          { 
+             this_task = ogs2metis;
+		  }
+          else if(s_buff.find("metis2ogs")!=string::npos)
+          { 
+             this_task = metis2ogs;
+		  }
+          else if(s_buff.find("help")!=string::npos)
+          { 
+             Version();
+             OptionList();
+			 exit(0);
+		  }
+          else if(s_buff.find("version")!=string::npos)
+          { 
+             Version();
+             exit(0);
+		  }
 
 
           if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
@@ -149,6 +172,7 @@ int main(int argc, char* argv[])
 			  pos = s_buff.find_first_of("p");
               s_buff = s_buff.substr(pos+1);
               nparts = atoi(s_buff.c_str());
+              str_nparts = s_buff;
               break;
 		   }
 
@@ -159,6 +183,22 @@ int main(int argc, char* argv[])
     
   }
     
+
+   //Get the path to the folder where the input file is. 
+   size_t pos_end;
+   pos_end = fname.find_last_of('\\');
+   //
+   if(pos_end != std::string::npos)
+   {
+       fpath = fname.substr(0,pos_end) + "\\";
+   }
+   else 
+   {
+       pos_end = fname.find_last_of('/');
+       if(pos_end != std::string::npos) 
+          fpath = fname.substr(0,pos_end) + "/";
+   }
+
 
   infile.open(fname+".msh");
   if(!infile.is_open())
@@ -186,8 +226,6 @@ int main(int argc, char* argv[])
   clock_t start, finish;
   start = clock();
 
-  a_mesh->ConstructGrid();  
-
  
   finish = clock();
   cout<<"CPU time elapsed in deformation process: "
@@ -198,13 +236,24 @@ int main(int argc, char* argv[])
      case ogs2metis:
         ofile.open(fname+".mesh", ios::out );         
         a_mesh->Write2METIS(ofile);
+
         break;
 	 case metis2ogs:
-        if(quad)
-			a_mesh->GenerateHighOrderNodes();
+        a_mesh->ConstructGrid();  
+
+		s_buff = fpath+"partdmesh "  + fname + ".mesh " + str_nparts;
+
+		system(s_buff.c_str());
+
         if(part_type == by_element)
-            a_mesh->ConstructDomain(fname.c_str(), nparts);
-		//else if(part_type == by_node)
+            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts);
+		else if(part_type == by_node)
+		{
+           if(quad)
+	          a_mesh->GenerateHighOrderNodes();
+           
+		   a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad); 
+		}
         break;
 	 default:
         break;

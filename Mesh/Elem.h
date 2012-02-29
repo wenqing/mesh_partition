@@ -48,12 +48,17 @@ class Elem:public Grain
 
    	  // Nodes
       void getNodeIndeces(Math_Group::vec<long>&  node_index) const 
-	            {for (int i=0; i< (int) nodes_index.Size();i++)
-                              node_index[i]= nodes_index[i]; } 
+	     {
+             for (int i=0; i< (int) nodes_index.Size();i++)
+                  node_index[i]= nodes_index[i];
+         } 
       long getNodeIndex(const int loc_lndex) const {  return nodes_index[loc_lndex];}
       void setNodes(Math_Group::vec<Node*>&  ele_nodes, const bool ReSize=false);
       void getNodes(Math_Group::vec<Node*>&  ele_nodes) 
-         { for (int i=0; i< (int) nodes.Size();i++) ele_nodes[i]= nodes[i]; }
+         { 
+			 for (int i=0; i< (int) nodes.Size();i++)
+				 ele_nodes[i]= nodes[i];
+	     }
       Node* getNode(const int i)  {return nodes[i];}
       void MarkingNodes(bool merker);
 	  //
@@ -79,8 +84,14 @@ class Elem:public Grain
       void getNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)  
          {for (int i=0; i< nfaces;i++) ele_neighbors[i]= neighbors[i];} 
       //Domain partition
-      long getDomNodeIndex(const int loc_index) { return locnodes_index[loc_index];}
-	  void setDomNodeIndex(const int loc_index, const long dom_nindex) { locnodes_index[loc_index]=dom_nindex;}
+      long getDomNodeIndex(const int loc_index)
+	    {
+			return locnodes_index[loc_index];
+	    }
+	  void setDomNodeIndex(const int loc_index, const long dom_nindex) 
+	  {
+		  locnodes_index[loc_index]=dom_nindex;
+	  }
       void AllocateLocalIndexVector() {locnodes_index.resize(nodes_index.Size());}
       void setDomainIndex(const int dom) {sub_dom = dom;} 
       int getDomainIndex() const { return sub_dom;} 
@@ -94,6 +105,8 @@ class Elem:public Grain
       // Output
       void Read(std::istream& is = std::cin, int fileType=1);
       void WriteIndex(std::ostream& os = std::cout) const;
+      void WriteGmsh(std::ostream& os = std::cout) const;
+      void WriteGSmsh(std::ostream& os = std::cout) const;
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;
       void WriteNeighbors(std::ostream& os = std::cout) const;
@@ -120,6 +133,8 @@ class Elem:public Grain
       Math_Group::vec<int>  edges_orientation;
       Math_Group::vec<Elem*>  neighbors;
       //vec<Elem*>  sons;
+
+	  Math_Group::vec<int>  ghost_nodes;
 
       // Private methods
       int getElementFaces1D(int *FaceNode);

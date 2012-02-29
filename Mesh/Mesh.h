@@ -26,7 +26,8 @@ class Mesh
      Mesh(bool quad = false);
      ~Mesh();
    
-     void ConstructDomain(const char *fname,  const int num_parts);
+     void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts);
+     void ConstructSubDomain_by_Nodes(const std::string fname,  const int num_parts, const bool is_quad);
     
      void ReadGrid(std::istream& is = std::cin);
      void ReadGridGeoSys(std::istream& is = std::cin);
