@@ -911,9 +911,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 	   sprintf(str_buf, "%d", counter);
        counter++;
 
-       string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"_subdomains.msh";
-    
-	   fstream os_subd(name_f.c_str(), ios::out );
+       //string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"_subdomains.msh";    
+       string name_f = fname+"_"+str_buf+".msh";    
+	   fstream os_subd(name_f.c_str(), ios::out|ios::trunc );
 
 	   //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
        //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
@@ -941,13 +941,98 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 		   }
 		   os_subd<<endl;
 	   }
-	 
+	   os_subd.close();
+
+	   //-----------------------------------------------------------
+	   /// VTK output
+       // Elements in this subdomain  
+       f_iparts = fname+"_"+str_buf+"_of_"+s_nparts+"_subdomains.vtk";
+       //f_iparts = fname+"_"+str_buf+".vtk";
+       ofstream os(f_iparts.c_str(), ios::out|ios::trunc);
+
+	   WriteVTK_Nodes(os);
+	   WriteVTK_Elements_of_Subdomain(os, in_subdom_elements, counter);
+	   os.close();
+
+	   // Ghost elements in this subdomain  
+       f_iparts = fname+"_"+str_buf+"_ghost_of_"+s_nparts+"_subdomains.vtk";
+       //f_iparts = fname+"_"+str_buf+"ghost.vtk";
+	   os.open(f_iparts.c_str(), ios::out|ios::trunc);
+       WriteVTK_Nodes(os);
+	   WriteVTK_Elements_of_Subdomain(os, ghost_subdom_elements, 0);
+	   os.close();
+	   //-----------------------------------------------------------
 
    }
  
  
 }
 
+// 02.2012. WW
+void  Mesh::WriteVTK_Nodes(std::ostream& os)
+{
+  long i;
+  Node *a_node = NULL;
+
+  os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n"<<endl;
+  os<<"DATASET UNSTRUCTURED_GRID"<<endl;
+  os<<"POINTS "<<node_vector.size()<<" double"<<endl;
+  setw(14);
+  os.precision(14);
+  for(i=0; i<(long)node_vector.size(); i++)
+  {
+     a_node = node_vector[i];
+     os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl; 
+  }
+
+}
+// 02.2012. WW
+void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec, const int sbd_index) 
+{
+   long i;
+   int k;
+   //-----------------------------------------------------------
+   //  VTK output
+   // Elements in this subdomain
+   long ne0 = (long)ele_vec.size();
+   long size = ne0;
+
+   string deli = " ";
+
+   Elem *a_elem = NULL;
+
+   for(i=0; i<ne0; i++)
+      size += ele_vec[i]->getNodesNumber(false);
+   os<<"\nCELLS "<<ne0<<deli<<size<<endl;
+
+  
+   // CELLs
+   for(i=0;i<ne0;i++)
+   {
+      a_elem = ele_vec[i];
+      os<<a_elem->getNodesNumber(false)<<deli;
+      for(k=0; k<a_elem->getNodesNumber(false); k++)
+         os << a_elem->nodes_index[k] << deli;
+      os << endl;
+   }
+   os << endl; 
+
+   // CELL types
+   os << "CELL_TYPES " << ne0 << endl; 
+   for(i=0;i<ne0;i++)
+   {
+      a_elem = ele_vec[i];
+      a_elem->WriteVTK_Type(os);
+   }
+   os << endl; 
+	  
+   // Partition
+   os<<"CELL_DATA "<<ne0<<endl;
+   os<<"SCALARS Partition int 1\nLOOKUP_TABLE default"<<endl;
+   for(i=0; i<ne0; i++)
+     os<<sbd_index<<endl;
+
+}
 
 void Mesh::Write2METIS(ostream& os)
 {

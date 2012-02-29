@@ -107,6 +107,7 @@ class Elem:public Grain
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os = std::cout) const;
       void WriteGSmsh(std::ostream& os = std::cout) const;
+      void WriteVTK_Type(std::ostream& os = std::cout) const;
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;
       void WriteNeighbors(std::ostream& os = std::cout) const;

@@ -207,8 +207,11 @@ int main(int argc, char* argv[])
       exit(1);
   }
 
-  Mesh_Group::Mesh *a_mesh = new Mesh();
 
+  clock_t elp_time;
+  elp_time = -clock();
+
+  Mesh_Group::Mesh *a_mesh = new Mesh();
 
   bool rfiMesh = true;
   string line_string;
@@ -223,14 +226,8 @@ int main(int argc, char* argv[])
      a_mesh->ReadGrid(infile);
   else
      a_mesh->ReadGridGeoSys(infile);
-  clock_t start, finish;
-  start = clock();
 
- 
-  finish = clock();
-  cout<<"CPU time elapsed in deformation process: "
-      <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
-   
+  
   switch(this_task)
   {
      case ogs2metis:
@@ -260,6 +257,11 @@ int main(int argc, char* argv[])
   }
 
   delete a_mesh;
+
+  elp_time += clock();
+  cout<<"CPU time elapsed: "
+      <<(double)elp_time / CLOCKS_PER_SEC<<"s"<<endl;
+ 
   return 0;
 
 }

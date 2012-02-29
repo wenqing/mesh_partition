@@ -433,6 +433,21 @@ void Elem::WriteGSmsh(ostream& os) const
    }
    os<<endl;
 }
+
+//  WW. 02.2012
+void Elem::WriteVTK_Type(ostream& os) const
+{
+   switch(ele_Type)
+   {
+       case 1:  os<< "3  "<<endl;    break;
+       case 2:  os<< "9  "<<endl;    break;
+       case 3:  os<< "12 "<<endl;    break;
+       case 4:  os<< "5  "<<endl;    break;
+       case 5:  os<< "10 "<<endl;    break;
+       case 6:  os<< "13 "<<endl;    break;
+   }
+}
+
 //    WW. 06.2005
 void Elem::WriteIndex(ostream& os) const
 {
@@ -461,6 +476,15 @@ void Elem::WriteAll(ostream& os) const
        <<deli<<nodes[i]->Z()<<endl;
     }
 }
+
+void Elem::WriteNeighbors(ostream& os) const
+{
+    os<<"Neighbors of "<<index<<endl;
+    for(int i=0; i<nfaces; i++)
+      neighbors[i]->WriteAll(os);
+    os<<"End neighbors of "<<index<<endl<<endl;;
+}
+
 //    WW. 06.2005
 void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
 { 
@@ -480,13 +504,7 @@ void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
 
 
 
-void Elem::WriteNeighbors(ostream& os) const
-{
-    os<<"Neighbors of "<<index<<endl;
-    for(int i=0; i<nfaces; i++)
-      neighbors[i]->WriteAll(os);
-    os<<"End neighbors of "<<index<<endl<<endl;;
-}
+
 //    WW. 06.2005
 void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
 {
