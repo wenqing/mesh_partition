@@ -26,15 +26,18 @@ class Mesh
      Mesh(bool quad = false);
      ~Mesh();
    
-     void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts);
-     void ConstructSubDomain_by_Nodes(const std::string fname,  const int num_parts, const bool is_quad);
+     void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts, const bool osdom);
+     void ConstructSubDomain_by_Nodes(const std::string fname,  const int num_parts,
+		                              const bool is_quad, const bool osdom);
     
      void ReadGrid(std::istream& is = std::cin);
      void ReadGridGeoSys(std::istream& is = std::cin);
 	 void Write2METIS(std::ostream& os); 
 
 	 void WriteVTK_Nodes(std::ostream& os); 
-	 void WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec, const int sbd_index); 
+	 void WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec); 
+	 void WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec,
+		                                 const int sbd_index, const long node_shift = 0); 
   
 	 void ConnectedNodes(bool quadratic); 
      void ConnectedElements2Node(bool quadratic=false);

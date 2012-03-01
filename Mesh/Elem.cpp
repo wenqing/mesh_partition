@@ -370,10 +370,10 @@ void Elem::Read(istream& is, int fileType)
   }
 }
 //  WW. 03.2009
-void Elem::WriteGmsh(ostream& os) const
+void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
 {
    //int igeo=14;
-   int ipart=0;
+ 
    int et=1;
    int ntags=3;
    string deli = " ";
@@ -404,7 +404,7 @@ void Elem::WriteGmsh(ostream& os) const
         case 6: et = 6; break;    //Pris
       }
    }
-   os<<index+1<<deli<<et<<deli<<ntags<<deli<<PatchIndex+1<<deli<<PatchIndex+1<<deli<<ipart<<deli;
+   os<<index+1<<deli<<et<<deli<<ntags<<deli<<PatchIndex+1<<deli<<PatchIndex+1<<deli<<sdom_idx<<deli;
    for(int i=0; i<nn; i++)
    os<<nodes_index[i]+1<<deli;
    os<<endl;
@@ -453,13 +453,13 @@ void Elem::WriteIndex(ostream& os) const
 {
     os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
     for(int i=0; i<nnodes; i++)
-      os<<nodes_index[i]<<deli;
-	   os<<endl;
+      os<<nodes[i]->index<<deli;
+    os<<endl;
 }
 void Elem::Write_index(ostream& os) const
 {
     for(int i=0; i<nnodes; i++)
-      os<<nodes_index[i]+1<<deli;
+      os<<nodes[i]->index+1<<deli;
     os<<endl;
 }
 //    WW. 06.2005
@@ -484,6 +484,18 @@ void Elem::WriteNeighbors(ostream& os) const
       neighbors[i]->WriteAll(os);
     os<<"End neighbors of "<<index<<endl<<endl;;
 }
+
+void Elem::MarkingNodes(bool maker)
+{
+    int SizeV = nnodes;
+    if(quadratic) SizeV = nnodesHQ;
+  
+    for (int i=0; i< SizeV;i++)
+    {
+		nodes[i]->Marking(false);
+    }
+}
+
 
 //    WW. 06.2005
 void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)

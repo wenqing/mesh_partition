@@ -17,12 +17,13 @@
 using namespace std;
 using namespace Mesh_Group;
 
+#define ver "V2.0. 2012"
 
 void Version()
 {  
   cout<<"\nOpenGeoSys interface to METIS"<<endl;
-  cout<<"V2.0"<<endl;
-  cout<<"Written by wenqing.wang@ufz.de. 2012"<<endl<<endl;
+  cout<<ver<<endl;
+  cout<<"Written by wenqing.wang@ufz.de."<<endl<<endl;
 }
 void OptionList()
 { 
@@ -35,9 +36,10 @@ void OptionList()
   cout << "Tasks:\n  --version\n  --help\n  --ogs2metis\n  --metis2ogs\n"<<endl;
   cout << "Option for --metis2ogs task:"<<endl;
   cout << "  -q           generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
-  cout << "  -np[number]  Number of partitions. There must be no space between np and number"<<endl;
+  cout << "  -np[number]  number of partitions. There must be no space between np and number"<<endl;
   cout << "  -e           partition by element (non overlapped subdomain)"<<endl;
   cout << "  -n           partition by node (overlapped subdomain)"<<endl;
+  cout << "  -odom        output subdomain mesh"<<endl;
 }
 
 void FindFileNameInCommand(stringstream &ss, string &fname)
@@ -65,6 +67,7 @@ int main(int argc, char* argv[])
   PartType part_type = by_node;
 
   bool quad = false;
+  bool out_subdom = false;
 
   //ios::pos_type position;
 
@@ -88,6 +91,11 @@ int main(int argc, char* argv[])
 
           if(s_buff.find("-q")!=string::npos) 
              quad = true; 
+   
+          if(s_buff.find("-odom")!=string::npos)
+          { 
+             out_subdom = true; 
+          }
 		   
 		  // Number of partitions
 		  if(s_buff.find("-np")!=string::npos) 
@@ -109,13 +117,13 @@ int main(int argc, char* argv[])
 		  }
           else if(s_buff.find("help")!=string::npos)
           { 
-             Version();
+             //Version();
              OptionList();
 			 exit(0);
 		  }
           else if(s_buff.find("version")!=string::npos)
           { 
-             Version();
+             cout<<ver;
              exit(0);
 		  }
 
@@ -155,6 +163,10 @@ int main(int argc, char* argv[])
        if(s_buff.find("-q")!=string::npos)
 	   { 
           quad = true; 
+       }
+       if(s_buff.find("-odom")!=string::npos)
+	   { 
+          out_subdom = true; 
        }
 
 	   // Find name
@@ -236,20 +248,22 @@ int main(int argc, char* argv[])
 
         break;
 	 case metis2ogs:
+        cout<<"\n***Compute mesh topology"<<endl;
         a_mesh->ConstructGrid();  
 
 		s_buff = fpath+"partdmesh "  + fname + ".mesh " + str_nparts;
 
 		system(s_buff.c_str());
 
+        cout<<"\n***Prepare subdomain mesh"<<endl;
         if(part_type == by_element)
-            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts);
+            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, out_subdom);
 		else if(part_type == by_node)
 		{
            if(quad)
 	          a_mesh->GenerateHighOrderNodes();
            
-		   a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad); 
+		   a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad, out_subdom); 
 		}
         break;
 	 default:
@@ -259,7 +273,7 @@ int main(int argc, char* argv[])
   delete a_mesh;
 
   elp_time += clock();
-  cout<<"CPU time elapsed: "
+  cout<<"\n***Total CPU time elapsed: "
       <<(double)elp_time / CLOCKS_PER_SEC<<"s"<<endl;
  
   return 0;
