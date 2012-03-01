@@ -253,7 +253,11 @@ int main(int argc, char* argv[])
 
 		s_buff = fpath+"partdmesh "  + fname + ".mesh " + str_nparts;
 
-		system(s_buff.c_str());
+		if(!system(s_buff.c_str()))
+		{
+           cout<<"METIS executable file may not be found "<<endl;
+           exit(1);
+		} 
 
         cout<<"\n***Prepare subdomain mesh"<<endl;
         if(part_type == by_element)
