@@ -106,8 +106,8 @@ class Elem:public Grain
       void Read(std::istream& is = std::cin, int fileType=1);
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
-      void WriteGSmsh(std::ostream& os) const;
-      void WriteVTK_Type(std::ostream& os) const;
+      void WriteGSmsh(std::ostream& os, bool quad = false) const;
+      void WriteVTK_Type(std::ostream& os, bool isquad) const;
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;
       void WriteNeighbors(std::ostream& os = std::cout) const;
@@ -135,7 +135,7 @@ class Elem:public Grain
       Math_Group::vec<Elem*>  neighbors;
       //vec<Elem*>  sons;
 
-	  Math_Group::vec<int>  ghost_nodes;
+	  std::vector<int>  ghost_nodes;
 
       // Private methods
       int getElementFaces1D(int *FaceNode);

@@ -411,10 +411,12 @@ void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
 }
 
 //  WW. 03.2009
-void Elem::WriteGSmsh(ostream& os) const
+void Elem::WriteGSmsh(ostream& os, bool quad) const
 {
    string ename;
    string deli = " ";
+ 
+   int nn = getNodesNumber(quad);
 
    switch(ele_Type)
    {
@@ -426,7 +428,7 @@ void Elem::WriteGSmsh(ostream& os) const
      case 6: ename = "pris"; break;
    }
    os<<index<<deli<<PatchIndex<<deli<<ename<<deli;
-   for(int i=0; i<nnodes; i++)
+   for(int i=0; i<nn; i++)
    {
 //      nodes_index[i] = nodes[i]->getIndex();
       os<<nodes[i]->getIndex()<<deli;
@@ -435,16 +437,31 @@ void Elem::WriteGSmsh(ostream& os) const
 }
 
 //  WW. 02.2012
-void Elem::WriteVTK_Type(ostream& os) const
+void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
 {
-   switch(ele_Type)
+   if(!isquad) 
    {
-       case 1:  os<< "3  "<<endl;    break;
-       case 2:  os<< "9  "<<endl;    break;
-       case 3:  os<< "12 "<<endl;    break;
-       case 4:  os<< "5  "<<endl;    break;
-       case 5:  os<< "10 "<<endl;    break;
-       case 6:  os<< "13 "<<endl;    break;
+      switch(ele_Type)
+      {
+         case 1:  os<< "3  "<<endl;    break;
+         case 2:  os<< "9  "<<endl;    break;
+         case 3:  os<< "12 "<<endl;    break;
+         case 4:  os<< "5  "<<endl;    break;
+         case 5:  os<< "10 "<<endl;    break;
+         case 6:  os<< "13 "<<endl;    break;
+     }
+   }
+   else
+   {
+      switch(ele_Type)
+      {
+         case 1:  os<< "21  "<<endl;    break;
+         case 2:  os<< "23  "<<endl;    break;
+         case 3:  os<< "25 "<<endl;    break;
+         case 4:  os<< "22  "<<endl;    break;
+         case 5:  os<< "24 "<<endl;    break;
+         default:   break;
+     }
    }
 }
 
@@ -458,8 +475,16 @@ void Elem::WriteIndex(ostream& os) const
 }
 void Elem::Write_index(ostream& os) const
 {
-    for(int i=0; i<nnodes; i++)
-      os<<nodes[i]->index+1<<deli;
+	if(nodes.Size()>0)
+	{
+      for(int i=0; i<nnodes; i++)
+         os<<nodes[i]->index+1<<deli;
+	}
+	else
+	{
+      for(int i=0; i<nnodes; i++)
+         os<<nodes_index[i]+1<<deli;
+	}
     os<<endl;
 }
 //    WW. 06.2005

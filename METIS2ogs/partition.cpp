@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
   clock_t elp_time;
   elp_time = -clock();
 
-  Mesh_Group::Mesh *a_mesh = new Mesh();
+  Mesh_Group::Mesh *a_mesh = new Mesh(quad);
 
   bool rfiMesh = true;
   string line_string;
@@ -265,7 +265,9 @@ int main(int argc, char* argv[])
 		else if(part_type == by_node)
 		{
            if(quad)
+		   {
 	          a_mesh->GenerateHighOrderNodes();
+		   }
            
 		   a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad, out_subdom); 
 		}
