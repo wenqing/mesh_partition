@@ -576,7 +576,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    //namef = ".mesh.epart."; //+str_buf;
    ifstream part_in;
    fstream part_out;
-   part_out.open(stro, ios::out );
+   part_out.open(stro, ios::out | ios::trunc );
    // Output for gmsh
  
    if(osdom)
@@ -610,18 +610,19 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    } 
 
    max_dom=0;
-   Elem  *elem;
+   Elem *ele = NULL;
+
    for(i=0; i<(long)elem_vector.size(); i++)
    {
       part_in>>dom>>ws;
-      elem = elem_vector[i];
-	  elem->setDomainIndex(dom);
+      ele = elem_vector[i];
+	  ele->setDomainIndex(dom);
 //      elem_vector[i]->AllocateLocalIndexVector(); 
       if(dom>max_dom) max_dom = dom;
 
 	  if(osdom)
 	  {  
-          elem->WriteGmsh(gmsh_out, dom+1);
+          ele->WriteGmsh(gmsh_out, dom+1);
 	  }
 
    }
@@ -650,11 +651,11 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       } 
    }
 
-   Elem *ele=0;
+ 
    bool done = false;
    long n_index=0;
    vector<int> nodes_dom;
-   vector<int> eles_dom;
+   vector<Elem*> eles_dom;
 
   
    //
@@ -697,7 +698,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 			   } 
 			}
             part_out<<ele->getIndex()<<endl;
-			eles_dom.push_back(ele->getIndex()); //TEST OUT
+			eles_dom.push_back(ele); //TEST OUT
 		 }
       }        
 	  part_out<<"$NODES_INNER "<<(long)nodes_dom.size()<<endl;
@@ -708,9 +709,10 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       if(osdom)
 	  {
          sprintf(str_buf, "%d",k);
+
          string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"subdomains.msh";
          fstream test_out;
-         test_out.open(name_f.c_str(), ios::out );
+         test_out.open(name_f.c_str(), ios::out|ios::trunc );
 
          Node *nod = 0;
          //GMSH test_out<<"$NOD"<<endl;
@@ -729,7 +731,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 	     //GMSG test_out<<(long)eles_dom.size()<<endl;
          for(j=0; j<(long)eles_dom.size(); j++)
 	     {
-             ele = elem_vector[eles_dom[j]]; 
+             ele = eles_dom[j]; 
 			
              //GMSH  ele->WriteGmsh(test_out, k+1);
  
@@ -738,7 +740,6 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
                 test_out<< ele->getDomNodeIndex(kk)<<deli;
              test_out<<endl;
          }
- 
          test_out.clear();
 	     test_out.close(); 
 	  }

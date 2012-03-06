@@ -90,7 +90,7 @@ class Elem:public Grain
 	    }
 	  void setDomNodeIndex(const int loc_index, const long dom_nindex) 
 	  {
-		  locnodes_index[loc_index]=dom_nindex;
+		  locnodes_index[loc_index] = dom_nindex;
 	  }
       void AllocateLocalIndexVector() {locnodes_index.resize(nodes_index.Size());}
       void setDomainIndex(const int dom) {sub_dom = dom;} 
