@@ -107,6 +107,7 @@ class Elem:public Grain
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
       void WriteGSmsh(std::ostream& os, bool quad = false) const;
+      void WriteSubDOM(std::ostream& os, bool quad = false) const;
       void WriteVTK_Type(std::ostream& os, bool isquad) const;
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;

@@ -436,6 +436,20 @@ void Elem::WriteGSmsh(ostream& os, bool quad) const
    os<<endl;
 }
 
+//  WW. 03.2012
+void Elem::WriteSubDOM(ostream& os, bool quad) const
+{ 
+   int nn = getNodesNumber(quad);
+
+   os<<index<<deli<<PatchIndex<<deli<<ele_Type<<deli;
+   for(int i=0; i<nn; i++)
+   {
+//      nodes_index[i] = nodes[i]->getIndex();
+      os<<nodes[i]->getIndex()<<deli;
+   }
+   os<<endl;
+}
+
 //  WW. 02.2012
 void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
 {

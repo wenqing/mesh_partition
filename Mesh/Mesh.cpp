@@ -767,7 +767,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 
    string f_iparts;
    string o_part_msh;
-   char str_buf[3];
+   char str_buf[128];
    size_t dom;
    int k,kk;
    long i,j;
@@ -1038,14 +1038,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 
 	   //os_subd<<"Elements"<<endl;
 	   for(j=0; j<in_subdom_elements.size(); j++)
-		   in_subdom_elements[j]->WriteGSmsh(os_subd, is_quad);
+		   in_subdom_elements[j]->WriteSubDOM(os_subd, is_quad);
 	  
 
 	   //os_subd<<"Ghost elements"<<endl;
 	   for(j=0; j<ne_g; j++)
 	   {
            a_elem = ghost_subdom_elements[j];
-		   a_elem->WriteGSmsh(os_subd, is_quad);
+		   a_elem->WriteSubDOM(os_subd, is_quad);
            os_subd<<a_elem->ghost_nodes.size()<<deli;
 		   for(kk=0; kk<a_elem->ghost_nodes.size(); kk++)
 		   {
