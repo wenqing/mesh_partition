@@ -1028,9 +1028,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 	   //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
        //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
        //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
-       os_subd<<"Nodes; Elements;  Ghost elements; Nodes of Linear elements; Nodes of quadratic elements"<<endl; 
+       
+       name_f = "Subdomain mesh "
+		   "(Nodes; Elements;  Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
+		        "in the whole mesh ( with Nodes of Linear elements; Nodes of quadratic elements) ";  
+       os_subd<<name_f<<endl; 
        os_subd<<size_sbd_nodes<<deli<<in_subdom_elements.size()
-		      <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h<<endl;
+		      <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
+			  <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic<<endl;
 
 	   //os_subd<<"Nodes"<<endl;
        for(j=0; j<size_sbd_nodes; j++)
@@ -1038,14 +1043,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 
 	   //os_subd<<"Elements"<<endl;
 	   for(j=0; j<in_subdom_elements.size(); j++)
-		   in_subdom_elements[j]->WriteSubDOM(os_subd, is_quad);
+		   in_subdom_elements[j]->WriteSubDOM(os_subd, node_id_shift, is_quad);
 	  
 
 	   //os_subd<<"Ghost elements"<<endl;
 	   for(j=0; j<ne_g; j++)
 	   {
            a_elem = ghost_subdom_elements[j];
-		   a_elem->WriteSubDOM(os_subd, is_quad);
+		   a_elem->WriteSubDOM(os_subd, node_id_shift, is_quad);
            os_subd<<a_elem->ghost_nodes.size()<<deli;
 		   for(kk=0; kk<a_elem->ghost_nodes.size(); kk++)
 		   {

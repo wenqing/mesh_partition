@@ -437,15 +437,15 @@ void Elem::WriteGSmsh(ostream& os, bool quad) const
 }
 
 //  WW. 03.2012
-void Elem::WriteSubDOM(ostream& os, bool quad) const
+void Elem::WriteSubDOM(ostream& os, const long node_id_shift, bool quad) const
 { 
    int nn = getNodesNumber(quad);
 
-   os<<nn<<deli<<PatchIndex<<deli<<ele_Type<<deli;
+   os<<PatchIndex<<deli<<ele_Type<<deli<<nn<<deli;
    for(int i=0; i<nn; i++)
    {
 //      nodes_index[i] = nodes[i]->getIndex();
-      os<<nodes[i]->getIndex()<<deli;
+      os<<nodes[i]->getIndex()-node_id_shift<<deli;
    }
    os<<endl;
 }
