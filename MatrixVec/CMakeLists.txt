@@ -18,4 +18,7 @@ set( Math_SOURCES
 # Create the library
 add_library(Math STATIC ${Math_SOURCES} )
 
+target_link_libraries(
+	Math
+)
 

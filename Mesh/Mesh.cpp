@@ -1,8 +1,11 @@
 #include "Mesh.h"
 
+#include <cstdlib>
 #include <iomanip>
+#include <cmath>
+#include <cfloat>
 #include <limits>
-#include <list>
+
 
 #include "Node.h"
 #include "Edge.h"
@@ -576,13 +579,13 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    //namef = ".mesh.epart."; //+str_buf;
    ifstream part_in;
    fstream part_out;
-   part_out.open(stro, ios::out | ios::trunc );
+   part_out.open(stro.c_str(), ios::out | ios::trunc );
    // Output for gmsh
  
    if(osdom)
    { 
       stro = fname + "_gmsh.msh";
-      gmsh_out.open(stro, ios::out );
+      gmsh_out.open(stro.c_str(), ios::out );
       //gmsh_out<<"$NOD"<<endl;
       gmsh_out<<"$MeshFormat\n2 0 8\n$EndMeshFormat\n$Nodes"<<endl;
       gmsh_out<<node_vector.size()<<endl;
@@ -602,7 +605,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    }
 
    //
-   part_in.open(str);
+   part_in.open(str.c_str());
    if(!part_in.is_open())
    {
        cerr<<("Error: cannot open .epart file . It may not exist !");
@@ -796,7 +799,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
    long nn = static_cast<long>(node_vector.size());
 
    vector<bool> sdom_marked(nn);
-   vector<size_t> dom_idx(NodesNumber_Linear);
+   vector<long> dom_idx(NodesNumber_Linear);
+
+   // Re-ordered nodes of the whole mesh for ouput
+   vector<Node*> reordered_nodes;
    for(i=0; i<NodesNumber_Linear; i++)
    {
       npart_in>>dom>>ws;
@@ -816,6 +822,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
           if(dom_idx[j] == idom && (!sdom_marked[j]))  
           //if(dom_idx[j] == idom)  
 		  { 
+
+             //Re-ordered nodes of the whole mesh for ouput
+			 reordered_nodes.push_back(node_vector[j]);
+
              sbd_nodes.push_back(node_vector[j]);
              sdom_marked[j] = true;  // avoid other subdomain use this node
 		  }
@@ -1027,7 +1037,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 
 	   //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
        //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
-       //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
+
        
        name_f = "Subdomain mesh "
 		   "(Nodes; Elements;  Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
@@ -1093,7 +1103,25 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 	   ghost_subdom_elements.clear();		  
    }
  
- 
+   f_iparts = fname + "_renum.msh";
+   ofstream os(f_iparts.c_str(), ios::out|ios::trunc);   
+
+   // Output renumbered mesh
+   os<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
+   os<<" $NODES\n"<<NodesNumber_Linear<<endl;
+   for(i=0; i<NodesNumber_Linear; i++)
+   {
+      a_node = reordered_nodes[i];
+      a_node->index = i;
+	  a_node->Write(os);
+   }
+   os<<" $ELEMENTS\n"<<elem_vector.size()<<endl;
+   for(size_t e=0; e<elem_vector.size(); e++)
+   {
+     elem_vector[e]->WriteGSmsh(os);
+   }
+   os<<"#STOP"<<endl;
+   os.close();
 }
 
 // 02.2012. WW
@@ -1264,7 +1292,7 @@ void Mesh::ReadGrid(istream& is)
    if(nn==0||ne==0)
    {
        cout<<"Error: number of elements or nodes is zero"<<endl;
-       abort();
+       exit(1);
    }
    
    // Read Nodes
@@ -1280,7 +1308,7 @@ void Mesh::ReadGrid(istream& is)
    if(counter!=nn)
    {
        cout<<"Error: number nodes do not match"<<endl;
-       abort();
+       exit(1);
    }
    NodesNumber_Linear = nn;
    NodesNumber_Quadratic = nn;
@@ -1298,7 +1326,7 @@ void Mesh::ReadGrid(istream& is)
    if(counter!=ne)
    {
        cout<<"Error: number elements do not match"<<endl;
-       abort();
+       exit(1);
    }
 
 //   position = is.tellg();

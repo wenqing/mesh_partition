@@ -1,8 +1,8 @@
-#include "edge.h"
+#include "Edge.h"
 
 #include <iomanip>
 
-#include "node.h"
+#include "Node.h"
 
 
 //------------------------------------------------------ 

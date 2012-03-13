@@ -22,4 +22,8 @@ set( MESH_SOURCES
 # Create the library
 add_library(Mesh STATIC ${MESH_SOURCES} )
 
+target_link_libraries(
+	Mesh
+	Math
+)
 
