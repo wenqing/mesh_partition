@@ -51,60 +51,60 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
    n = Owner->getElementFaceNodes(Face, faceIndex_loc);
    switch(Owner->ele_Type)
    {
-   case 1:  // 1-D bar element
-      break;
-   case 2: // 2-D quadrilateral element
-      nnodes = 2;
-      nnodesHQ = 3;
-      ele_dim = 1;
-      ele_Type = 1;
-      nfaces = 2;
-      nedges = 0;
-      break;
-   case 3: // 3-D hexahedral element
-      nnodes = 4;
-      nnodesHQ = 8;
-      ele_dim = 2;
-      ele_Type = 2;
-      nfaces = 4;
-      nedges = 4;
-      break;
-   case 4:  // 2-D triagular element
-      nnodes = 2;
-      nnodesHQ = 3;
-      ele_dim = 1;
-      ele_Type = 1;
-      nfaces = 2;
-      nedges = 0;
-      break;
-   case 5:  // 3-D tetrahedral element
-      nnodes = 3;
-      nnodesHQ = 6;
-      ele_dim = 2;
-      ele_Type = 4;
-      nfaces = 3;
-      nedges = 3;
-      break;
-   case 6:
-      if(Face<2)
-      {
-         nnodes = 3;
-         nnodesHQ = 6;
-         ele_dim = 2;
-         ele_Type = 4;
-         nfaces = 3;
-         nedges = 3;
-      }
-      else
-      {
+      case 1:  // 1-D bar element
+         break;
+      case 2: // 2-D quadrilateral element
+         nnodes = 2;
+         nnodesHQ = 3;
+         ele_dim = 1;
+         ele_Type = 1;
+         nfaces = 2;
+         nedges = 0;
+         break;
+      case 3: // 3-D hexahedral element
          nnodes = 4;
          nnodesHQ = 8;
          ele_dim = 2;
          ele_Type = 2;
          nfaces = 4;
          nedges = 4;
-      }
-      break; // 3-D prismatic element
+         break;
+      case 4:  // 2-D triagular element
+         nnodes = 2;
+         nnodesHQ = 3;
+         ele_dim = 1;
+         ele_Type = 1;
+         nfaces = 2;
+         nedges = 0;
+         break;
+      case 5:  // 3-D tetrahedral element
+         nnodes = 3;
+         nnodesHQ = 6;
+         ele_dim = 2;
+         ele_Type = 4;
+         nfaces = 3;
+         nedges = 3;
+         break;
+      case 6:
+         if(Face<2)
+         {
+            nnodes = 3;
+            nnodesHQ = 6;
+            ele_dim = 2;
+            ele_Type = 4;
+            nfaces = 3;
+            nedges = 3;
+         }
+         else
+         {
+            nnodes = 4;
+            nnodesHQ = 8;
+            ele_dim = 2;
+            ele_Type = 2;
+            nfaces = 4;
+            nedges = 4;
+         }
+         break; // 3-D prismatic element
    }
 
    PatchIndex =  Owner->PatchIndex;
@@ -153,27 +153,27 @@ string Elem::getName() const
 
    switch(ele_Type)
    {
-   case 1:
-      return "line";
-      break;
-   case 2:
-      return "quad";
-      break;
-   case 3:
-      return "hex";
-      break;
-   case 4:
-      return "tri";
-      break;
-   case 5:
-      return "tet";
-      break;
-   case 6:
-      return "pris";
-      break;
-   default:
-      return "none";
-      break;
+      case 1:
+         return "line";
+         break;
+      case 2:
+         return "quad";
+         break;
+      case 3:
+         return "hex";
+         break;
+      case 4:
+         return "tri";
+         break;
+      case 5:
+         return "tet";
+         break;
+      case 6:
+         return "pris";
+         break;
+      default:
+         return "none";
+         break;
    }
 }
 
@@ -204,173 +204,173 @@ void Elem::Read(istream& is, int fileType)
    // 1 Reading element type data
    switch(fileType)
    {
-      //....................................................................
-   case 0: // msh
-      is>>index>>PatchIndex;
-      is>>buffer;
-      if(buffer.find("-1")!=string::npos)
-         is>>name;
-      else
-         name = buffer;
-      if(name.find("line")!=string::npos)
-         ele_Type = 1;
-      else if(name.find("quad")!=string::npos)
-         ele_Type = 2;
-      else if(name.find("hex")!=string::npos)
-         ele_Type = 3;
-      else if(name.find("tri")!=string::npos)
+         //....................................................................
+      case 0: // msh
+         is>>index>>PatchIndex;
+         is>>buffer;
+         if(buffer.find("-1")!=string::npos)
+            is>>name;
+         else
+            name = buffer;
+         if(name.find("line")!=string::npos)
+            ele_Type = 1;
+         else if(name.find("quad")!=string::npos)
+            ele_Type = 2;
+         else if(name.find("hex")!=string::npos)
+            ele_Type = 3;
+         else if(name.find("tri")!=string::npos)
+            ele_Type = 4;
+         else if(name.find("tet")!=string::npos)
+            ele_Type = 5;
+         else if(name.find("pri")!=string::npos)
+            ele_Type = 6;
+         break;
+         //....................................................................
+      case 1: // rfi
+         is>>index>>PatchIndex>>name;
+         if(name.find("line")!=string::npos)
+            ele_Type = 1;
+         else if(name.find("quad")!=string::npos)
+            ele_Type = 2;
+         else if(name.find("hex")!=string::npos)
+            ele_Type = 3;
+         else if(name.find("tri")!=string::npos)
+            ele_Type = 4;
+         else if(name.find("tet")!=string::npos)
+            ele_Type = 5;
+         else if(name.find("pri")!=string::npos)
+            ele_Type = 6;
+         break;
+         //....................................................................
+      case 2: // gmsh
+         int gmsh_patch_index;
+         is>>index>>et>>gmsh_patch_index>>idummy>>nnodes;
+         PatchIndex = gmsh_patch_index-1; //OK
+         switch(et)
+         {
+            case 1:
+               ele_Type = 1;
+               break;
+            case 2:
+               ele_Type = 4;
+               break;
+            case 3:
+               ele_Type = 2;
+               break;
+            case 4:
+               ele_Type = 5;
+               break;
+            case 5:
+               ele_Type = 3;
+               break;
+            case 6:
+               ele_Type = 6;
+               break;
+         }
+         index--;
+         break;
+         //....................................................................
+      case 3: // GMS
          ele_Type = 4;
-      else if(name.find("tet")!=string::npos)
-         ele_Type = 5;
-      else if(name.find("pri")!=string::npos)
-         ele_Type = 6;
-      break;
-      //....................................................................
-   case 1: // rfi
-      is>>index>>PatchIndex>>name;
-      if(name.find("line")!=string::npos)
-         ele_Type = 1;
-      else if(name.find("quad")!=string::npos)
-         ele_Type = 2;
-      else if(name.find("hex")!=string::npos)
-         ele_Type = 3;
-      else if(name.find("tri")!=string::npos)
-         ele_Type = 4;
-      else if(name.find("tet")!=string::npos)
-         ele_Type = 5;
-      else if(name.find("pri")!=string::npos)
-         ele_Type = 6;
-      break;
-      //....................................................................
-   case 2: // gmsh
-      int gmsh_patch_index;
-      is>>index>>et>>gmsh_patch_index>>idummy>>nnodes;
-      PatchIndex = gmsh_patch_index-1; //OK
-      switch(et)
-      {
-      case 1:
-         ele_Type = 1;
          break;
-      case 2:
+         //....................................................................
+      case 4: // gmsh
          ele_Type = 4;
          break;
-      case 3:
-         ele_Type = 2;
-         break;
-      case 4:
-         ele_Type = 5;
-         break;
-      case 5:
-         ele_Type = 3;
-         break;
-      case 6:
-         ele_Type = 6;
-         break;
-      }
-      index--;
-      break;
-      //....................................................................
-   case 3: // GMS
-      ele_Type = 4;
-      break;
-      //....................................................................
-   case 4: // gmsh
-      ele_Type = 4;
-      break;
    }
    //----------------------------------------------------------------------
    // 2 Element configuration
    switch(ele_Type)
    {
-   case 1:
-      nnodes = 2;
-      nnodesHQ = 3;
-      ele_dim = 1;
-      ele_Type = 1;
-      nfaces = 2;
-      nedges = 0;
-      break;
-   case 2:
-      nnodes = 4;
-      nnodesHQ = 9;
-      ele_dim = 2;
-      ele_Type = 2;
-      nfaces = 4;
-      nedges = 4;
-      break;
-   case 3:
-      nnodes = 8;
-      nnodesHQ = 20;
-      ele_dim = 3;
-      nfaces = 6;
-      nedges = 12;
-      ele_Type = 3;
-      break;
-   case 4:
-      nnodes = 3;
-      nnodesHQ = 6;
-      ele_dim = 2;
-      ele_Type = 4;
-      nfaces = 3;
-      nedges = 3;
-      break;
-   case 5:
-      nnodes = 4;
-      nnodesHQ = 10;
-      ele_dim = 3;
-      ele_Type = 5;
-      nfaces = 4;
-      nedges = 6;
-      break;
-   case 6:
-      nnodes = 6;
-      nnodesHQ = 15;
-      ele_dim = 3;
-      ele_Type = 6;
-      nfaces = 5;
-      nedges = 9;
-      break;
+      case 1:
+         nnodes = 2;
+         nnodesHQ = 3;
+         ele_dim = 1;
+         ele_Type = 1;
+         nfaces = 2;
+         nedges = 0;
+         break;
+      case 2:
+         nnodes = 4;
+         nnodesHQ = 9;
+         ele_dim = 2;
+         ele_Type = 2;
+         nfaces = 4;
+         nedges = 4;
+         break;
+      case 3:
+         nnodes = 8;
+         nnodesHQ = 20;
+         ele_dim = 3;
+         nfaces = 6;
+         nedges = 12;
+         ele_Type = 3;
+         break;
+      case 4:
+         nnodes = 3;
+         nnodesHQ = 6;
+         ele_dim = 2;
+         ele_Type = 4;
+         nfaces = 3;
+         nedges = 3;
+         break;
+      case 5:
+         nnodes = 4;
+         nnodesHQ = 10;
+         ele_dim = 3;
+         ele_Type = 5;
+         nfaces = 4;
+         nedges = 6;
+         break;
+      case 6:
+         nnodes = 6;
+         nnodesHQ = 15;
+         ele_dim = 3;
+         ele_Type = 6;
+         nfaces = 5;
+         nedges = 9;
+         break;
    }
    nodes_index.resize(nnodes);
    //----------------------------------------------------------------------
    // 3 Reading element node data
    switch(fileType)
    {
-      //....................................................................
-   case 0: // msh
-      for(int i=0; i<nnodes; i++)
-         is>>nodes_index[i];
-      break;
-      //....................................................................
-   case 1: // rfi
-      for(int i=0; i<nnodes; i++)
-         is>>nodes_index[i];
-      break;
-      //....................................................................
-   case 2: // gmsh
-      for(int i=0; i<nnodes; i++)
-      {
-         is>>nodes_index[i];
-         nodes_index[i] -= 1;
-      }
-      break;
-      //....................................................................
-   case 3: // GMS
-      for(int i=0; i<nnodes; i++)
-      {
-         is>>nodes_index[i];
-         nodes_index[i] -= 1;
-      }
-      break;
-      //....................................................................
-   case 4: // SOL
-      for(int i=0; i<nnodes; i++)
-      {
-         is>>nodes_index[i];
-         nodes_index[i] -= 1;
-      }
-      is >> PatchIndex;
-      break;
+         //....................................................................
+      case 0: // msh
+         for(int i=0; i<nnodes; i++)
+            is>>nodes_index[i];
+         break;
+         //....................................................................
+      case 1: // rfi
+         for(int i=0; i<nnodes; i++)
+            is>>nodes_index[i];
+         break;
+         //....................................................................
+      case 2: // gmsh
+         for(int i=0; i<nnodes; i++)
+         {
+            is>>nodes_index[i];
+            nodes_index[i] -= 1;
+         }
+         break;
+         //....................................................................
+      case 3: // GMS
+         for(int i=0; i<nnodes; i++)
+         {
+            is>>nodes_index[i];
+            nodes_index[i] -= 1;
+         }
+         break;
+         //....................................................................
+      case 4: // SOL
+         for(int i=0; i<nnodes; i++)
+         {
+            is>>nodes_index[i];
+            nodes_index[i] -= 1;
+         }
+         is >> PatchIndex;
+         break;
    }
    is>>ws;
    //----------------------------------------------------------------------
@@ -401,48 +401,48 @@ void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
       nn = nnodesHQ;
       switch(ele_Type)
       {
-      case 1:
-         et = 8;
-         break;    //Line
-      case 2:
-         et = 10;
-         break;    //Quad
-      case 3:
-         et = 12;
-         break;    //Hex
-      case 4:
-         et = 9;
-         break;    //Tri
-      case 5:
-         et = 11;
-         break;    //Tet
-      case 6:
-         et = 18;
-         break;    //Pris
+         case 1:
+            et = 8;
+            break;    //Line
+         case 2:
+            et = 10;
+            break;    //Quad
+         case 3:
+            et = 12;
+            break;    //Hex
+         case 4:
+            et = 9;
+            break;    //Tri
+         case 5:
+            et = 11;
+            break;    //Tet
+         case 6:
+            et = 18;
+            break;    //Pris
       }
    }
    else
    {
       switch(ele_Type)
       {
-      case 1:
-         et = 1;
-         break;    //Line
-      case 2:
-         et = 3;
-         break;    //Quad
-      case 3:
-         et = 5;
-         break;    //Hex
-      case 4:
-         et = 2;
-         break;    //Tri
-      case 5:
-         et = 4;
-         break;    //Tet
-      case 6:
-         et = 6;
-         break;    //Pris
+         case 1:
+            et = 1;
+            break;    //Line
+         case 2:
+            et = 3;
+            break;    //Quad
+         case 3:
+            et = 5;
+            break;    //Hex
+         case 4:
+            et = 2;
+            break;    //Tri
+         case 5:
+            et = 4;
+            break;    //Tet
+         case 6:
+            et = 6;
+            break;    //Pris
       }
    }
    os<<index+1<<deli<<et<<deli<<ntags<<deli<<PatchIndex+1<<deli<<PatchIndex+1<<deli<<sdom_idx<<deli;
@@ -461,24 +461,24 @@ void Elem::WriteGSmsh(ostream& os, bool quad) const
 
    switch(ele_Type)
    {
-   case 1:
-      ename = "line";
-      break;
-   case 2:
-      ename = "quad";
-      break;
-   case 3:
-      ename = "hex";
-      break;
-   case 4:
-      ename = "tri";
-      break;
-   case 5:
-      ename = "tet";
-      break;
-   case 6:
-      ename = "pris";
-      break;
+      case 1:
+         ename = "line";
+         break;
+      case 2:
+         ename = "quad";
+         break;
+      case 3:
+         ename = "hex";
+         break;
+      case 4:
+         ename = "tri";
+         break;
+      case 5:
+         ename = "tet";
+         break;
+      case 6:
+         ename = "pris";
+         break;
    }
    os<<index<<deli<<PatchIndex<<deli<<ename<<deli;
    for(int i=0; i<nn; i++)
@@ -510,47 +510,47 @@ void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
    {
       switch(ele_Type)
       {
-      case 1:
-         os<< "3  "<<endl;
-         break;
-      case 2:
-         os<< "9  "<<endl;
-         break;
-      case 3:
-         os<< "12 "<<endl;
-         break;
-      case 4:
-         os<< "5  "<<endl;
-         break;
-      case 5:
-         os<< "10 "<<endl;
-         break;
-      case 6:
-         os<< "13 "<<endl;
-         break;
+         case 1:
+            os<< "3  "<<endl;
+            break;
+         case 2:
+            os<< "9  "<<endl;
+            break;
+         case 3:
+            os<< "12 "<<endl;
+            break;
+         case 4:
+            os<< "5  "<<endl;
+            break;
+         case 5:
+            os<< "10 "<<endl;
+            break;
+         case 6:
+            os<< "13 "<<endl;
+            break;
       }
    }
    else
    {
       switch(ele_Type)
       {
-      case 1:
-         os<< "21  "<<endl;
-         break;
-      case 2:
-         os<< "23  "<<endl;
-         break;
-      case 3:
-         os<< "25 "<<endl;
-         break;
-      case 4:
-         os<< "22  "<<endl;
-         break;
-      case 5:
-         os<< "24 "<<endl;
-         break;
-      default:
-         break;
+         case 1:
+            os<< "21  "<<endl;
+            break;
+         case 2:
+            os<< "23  "<<endl;
+            break;
+         case 3:
+            os<< "25 "<<endl;
+            break;
+         case 4:
+            os<< "22  "<<endl;
+            break;
+         case 5:
+            os<< "24 "<<endl;
+            break;
+         default:
+            break;
       }
    }
 }
@@ -637,53 +637,53 @@ void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
 {
    switch(ele_Type)
    {
-   case 1:
-      break; // 1-D bar element
-   case 2: // 2-D quadrilateral element
-      EdgeNodes[0] = Edge;
-      EdgeNodes[1] = (Edge+1)%4;
-      break;
-   case 3: // 3-D hexahedral element
-      if(Edge<8)
-      {
+      case 1:
+         break; // 1-D bar element
+      case 2: // 2-D quadrilateral element
          EdgeNodes[0] = Edge;
-         EdgeNodes[1] = (Edge+1)%4+4*(int)(Edge/4);
-      }
-      else
-      {
-         EdgeNodes[0] = Edge%4;
-         EdgeNodes[1] = Edge%4+4;
-      }
-      break;
-   case 4:  // 2-D triagular element
-      EdgeNodes[0] = Edge;
-      EdgeNodes[1] = (Edge+1)%3;
-      break;
-   case 5:  // 3-D tetrahedra
-      if(Edge<3)
-      {
+         EdgeNodes[1] = (Edge+1)%4;
+         break;
+      case 3: // 3-D hexahedral element
+         if(Edge<8)
+         {
+            EdgeNodes[0] = Edge;
+            EdgeNodes[1] = (Edge+1)%4+4*(int)(Edge/4);
+         }
+         else
+         {
+            EdgeNodes[0] = Edge%4;
+            EdgeNodes[1] = Edge%4+4;
+         }
+         break;
+      case 4:  // 2-D triagular element
          EdgeNodes[0] = Edge;
          EdgeNodes[1] = (Edge+1)%3;
-      }
-      else
-      {
-         EdgeNodes[0] = 3;
-         EdgeNodes[1] = (Edge+1)%3;
-      }
+         break;
+      case 5:  // 3-D tetrahedra
+         if(Edge<3)
+         {
+            EdgeNodes[0] = Edge;
+            EdgeNodes[1] = (Edge+1)%3;
+         }
+         else
+         {
+            EdgeNodes[0] = 3;
+            EdgeNodes[1] = (Edge+1)%3;
+         }
 
-      break;
-   case 6: // 3-D prismatic element
-      if(Edge<6)
-      {
-         EdgeNodes[0] = Edge;
-         EdgeNodes[1] = (Edge+1)%3+3*(int)(Edge/3);
-      }
-      else
-      {
-         EdgeNodes[0] = Edge%3;
-         EdgeNodes[1] = Edge%3+3;
-      }
-      break;
+         break;
+      case 6: // 3-D prismatic element
+         if(Edge<6)
+         {
+            EdgeNodes[0] = Edge;
+            EdgeNodes[1] = (Edge+1)%3+3*(int)(Edge/3);
+         }
+         else
+         {
+            EdgeNodes[0] = Edge%3;
+            EdgeNodes[1] = Edge%3+3;
+         }
+         break;
    }
 }
 
@@ -774,77 +774,77 @@ int Elem::getElementFacesHex(const int Face, int *FaceNode)
    if(quadratic) nn = 8;
    switch(Face)
    {
-   case 0:
-      for(k=0; k<4; k++)
-         FaceNode[k] = k;
-      if(quadratic)
-      {
+      case 0:
          for(k=0; k<4; k++)
-            FaceNode[k+4] = k+8;
-      }
-      break;
-   case 1:
-      for(k=0; k<4; k++)
-         FaceNode[k] = k+4;
-      if(quadratic)
-      {
+            FaceNode[k] = k;
+         if(quadratic)
+         {
+            for(k=0; k<4; k++)
+               FaceNode[k+4] = k+8;
+         }
+         break;
+      case 1:
          for(k=0; k<4; k++)
-            FaceNode[k+4] = k+12;
-      }
-      break;
-   case 2:
-      FaceNode[0] = 0;
-      FaceNode[1] = 4;
-      FaceNode[2] = 5;
-      FaceNode[3] = 1;
-      if(quadratic)
-      {
-         FaceNode[4] = 16;
-         FaceNode[5] = 12;
-         FaceNode[6] = 17;
-         FaceNode[7] = 8;
-      }
-      break;
-   case 3:
-      FaceNode[0] = 1;
-      FaceNode[1] = 5;
-      FaceNode[2] = 6;
-      FaceNode[3] = 2;
-      if(quadratic)
-      {
-         FaceNode[4] = 17;
-         FaceNode[5] = 13;
-         FaceNode[6] = 18;
-         FaceNode[7] = 9;
-      }
+            FaceNode[k] = k+4;
+         if(quadratic)
+         {
+            for(k=0; k<4; k++)
+               FaceNode[k+4] = k+12;
+         }
+         break;
+      case 2:
+         FaceNode[0] = 0;
+         FaceNode[1] = 4;
+         FaceNode[2] = 5;
+         FaceNode[3] = 1;
+         if(quadratic)
+         {
+            FaceNode[4] = 16;
+            FaceNode[5] = 12;
+            FaceNode[6] = 17;
+            FaceNode[7] = 8;
+         }
+         break;
+      case 3:
+         FaceNode[0] = 1;
+         FaceNode[1] = 5;
+         FaceNode[2] = 6;
+         FaceNode[3] = 2;
+         if(quadratic)
+         {
+            FaceNode[4] = 17;
+            FaceNode[5] = 13;
+            FaceNode[6] = 18;
+            FaceNode[7] = 9;
+         }
 
-      break;
-   case 4:
-      FaceNode[0] = 2;
-      FaceNode[1] = 6;
-      FaceNode[2] = 7;
-      FaceNode[3] = 3;
-      if(quadratic)
-      {
-         FaceNode[4] = 18;
-         FaceNode[5] = 14;
-         FaceNode[6] = 19;
-         FaceNode[7] = 10;
-      }
-      break;
-   case 5:
-      FaceNode[0] = 0;
-      FaceNode[1] = 3;
-      FaceNode[2] = 7;
-      FaceNode[3] = 4;
-      if(quadratic)
-      {
-         FaceNode[4] = 11;
-         FaceNode[5] = 19;
-         FaceNode[6] = 15;
-         FaceNode[7] = 16;
-      }
-      break;
+         break;
+      case 4:
+         FaceNode[0] = 2;
+         FaceNode[1] = 6;
+         FaceNode[2] = 7;
+         FaceNode[3] = 3;
+         if(quadratic)
+         {
+            FaceNode[4] = 18;
+            FaceNode[5] = 14;
+            FaceNode[6] = 19;
+            FaceNode[7] = 10;
+         }
+         break;
+      case 5:
+         FaceNode[0] = 0;
+         FaceNode[1] = 3;
+         FaceNode[2] = 7;
+         FaceNode[3] = 4;
+         if(quadratic)
+         {
+            FaceNode[4] = 11;
+            FaceNode[5] = 19;
+            FaceNode[6] = 15;
+            FaceNode[7] = 16;
+         }
+         break;
    }
    return nn;
 }
@@ -867,50 +867,50 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
    if(quadratic) nn =6;
    switch(Face)
    {
-   case 0:
-      FaceNode[0] = 1;
-      FaceNode[1] = 2;
-      FaceNode[2] = 3;
-      if(quadratic)
-      {
-         FaceNode[3] = 5 ;
-         FaceNode[4] = 8;
-         FaceNode[5] = 7;
-      }
-      break;
-   case 1:
-      FaceNode[0] = 3;
-      FaceNode[1] = 2;
-      FaceNode[2] = 0;
-      if(quadratic)
-      {
-         FaceNode[3] = 8 ;
-         FaceNode[4] = 6;
-         FaceNode[5] = 9;
-      }
-      break;
-   case 2:
-      FaceNode[0] = 1;
-      FaceNode[1] = 3;
-      FaceNode[2] = 0;
-      if(quadratic)
-      {
-         FaceNode[3] = 7 ;
-         FaceNode[4] = 9;
-         FaceNode[5] = 4;
-      }
-      break;
-   case 3:
-      FaceNode[0] = 0;
-      FaceNode[1] = 2;
-      FaceNode[2] = 1;
-      if(quadratic)
-      {
-         FaceNode[3] = 6 ;
-         FaceNode[4] = 5;
-         FaceNode[5] = 4;
-      }
-      break;
+      case 0:
+         FaceNode[0] = 1;
+         FaceNode[1] = 2;
+         FaceNode[2] = 3;
+         if(quadratic)
+         {
+            FaceNode[3] = 5 ;
+            FaceNode[4] = 8;
+            FaceNode[5] = 7;
+         }
+         break;
+      case 1:
+         FaceNode[0] = 3;
+         FaceNode[1] = 2;
+         FaceNode[2] = 0;
+         if(quadratic)
+         {
+            FaceNode[3] = 8 ;
+            FaceNode[4] = 6;
+            FaceNode[5] = 9;
+         }
+         break;
+      case 2:
+         FaceNode[0] = 1;
+         FaceNode[1] = 3;
+         FaceNode[2] = 0;
+         if(quadratic)
+         {
+            FaceNode[3] = 7 ;
+            FaceNode[4] = 9;
+            FaceNode[5] = 4;
+         }
+         break;
+      case 3:
+         FaceNode[0] = 0;
+         FaceNode[1] = 2;
+         FaceNode[2] = 1;
+         if(quadratic)
+         {
+            FaceNode[3] = 6 ;
+            FaceNode[4] = 5;
+            FaceNode[5] = 4;
+         }
+         break;
 
    }
    return nn;
@@ -933,73 +933,73 @@ int Elem::getElementFacesPri(const int Face, int *FaceNode)
    int nn=3, k = 0;
    switch(Face)
    {
-   case 0:
-      nn = 3;
-      for(k=0; k<3; k++)
-         FaceNode[k] = k;
-      if(quadratic)
-      {
+      case 0:
+         nn = 3;
          for(k=0; k<3; k++)
-            FaceNode[k+3] = k+6;
-         nn = 6;
-      }
-      break;
-   case 1:
-      for(k=0; k<3; k++)
-         FaceNode[k] = k+3;
-      nn = 3;
-      if(quadratic)
-      {
+            FaceNode[k] = k;
+         if(quadratic)
+         {
+            for(k=0; k<3; k++)
+               FaceNode[k+3] = k+6;
+            nn = 6;
+         }
+         break;
+      case 1:
          for(k=0; k<3; k++)
-            FaceNode[k+3] = k+9;
-         nn = 6;
-      }
-      break;
-   case 2:
-      FaceNode[0] = 1;
-      FaceNode[1] = 2;
-      FaceNode[2] = 5;
-      FaceNode[3] = 4;
-      nn = 4;
-      if(quadratic)
-      {
-         FaceNode[4] = 7 ;
-         FaceNode[5] = 14;
-         FaceNode[6] = 10;
-         FaceNode[7] = 13;
-         nn = 8;
-      }
-      break;
-   case 3:
-      FaceNode[0] = 5;
-      FaceNode[1] = 2;
-      FaceNode[2] = 0;
-      FaceNode[3] = 3;
-      nn = 4;
-      if(quadratic)
-      {
-         FaceNode[4] = 14 ;
-         FaceNode[5] =  8;
-         FaceNode[6] = 12;
-         FaceNode[7] = 10;
-         nn = 8;
-      }
-      break;
-   case 4:
-      FaceNode[0] = 0;
-      FaceNode[1] = 1;
-      FaceNode[2] = 4;
-      FaceNode[3] = 3;
-      nn = 4;
-      if(quadratic)
-      {
-         FaceNode[4] = 6 ;
-         FaceNode[5] = 13;
-         FaceNode[6] = 9;
-         FaceNode[7] = 12;
-         nn = 8;
-      }
-      break;
+            FaceNode[k] = k+3;
+         nn = 3;
+         if(quadratic)
+         {
+            for(k=0; k<3; k++)
+               FaceNode[k+3] = k+9;
+            nn = 6;
+         }
+         break;
+      case 2:
+         FaceNode[0] = 1;
+         FaceNode[1] = 2;
+         FaceNode[2] = 5;
+         FaceNode[3] = 4;
+         nn = 4;
+         if(quadratic)
+         {
+            FaceNode[4] = 7 ;
+            FaceNode[5] = 14;
+            FaceNode[6] = 10;
+            FaceNode[7] = 13;
+            nn = 8;
+         }
+         break;
+      case 3:
+         FaceNode[0] = 5;
+         FaceNode[1] = 2;
+         FaceNode[2] = 0;
+         FaceNode[3] = 3;
+         nn = 4;
+         if(quadratic)
+         {
+            FaceNode[4] = 14 ;
+            FaceNode[5] =  8;
+            FaceNode[6] = 12;
+            FaceNode[7] = 10;
+            nn = 8;
+         }
+         break;
+      case 4:
+         FaceNode[0] = 0;
+         FaceNode[1] = 1;
+         FaceNode[2] = 4;
+         FaceNode[3] = 3;
+         nn = 4;
+         if(quadratic)
+         {
+            FaceNode[4] = 6 ;
+            FaceNode[5] = 13;
+            FaceNode[6] = 9;
+            FaceNode[7] = 12;
+            nn = 8;
+         }
+         break;
 
    }
    return nn;
@@ -1022,24 +1022,24 @@ int Elem::getElementFaceNodes(const int Face, int *FacesNode)
 {
    switch(ele_Type)
    {
-   case 1:  // 1-D bar element
-      return getElementFaces1D(FacesNode);
-      break;
-   case 2: // 2-D quadrilateral element
-      return getElementFacesQuad(Face, FacesNode);
-      break;
-   case 3: // 3-D hexahedral element
-      return getElementFacesHex(Face, FacesNode);
-      break;
-   case 4:  // 2-D triagular element
-      return getElementFacesTri(Face, FacesNode);
-      break;
-   case 5:  // 3-D tetrahedral element
-      return getElementFacesTet(Face, FacesNode);
-      break;
-   case 6:
-      return getElementFacesPri(Face, FacesNode);
-      break; // 3-D prismatic element
+      case 1:  // 1-D bar element
+         return getElementFaces1D(FacesNode);
+         break;
+      case 2: // 2-D quadrilateral element
+         return getElementFacesQuad(Face, FacesNode);
+         break;
+      case 3: // 3-D hexahedral element
+         return getElementFacesHex(Face, FacesNode);
+         break;
+      case 4:  // 2-D triagular element
+         return getElementFacesTri(Face, FacesNode);
+         break;
+      case 5:  // 3-D tetrahedral element
+         return getElementFacesTet(Face, FacesNode);
+         break;
+      case 6:
+         return getElementFacesPri(Face, FacesNode);
+         break; // 3-D prismatic element
    }
    return 0;
 }

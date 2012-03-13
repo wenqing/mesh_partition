@@ -242,38 +242,38 @@ int main(int argc, char* argv[])
 
    switch(this_task)
    {
-   case ogs2metis:
-      ofile.open(fname+".mesh", ios::out );
-      a_mesh->Write2METIS(ofile);
+      case ogs2metis:
+         ofile.open(fname+".mesh", ios::out );
+         a_mesh->Write2METIS(ofile);
 
-      break;
-   case metis2ogs:
-      cout<<"\n***Compute mesh topology"<<endl;
-      a_mesh->ConstructGrid();
+         break;
+      case metis2ogs:
+         cout<<"\n***Compute mesh topology"<<endl;
+         a_mesh->ConstructGrid();
 
-      s_buff = fpath+"partdmesh "  + fname + ".mesh " + str_nparts;
+         s_buff = fpath+"partdmesh "  + fname + ".mesh " + str_nparts;
 
-      if(!system(s_buff.c_str()))
-      {
-         cout<<"METIS executable file may not be found "<<endl;
-         exit(1);
-      }
-
-      cout<<"\n***Prepare subdomain mesh"<<endl;
-      if(part_type == by_element)
-         a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, out_subdom);
-      else if(part_type == by_node)
-      {
-         if(quad)
+         if(!system(s_buff.c_str()))
          {
-            a_mesh->GenerateHighOrderNodes();
+            cout<<"METIS executable file may not be found "<<endl;
+            exit(1);
          }
 
-         a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad, out_subdom);
-      }
-      break;
-   default:
-      break;
+         cout<<"\n***Prepare subdomain mesh"<<endl;
+         if(part_type == by_element)
+            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, out_subdom);
+         else if(part_type == by_node)
+         {
+            if(quad)
+            {
+               a_mesh->GenerateHighOrderNodes();
+            }
+
+            a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad, out_subdom);
+         }
+         break;
+      default:
+         break;
    }
 
    delete a_mesh;

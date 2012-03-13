@@ -19,28 +19,28 @@ namespace Math_Group
 // Symmetrical matrix. 12-01-2005. WW
 class SymMatrix:public Matrix
 {
-public:
-   SymMatrix(const int dim);
-   SymMatrix();
-   explicit SymMatrix(const SymMatrix& m);
+   public:
+      SymMatrix(const int dim);
+      SymMatrix();
+      explicit SymMatrix(const SymMatrix& m);
 
-   void resize(const int dim);
+      void resize(const int dim);
 
-   ~SymMatrix() {}
+      ~SymMatrix() {}
 
 //----------------------------------------------
 #ifdef OverLoadNEW_DELETE
-   // Allocate memory
-   void* operator new(size_t sz);
+      // Allocate memory
+      void* operator new(size_t sz);
 #endif
 //----------------------------------------------
 
-   // Operators
+      // Operators
 
-   void LimitSize(const int dim);
+      void LimitSize(const int dim);
 
-   // Access to members
-   double& operator() (const int i, const int j) const;
+      // Access to members
+      double& operator() (const int i, const int j) const;
 };
 
 }

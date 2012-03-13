@@ -321,24 +321,24 @@ void Mesh::ConstructGrid()
       thisElem0 = elem_vector[e];
       switch(thisElem0->getElementType())
       {
-      case 1:
-         msh_no_line++;
-         break;
-      case 2:
-         msh_no_quad++;
-         break;
-      case 3:
-         msh_no_hexs++;
-         break;
-      case 4:
-         msh_no_tris++;
-         break;
-      case 5:
-         msh_no_tets++;
-         break;
-      case 6:
-         msh_no_pris++;
-         break;
+         case 1:
+            msh_no_line++;
+            break;
+         case 2:
+            msh_no_quad++;
+            break;
+         case 3:
+            msh_no_hexs++;
+            break;
+         case 4:
+            msh_no_tris++;
+            break;
+         case 5:
+            msh_no_tets++;
+            break;
+         case 6:
+            msh_no_pris++;
+            break;
       }
       // Compute volume meanwhile
       //thisElem0->ComputeVolume();
@@ -1269,24 +1269,24 @@ void Mesh::Write2METIS(ostream& os)
    int e_type =0;
    switch(elem_vector[0]->getElementType())
    {
-   case 1:
-      cout<<"Not for 1D element"<<endl;
-      exit(1);
-   case 2:
-      e_type =4;
-      break;
-   case 3:
-      e_type =3;
-      break;
-   case 4:
-      e_type =1;
-      break;
-   case 5:
-      e_type =2;
-      break;
-   case 6:
-      cout<<"Not for prismal element"<<endl;
-      abort();
+      case 1:
+         cout<<"Not for 1D element"<<endl;
+         exit(1);
+      case 2:
+         e_type =4;
+         break;
+      case 3:
+         e_type =3;
+         break;
+      case 4:
+         e_type =1;
+         break;
+      case 5:
+         e_type =2;
+         break;
+      case 6:
+         cout<<"Not for prismal element"<<endl;
+         abort();
    }
    os<<e_type<<endl;
    for(long i=0; i<(long)elem_vector.size(); i++)
