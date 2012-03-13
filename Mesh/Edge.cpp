@@ -5,17 +5,17 @@
 #include "Node.h"
 
 
-//------------------------------------------------------ 
+//------------------------------------------------------
 //   Topology definition of geometrical element.
 //    WW. 10.01.2005
-//------------------------------------------------------ 
+//------------------------------------------------------
 namespace Mesh_Group
 {
-  
- using namespace std;
- 
+
+using namespace std;
+
 //    WW. 06.2005
-//----------------------------------------------------- 
+//-----------------------------------------------------
 //2. Edge
 Edge::Edge(const int Index, bool quadr)
    :Grain(Index)
@@ -25,7 +25,7 @@ Edge::Edge(const int Index, bool quadr)
    // Assume that each edge has three nodes
    nodes_of_edges.resize(3);
    for(int i=0; i<3; i++)
-     nodes_of_edges[i] = NULL;	 
+      nodes_of_edges[i] = NULL;
 }
 Edge::~Edge()
 {
@@ -35,35 +35,35 @@ Edge::~Edge()
 //    WW. 06.2005
 void Edge::operator = (Edge& ed)
 {
-   boundayC = ed.boundayC; 
+   boundayC = ed.boundayC;
    index = ed.index;
    mark = ed.mark;
    for(int i=0; i<nodes_of_edges.Size(); i++)
-      nodes_of_edges[i] = ed.nodes_of_edges[i]; 
+      nodes_of_edges[i] = ed.nodes_of_edges[i];
 }
 //    WW. 06.2005
 bool Edge::operator == (Edge& ed)
 {
    int identical;
- 
+
    // Compare two ends
    identical=0;
    for(int i=0; i<2; i++)
    {
       if(nodes_of_edges[i] == ed.nodes_of_edges[i])
-        identical++;
+         identical++;
    }
    if(identical==2)
-	   return true;
+      return true;
 
    identical=0;
    for(int i=0; i<2; i++)
    {
       if(nodes_of_edges[1-i] == ed.nodes_of_edges[i])
-        identical++;
+         identical++;
    }
    if(identical==2)
-	   return true;
+      return true;
 
    return false;
 }
@@ -72,13 +72,13 @@ bool Edge::operator == (Edge& ed)
 // Output
 void Edge::Write(ostream& osm) const
 {
-    osm<<"Edge: "<< index<<endl;
-   	for(int i=0; i<nodes_of_edges.Size(); i++)
-   	{
-       osm<<"Node: "<< i<<endl;
-       nodes_of_edges[i]->Write(osm);        
-    }
-   	osm<<endl;
+   osm<<"Edge: "<< index<<endl;
+   for(int i=0; i<nodes_of_edges.Size(); i++)
+   {
+      osm<<"Node: "<< i<<endl;
+      nodes_of_edges[i]->Write(osm);
+   }
+   osm<<endl;
 }
 
 }// Namespace
