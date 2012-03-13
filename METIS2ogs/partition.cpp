@@ -3,6 +3,7 @@
 #include <cmath>
 
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -212,7 +213,8 @@ int main(int argc, char* argv[])
    }
 
 
-   infile.open(fname+".msh");
+   s_buff = fname+".msh";
+   infile.open(s_buff.c_str());
    if(!infile.is_open())
    {
       cerr<<("Error: cannot open msh file . It may not exist !");
@@ -243,7 +245,8 @@ int main(int argc, char* argv[])
    switch(this_task)
    {
       case ogs2metis:
-         ofile.open(fname+".mesh", ios::out );
+         s_buff = fname+".mesh";
+         ofile.open(s_buff.c_str(), ios::out | ios::trunc );
          a_mesh->Write2METIS(ofile);
 
          break;

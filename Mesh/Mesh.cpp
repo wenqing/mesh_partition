@@ -787,7 +787,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
    string f_iparts;
    string o_part_msh;
    char str_buf[128];
-   size_t dom;
+   long dom;
    int k,kk;
    long i,j;
 
