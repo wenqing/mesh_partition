@@ -1266,6 +1266,8 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
 void Mesh::Write2METIS(ostream& os)
 {
    os<<(long)elem_vector.size()<<" ";
+
+#ifdef METIS4_0
    int e_type =0;
    switch(elem_vector[0]->getElementType())
    {
@@ -1288,7 +1290,9 @@ void Mesh::Write2METIS(ostream& os)
          cout<<"Not for prismal element"<<endl;
          abort();
    }
-   os<<e_type<<endl;
+   os<<e_type;
+#endif
+   os<<endl;
    for(long i=0; i<(long)elem_vector.size(); i++)
       elem_vector[i]->Write_index(os);
 }

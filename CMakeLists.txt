@@ -1,6 +1,6 @@
 ##-------------------------------------------------------
 ##          
-##                  METIS to OGS project
+##                  Partition Tool Project
 ##
 ##                By Wenqing Wang
 ##
@@ -28,10 +28,13 @@ IF (UNIX)
 	ENDIF()
 ENDIF (UNIX)
 
-SET(PROJECT_NAME metis2ogs)
+SET(PROJECT_NAME partmesh)
 # Project name
 PROJECT( ${PROJECT_NAME} )
 INCLUDE( Cmake/base.cmake )
+
+# Option
+OPTION(USE_METIS_SOURCE "Use METIS source code" OFF)
 
 # Set build directories
 # Binaries are created in /bin and libraries in /lib
@@ -47,6 +50,7 @@ IF (MSVC)
 	ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_WARNINGS)
 ENDIF (MSVC)
 
+
 ### For GNU C/CXX.
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi -Wall -Wextra")
@@ -55,6 +59,36 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 		-fno-nonansi-builtins
 	)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
+
+IF(USE_METIS_SOURCE) 
+	add_definitions(-DUSE_METIS_SOURCE -DUSE_GKREGEX)
+
+	SET(METIS_PATH "${CMAKE_SOURCE_DIR}/metis-5.0.2")
+	
+	set(GKLIB_PATH "${METIS_PATH}/GKlib" CACHE PATH "path to GKlib")
+	set(SHARED FALSE CACHE BOOL "build a shared library")
+
+	if(MSVC)
+		set(METIS_INSTALL FALSE)
+	else()
+		set(METIS_INSTALL TRUE)
+	endif()
+
+	# Configure libmetis library.
+	if(SHARED)
+		set(METIS_LIBRARY_TYPE SHARED)
+	else()
+		set(METIS_LIBRARY_TYPE STATIC)
+	endif(SHARED)
+
+	include(${GKLIB_PATH}/GKlibSystem.cmake)
+	# Add include directories.
+	include_directories(${GKLIB_PATH})
+	include_directories(${METIS_PATH}/include)
+	# Recursively look for CMakeLists.txt in subdirs.
+	add_subdirectory("${METIS_PATH}/include")
+	add_subdirectory("${METIS_PATH}/libmetis")
+ENDIF(USE_METIS_SOURCE)
 
 
 ##Sow all compilation messages

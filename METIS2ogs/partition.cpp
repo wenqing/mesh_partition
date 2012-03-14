@@ -12,6 +12,12 @@
 #include <time.h>
 #include <vector>
 
+#ifdef USE_METIS_SOURCE
+extern "C" {
+//#include "../metis-5.0.2/programs/metis_main.h"
+#include "metis_main.h"
+}
+#endif
 
 #include "Mesh.h"
 
@@ -254,14 +260,26 @@ int main(int argc, char* argv[])
          cout<<"\n***Compute mesh topology"<<endl;
          a_mesh->ConstructGrid();
 
-         s_buff = fpath+"partdmesh "  + fname + ".mesh " + str_nparts;
+#ifdef USE_METIS_SOURCE
+         int argc_m;
+		 argc_m = 3;
+         char *argv_m[3];
+         argv_m[0] = "-"; 
+         s_buff = fname + ".mesh ";
+
+		 argv_m[1] = &s_buff[0];
+		 argv_m[2] = &str_nparts[0];
+
+         metis_main(argc_m, argv_m);
+#else
+         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
 
          if(!system(s_buff.c_str()))
          {
             cout<<"METIS executable file may not be found "<<endl;
             exit(1);
          }
-
+#endif
          cout<<"\n***Prepare subdomain mesh"<<endl;
          if(part_type == by_element)
             a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, out_subdom);
