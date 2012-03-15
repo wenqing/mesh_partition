@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
          argc_m = 3;
          char *argv_m[3];
          argv_m[0] = "-";
-         s_buff = fname + ".mesh ";
+         s_buff = fname + ".mesh";
 
          argv_m[1] = &s_buff[0];
          argv_m[2] = &str_nparts[0];
