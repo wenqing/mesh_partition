@@ -61,6 +61,10 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 
 IF(USE_METIS_SOURCE) 
+	MESSAGE( STATUS "The METIS package is copyrighted by the Regents of the University of
+Minnesota." )
+	MESSAGE( STATUS "Please read the license of the METIS package carefully before you use the METIS." )
+
 	add_definitions(-DUSE_METIS_SOURCE -DUSE_GKREGEX)
 
 	SET(METIS_PATH "${CMAKE_SOURCE_DIR}/metis-5.0.2")

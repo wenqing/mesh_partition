@@ -28,15 +28,15 @@ using namespace Mesh_Group;
 
 void Version()
 {
-   cout<<"\nOpenGeoSys interface to METIS"<<endl;
+   cout<<"\nOpenGeoSys interface to partitioning tools"<<endl;
    cout<<ver<<endl;
    cout<<"Written by wenqing.wang@ufz.de."<<endl<<endl;
 }
 void OptionList()
 {
    string s_intro = "The task of this tool is twofold:"
-                    " to convert ogs mesh file into METIS input file for domain decomposition,"
-                    " and to use the METIS domain decomposition data to partition"
+                    " to convert ogs mesh file into the partitioning tool input file for domain decomposition,"
+                    " and to use the paritioning tool's results to partition"
                     "the ogs finite element meshes for parallel computing.\n"
                     "Note: input mesh file must only contain linear elements";
    cout << s_intro<<endl<<endl;
@@ -91,15 +91,15 @@ int main(int argc, char* argv[])
       for(int i=0; i<argc; i++)
       {
          s_buff = argv[i];
-         if(s_buff.find("-e")!=string::npos)
+         if(s_buff.compare("-e") == 0)
             part_type = by_element;
-         else if(s_buff.find("-n")!=string::npos)
+         else if(s_buff.compare("-n") == 0)
             part_type = by_node;
 
-         if(s_buff.find("-q")!=string::npos)
+         if(s_buff.compare("-q") == 0)
             quad = true;
 
-         if(s_buff.find("-odom")!=string::npos)
+         if(s_buff.compare("-odom") == 0)
          {
             out_subdom = true;
          }
@@ -162,29 +162,24 @@ int main(int argc, char* argv[])
       else if(s_buff.find("metis2ogs")!=string::npos)
       {
          this_task = metis2ogs;
-         if(s_buff.find("-e")!=string::npos)
-            part_type = by_element;
-         else if(s_buff.find("-n")!=string::npos)
-            part_type = by_node;
-
-         if(s_buff.find("-q")!=string::npos)
-         {
-            quad = true;
-         }
-         if(s_buff.find("-odom")!=string::npos)
-         {
-            out_subdom = true;
-         }
-
-         // Find name
-         FindFileNameInCommand(ss, fname);
-         ss.clear();
-
-         // Find partition number
-         ss.str(s_buff);
          while(!ss.eof())
          {
             ss>>s_buff;
+
+            if(s_buff.compare("-e") == 0)
+               part_type = by_element;
+            else if(s_buff.compare("-n") == 0)
+               part_type = by_node;
+
+            if(s_buff.compare("-q") == 0)
+            {
+                quad = true;
+            }
+            if(s_buff.compare("-odom") == 0)
+            {
+                out_subdom = true;
+            }
+
             if(s_buff.find("-np")!=string::npos)
             {
                size_t pos;
@@ -192,11 +187,12 @@ int main(int argc, char* argv[])
                s_buff = s_buff.substr(pos+1);
                nparts = atoi(s_buff.c_str());
                str_nparts = s_buff;
-               break;
             }
-
+            if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
+            {
+               fname = s_buff;
+            } 
          }
-
       }
       ss.clear();
 
@@ -271,14 +267,14 @@ int main(int argc, char* argv[])
          argv_m[2] = &str_nparts[0];
 
          metis_main(argc_m, argv_m);
-#else
-         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
+//#else
+//         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
 
-         if(!system(s_buff.c_str()))
-         {
-            cout<<"METIS executable file may not be found "<<endl;
-            exit(1);
-         }
+//         if(!system(s_buff.c_str()))
+//         {
+//            cout<<"METIS executable file may not be found "<<endl;
+//            exit(1);
+//         }
 #endif
          cout<<"\n***Prepare subdomain mesh"<<endl;
          if(part_type == by_element)
