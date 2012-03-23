@@ -1077,7 +1077,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
       for(j=0; j<neg; j++)
       {
          nmb_element_idxs_g += ghost_subdom_elements[j]->getNodesNumber(is_quad);
-         nmb_element_idxs_g += ghost_subdom_elements[j]->ghost_nodes.size();
+         nmb_element_idxs_g += static_cast<long>(ghost_subdom_elements[j]->ghost_nodes.size());
       }
 
 
@@ -1100,7 +1100,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
       os_subd<<size_sbd_nodes<<deli<<in_subdom_elements.size()
              <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
              <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
-             <<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
+             <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
 
       //os_subd<<"Nodes"<<endl;
       for(j=0; j<size_sbd_nodes; j++)
