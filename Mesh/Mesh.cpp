@@ -1073,7 +1073,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          nmb_element_idxs += in_subdom_elements[j]->getNodesNumber(is_quad);  
       }
       const long neg = static_cast<long>( ghost_subdom_elements.size());
-      nmb_element_idxs_g = 3*neg;
+      nmb_element_idxs_g = 4*neg;
       for(j=0; j<neg; j++)
       {
          nmb_element_idxs_g += ghost_subdom_elements[j]->getNodesNumber(is_quad);
