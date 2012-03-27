@@ -841,6 +841,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
             "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
        "Total integer variables of elements;Total integer variables of ghost elements  ";
       os_subd<<name_f<<endl;
+      os_subd<<num_parts<<endl;
 #endif
 
    long node_id_shift = 0;
