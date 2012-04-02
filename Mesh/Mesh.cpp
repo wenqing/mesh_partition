@@ -990,6 +990,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          for(j=0; j<neg; j++)
          {
             a_elem = ghost_subdom_elements[j];
+	    a_elem->nnodes_gl = static_cast<int>(ghost_nodes.size());
+
             for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
             {
                a_node = a_elem->nodes[k];
@@ -1118,10 +1120,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
       {
          a_elem = ghost_subdom_elements[j];
          a_elem->WriteSubDOM(os_subd, node_id_shift, is_quad);
-         os_subd<<a_elem->ghost_nodes.size()<<deli;
-
          const int ngh_nodes = static_cast<int>(a_elem->ghost_nodes.size());
 
+         os_subd<<a_elem->nnodes_gl<<deli<<ngh_nodes<<deli;
          for(kk=0; kk<ngh_nodes; kk++)
          {
             os_subd<<a_elem->ghost_nodes[kk]<<deli;

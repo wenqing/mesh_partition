@@ -198,7 +198,8 @@ class Elem:public Grain
       Math_Group::vec<int>  edges_orientation;
       Math_Group::vec<Elem*>  neighbors;
       //vec<Elem*>  sons;
-
+  
+      int nnodes_gl; //> number of ghost nodes for linear element 
       std::vector<int>  ghost_nodes;
 
       // Private methods
