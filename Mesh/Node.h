@@ -82,7 +82,7 @@ class Node:public Grain
 
       // Output
       void Write(std::ostream& os = std::cout) const;
-
+      void WriteCoordinates(std::ostream& os = std::cout) const;
 
    private:
       double *Coordinate;

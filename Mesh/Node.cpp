@@ -21,6 +21,7 @@ Node:: Node(const int Index, const double x,
    Coordinate[2] =z;
    boundayC = 'I';
 
+   local_index = -1;
 }
 //    WW. 06.2005
 void Node::operator = (const Node& n)
@@ -42,16 +43,21 @@ bool Node::operator == (const Node& n)
 }
 //    WW. 06.2005
 // Output
-void Node::Write(ostream& osm) const
+void Node::Write(ostream& os) const
 {
-   osm.setf(ios::scientific, ios::floatfield);
-   setw(14);
-   osm.precision(14);
-   osm<<index<<deli
-      <<Coordinate[0]<<deli
+   os<<setw(14)<<index<<deli;
+   os<<Coordinate[0]<<deli
       <<Coordinate[1]<<deli
       <<Coordinate[2]<<endl;
 }
+
+void Node::WriteCoordinates(std::ostream& os) const
+{
+   os <<Coordinate[0]<<deli
+       <<Coordinate[1]<<deli
+       <<Coordinate[2]<<endl;
+}
+
 //    WW. 06.2005
 // Set
 void Node::SetCoordinates(const double* argCoord)
