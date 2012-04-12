@@ -836,7 +836,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
    string name_f = fname+"_partitioned.msh";
    fstream os_subd(name_f.c_str(), ios::out|ios::trunc );
    name_f = "Subdomain mesh "
-           "(Nodes; Elements;  Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
+           "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
             "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
        "Total integer variables of elements;Total integer variables of ghost elements  ";
    os_subd<<name_f<<endl;
@@ -1049,8 +1049,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          size_sbd_nodes_h = size_sbd_nodes0;
       }
 
-
-
+	  /// Number of subdomain nodes for linear element 
+	  int sdom_nnodes = size_sbd_nodes_l;
       //-----------------------------------------------
       // Add nodes in ghost elements
       const long ne_g = static_cast<long>(ghost_subdom_elements.size());
@@ -1079,6 +1079,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
             a_node->index = new_node_idx;
             sbd_nodes.push_back(a_node);
             new_node_idx++;
+
+            if(k < a_elem->getNodesNumber())
+				sdom_nnodes++;
          }
 
       }
@@ -1113,14 +1116,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
       //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
 
 
-      name_f = "Subdomain mesh "
-               "(Nodes; Elements;  Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
-               "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
-        "Total integer variables of elements;Total integer variables of ghost elements  ";
+	  name_f = "Subdomain mesh "
+           "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
+            "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
+       "Total integer variables of elements;Total integer variables of ghost elements  ";
       os_subd<<name_f<<endl;
 #endif
-      os_subd<<size_sbd_nodes<<deli<<in_subdom_elements.size()
-             <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
+      os_subd<<size_sbd_nodes<<deli<<sdom_nnodes<<deli<<in_subdom_elements.size()
+			<<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
              <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
              <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
 
