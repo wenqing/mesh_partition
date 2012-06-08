@@ -833,7 +833,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
 
 #define OUTPUT_TO_SINGLE_FILE
 #ifdef OUTPUT_TO_SINGLE_FILE
-   string name_f = fname+"_partitioned.msh";
+   string name_f = fname+"_partitioned_"+ s_nparts + ".msh";
    fstream os_subd(name_f.c_str(), ios::out|ios::trunc );
    name_f = "Subdomain mesh "
            "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
