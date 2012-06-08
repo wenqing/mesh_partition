@@ -1214,7 +1214,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
    os_subd.close();
 #endif
 
-   f_iparts = fname + "_renum.msh";
+   f_iparts = fname + "_renum_"+ s_nparts +".msh";
    ofstream os(f_iparts.c_str(), ios::out|ios::trunc);
 
    // Output renumbered mesh
