@@ -51,47 +51,47 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
    n = Owner->getElementFaceNodes(Face, faceIndex_loc);
    switch(Owner->ele_Type)
    {
-      case 1:  // 1-D bar element
+      case line:  // 1-D bar element
          break;
-      case 2: // 2-D quadrilateral element
+      case quadri: // 2-D quadrilateral element
          nnodes = 2;
          nnodesHQ = 3;
          ele_dim = 1;
-         ele_Type = 1;
+         ele_Type = line;
          nfaces = 2;
          nedges = 0;
          break;
-      case 3: // 3-D hexahedral element
+      case hex: // 3-D hexahedral element
          nnodes = 4;
          nnodesHQ = 8;
          ele_dim = 2;
-         ele_Type = 2;
+         ele_Type = quadri;
          nfaces = 4;
          nedges = 4;
          break;
-      case 4:  // 2-D triagular element
+      case tri:  // 2-D triagular element
          nnodes = 2;
          nnodesHQ = 3;
          ele_dim = 1;
-         ele_Type = 1;
+         ele_Type = line;
          nfaces = 2;
          nedges = 0;
          break;
-      case 5:  // 3-D tetrahedral element
+      case tet:  // 3-D tetrahedral element
          nnodes = 3;
          nnodesHQ = 6;
          ele_dim = 2;
-         ele_Type = 4;
+         ele_Type = tri;
          nfaces = 3;
          nedges = 3;
          break;
-      case 6:
+      case prism:
          if(Face<2)
          {
             nnodes = 3;
             nnodesHQ = 6;
             ele_dim = 2;
-            ele_Type = 4;
+            ele_Type = tri;
             nfaces = 3;
             nedges = 3;
          }
@@ -100,11 +100,33 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
             nnodes = 4;
             nnodesHQ = 8;
             ele_dim = 2;
-            ele_Type = 2;
+            ele_Type = quadri;
             nfaces = 4;
             nedges = 4;
          }
          break; // 3-D prismatic element
+      case pyramid:
+         if(Face > 0)
+         {
+            nnodes = 3;
+            nnodesHQ = 6;
+            ele_dim = 2;
+            ele_Type = tri;
+            nfaces = 3;
+            nedges = 3;
+         }
+         else // Bottom
+         {
+            nnodes = 4;
+            nnodesHQ = 8;
+            ele_dim = 2;
+            ele_Type = quadri;
+            nfaces = 4;
+            nedges = 4;
+         }
+         break; // 3-D prismatic element
+	  default:
+		 break;
    }
 
    PatchIndex =  Owner->PatchIndex;
@@ -153,27 +175,22 @@ string Elem::getName() const
 
    switch(ele_Type)
    {
-      case 1:
+      case line:
          return "line";
-         break;
-      case 2:
+      case quadri:
          return "quad";
-         break;
-      case 3:
+      case hex:
          return "hex";
-         break;
-      case 4:
+      case tri:
          return "tri";
-         break;
-      case 5:
+      case tet:
          return "tet";
-         break;
-      case 6:
+      case prism:
          return "pris";
-         break;
+      case pyramid:
+         return "pyra";
       default:
          return "none";
-         break;
    }
 }
 
@@ -213,33 +230,37 @@ void Elem::Read(istream& is, int fileType)
          else
             name = buffer;
          if(name.find("line")!=string::npos)
-            ele_Type = 1;
+            ele_Type = line;
          else if(name.find("quad")!=string::npos)
-            ele_Type = 2;
+            ele_Type = quadri;
          else if(name.find("hex")!=string::npos)
-            ele_Type = 3;
+            ele_Type = hex;
          else if(name.find("tri")!=string::npos)
-            ele_Type = 4;
+            ele_Type = tri;
          else if(name.find("tet")!=string::npos)
-            ele_Type = 5;
+            ele_Type = tet;
          else if(name.find("pri")!=string::npos)
-            ele_Type = 6;
+            ele_Type = prism;
+         else if(name.find("pyra")!=string::npos)
+            ele_Type = pyramid;
          break;
          //....................................................................
       case 1: // rfi
          is>>index>>PatchIndex>>name;
          if(name.find("line")!=string::npos)
-            ele_Type = 1;
+            ele_Type = line;
          else if(name.find("quad")!=string::npos)
-            ele_Type = 2;
+            ele_Type = quadri;
          else if(name.find("hex")!=string::npos)
-            ele_Type = 3;
+            ele_Type = hex;
          else if(name.find("tri")!=string::npos)
-            ele_Type = 4;
+            ele_Type = tri;
          else if(name.find("tet")!=string::npos)
-            ele_Type = 5;
+            ele_Type = tet;
          else if(name.find("pri")!=string::npos)
-            ele_Type = 6;
+            ele_Type = prism;
+         else if(name.find("pyra")!=string::npos)
+            ele_Type = pyramid;
          break;
          //....................................................................
       case 2: // gmsh
@@ -249,87 +270,95 @@ void Elem::Read(istream& is, int fileType)
          switch(et)
          {
             case 1:
-               ele_Type = 1;
+               ele_Type = line;
                break;
             case 2:
-               ele_Type = 4;
+               ele_Type = tri;
                break;
             case 3:
-               ele_Type = 2;
+               ele_Type = quadri;
                break;
             case 4:
-               ele_Type = 5;
+               ele_Type = tet;
                break;
             case 5:
-               ele_Type = 3;
+               ele_Type = hex;
                break;
             case 6:
-               ele_Type = 6;
+               ele_Type = prism;
                break;
+            case 7:
+               ele_Type = pyramid;
+               break;
+			default:
+			   break;		
          }
          index--;
          break;
          //....................................................................
       case 3: // GMS
-         ele_Type = 4;
+         ele_Type = tri;
          break;
          //....................................................................
-      case 4: // gmsh
-         ele_Type = 4;
+      case 4: // SOL
+         ele_Type = tri;
          break;
    }
    //----------------------------------------------------------------------
    // 2 Element configuration
    switch(ele_Type)
    {
-      case 1:
+      case line:
          nnodes = 2;
          nnodesHQ = 3;
          ele_dim = 1;
-         ele_Type = 1;
          nfaces = 2;
          nedges = 0;
          break;
-      case 2:
+      case quadri:
          nnodes = 4;
          nnodesHQ = 9;
          ele_dim = 2;
-         ele_Type = 2;
          nfaces = 4;
          nedges = 4;
          break;
-      case 3:
+      case hex:
          nnodes = 8;
          nnodesHQ = 20;
          ele_dim = 3;
          nfaces = 6;
          nedges = 12;
-         ele_Type = 3;
          break;
-      case 4:
+      case tri:
          nnodes = 3;
          nnodesHQ = 6;
          ele_dim = 2;
-         ele_Type = 4;
          nfaces = 3;
          nedges = 3;
          break;
-      case 5:
+      case tet:
          nnodes = 4;
          nnodesHQ = 10;
          ele_dim = 3;
-         ele_Type = 5;
          nfaces = 4;
          nedges = 6;
          break;
-      case 6:
+      case prism:
          nnodes = 6;
          nnodesHQ = 15;
          ele_dim = 3;
-         ele_Type = 6;
          nfaces = 5;
          nedges = 9;
          break;
+      case pyramid:
+         nnodes = 5;
+         nnodesHQ = 14;
+         ele_dim = 3;
+         nfaces = 5;
+         nedges = 8;
+         break;
+	  default:
+		break;	
    }
    nodes_index.resize(nnodes);
    //----------------------------------------------------------------------
@@ -401,23 +430,26 @@ void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
       nn = nnodesHQ;
       switch(ele_Type)
       {
-         case 1:
+         case line:
             et = 8;
             break;    //Line
-         case 2:
+         case quadri:
             et = 10;
             break;    //Quad
-         case 3:
+         case hex:
             et = 12;
             break;    //Hex
-         case 4:
+         case tri:
             et = 9;
             break;    //Tri
-         case 5:
+         case tet:
             et = 11;
             break;    //Tet
-         case 6:
+         case prism:
             et = 18;
+            break;    //Pris
+         case pyramid:
+            et = 14;
             break;    //Pris
       }
    }
@@ -425,23 +457,26 @@ void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
    {
       switch(ele_Type)
       {
-         case 1:
+         case line:
             et = 1;
             break;    //Line
-         case 2:
+         case quadri:
             et = 3;
             break;    //Quad
-         case 3:
+         case hex:
             et = 5;
             break;    //Hex
-         case 4:
+         case tri:
             et = 2;
             break;    //Tri
-         case 5:
+         case tet:
             et = 4;
             break;    //Tet
-         case 6:
+         case prism:
             et = 6;
+            break;    //Pris
+         case pyramid:
+            et = 7;
             break;    //Pris
       }
    }
@@ -461,23 +496,26 @@ void Elem::WriteGSmsh(ostream& os, bool quad) const
 
    switch(ele_Type)
    {
-      case 1:
+      case line:
          ename = "line";
          break;
-      case 2:
+      case quadri:
          ename = "quad";
          break;
-      case 3:
+      case hex:
          ename = "hex";
          break;
-      case 4:
+      case tri:
          ename = "tri";
          break;
-      case 5:
+      case tet:
          ename = "tet";
          break;
-      case 6:
+      case prism:
          ename = "pris";
+         break;
+      case pyramid:
+         ename = "pyra";
          break;
    }
    os<<index<<deli<<PatchIndex<<deli<<ename<<deli;
@@ -510,23 +548,26 @@ void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
    {
       switch(ele_Type)
       {
-         case 1:
+         case line:
             os<< "3  "<<endl;
             break;
-         case 2:
+         case quadri:
             os<< "9  "<<endl;
             break;
-         case 3:
+         case hex:
             os<< "12 "<<endl;
             break;
-         case 4:
+         case tri:
             os<< "5  "<<endl;
             break;
-         case 5:
+         case tet:
             os<< "10 "<<endl;
             break;
-         case 6:
+         case prism:
             os<< "13 "<<endl;
+            break;
+         case pyramid:
+            os<< "14 "<<endl;
             break;
       }
    }
@@ -534,22 +575,23 @@ void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
    {
       switch(ele_Type)
       {
-         case 1:
+         case line:
             os<< "21  "<<endl;
             break;
-         case 2:
+         case quadri:
             os<< "23  "<<endl;
             break;
-         case 3:
+         case hex:
             os<< "25 "<<endl;
             break;
-         case 4:
+         case tri:
             os<< "22  "<<endl;
             break;
-         case 5:
+         case tet:
             os<< "24 "<<endl;
             break;
          default:
+            cout<<"Warning: quadratic element is not available for prism and pyramid elements"<<endl;				
             break;
       }
    }
@@ -632,18 +674,20 @@ void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
 
 
 
-//    WW. 06.2005
+//   WW  06.2005
+//   WW  08.2012
 void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
 {
+   int i_buff = 0; 		
    switch(ele_Type)
    {
-      case 1:
+      case line:
          break; // 1-D bar element
-      case 2: // 2-D quadrilateral element
+      case quadri: // 2-D quadrilateral element
          EdgeNodes[0] = Edge;
          EdgeNodes[1] = (Edge+1)%4;
          break;
-      case 3: // 3-D hexahedral element
+      case hex: // 3-D hexahedral element
          if(Edge<8)
          {
             EdgeNodes[0] = Edge;
@@ -651,15 +695,16 @@ void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
          }
          else
          {
-            EdgeNodes[0] = Edge%4;
-            EdgeNodes[1] = Edge%4+4;
+            i_buff = Edge%4;
+            EdgeNodes[0] = i_buff;
+            EdgeNodes[1] = i_buff + 4;
          }
          break;
-      case 4:  // 2-D triagular element
+      case tri:  // 2-D triagular element
          EdgeNodes[0] = Edge;
          EdgeNodes[1] = (Edge+1)%3;
          break;
-      case 5:  // 3-D tetrahedra
+      case tet:  // 3-D tetrahedra
          if(Edge<3)
          {
             EdgeNodes[0] = Edge;
@@ -672,7 +717,7 @@ void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
          }
 
          break;
-      case 6: // 3-D prismatic element
+      case prism: // 3-D prismatic element
          if(Edge<6)
          {
             EdgeNodes[0] = Edge;
@@ -680,10 +725,26 @@ void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
          }
          else
          {
-            EdgeNodes[0] = Edge%3;
-            EdgeNodes[1] = Edge%3+3;
+		    i_buff = Edge%3;
+            EdgeNodes[0] = i_buff;
+            EdgeNodes[1] = i_buff + 3;
          }
          break;
+      case pyramid: // 08.2012. WW
+         if(Edge<4) // off bottom
+         {
+            EdgeNodes[0] = 0;
+            EdgeNodes[1] = Edge+1;
+         }
+         else
+         {
+            i_buff = Edge - 3;  
+            EdgeNodes[0] = i_buff;
+            EdgeNodes[1] = (i_buff+1)%4;
+         }
+         break;
+	  default:
+		 break; 	
    }
 }
 
@@ -1005,6 +1066,85 @@ int Elem::getElementFacesPri(const int Face, int *FaceNode)
    return nn;
 }
 
+// 08.2012. WW
+int Elem::getElementFacesPyramid(const int Face, int *FaceNode)
+{
+   int nn = 3;
+
+   switch(Face)
+   {
+      case 0:
+         nn= 4; 
+         FaceNode[0] = 1;
+         FaceNode[1] = 2;
+         FaceNode[2] = 3;
+         FaceNode[3] = 4;
+         if(quadratic)
+         {
+            FaceNode[4] = 9 ;
+            FaceNode[5] = 10;
+            FaceNode[6] = 11;
+            FaceNode[7] = 12;
+            FaceNode[9] = 3;
+            nn = 9;
+         }
+         break;
+      case 1:
+         nn = 3;
+         FaceNode[0] = 0;
+         FaceNode[1] = 2;
+         FaceNode[2] = 1;
+         if(quadratic)
+         {
+            nn = 6;
+            FaceNode[3] = 6 ;
+            FaceNode[4] = 9;
+            FaceNode[5] = 5;
+         }
+         break;
+      case 2:
+         nn = 3;
+         FaceNode[0] = 0;
+         FaceNode[1] = 3;
+         FaceNode[2] = 2;
+         if(quadratic)
+         {
+			nn = 6;  
+            FaceNode[3] = 7 ;
+            FaceNode[4] = 10;
+            FaceNode[5] = 6;
+         }
+         break;
+      case 3:
+         nn = 3;
+         FaceNode[0] = 0;
+         FaceNode[1] = 4;
+         FaceNode[2] = 3;
+         if(quadratic)
+         {
+            nn = 6;
+            FaceNode[3] = 8 ;
+            FaceNode[4] = 11;
+            FaceNode[5] = 7;
+         }
+         break;
+      case 4:
+         nn = 3;
+         FaceNode[0] = 0;
+         FaceNode[1] = 1;
+         FaceNode[2] = 4;
+         if(quadratic)
+         {
+            nn = 6;
+            FaceNode[3] = 5 ;
+            FaceNode[4] = 12;
+            FaceNode[5] = 8;
+         }
+         break;
+   }
+   return nn;
+}
+
 
 
 /**************************************************************************
@@ -1022,24 +1162,22 @@ int Elem::getElementFaceNodes(const int Face, int *FacesNode)
 {
    switch(ele_Type)
    {
-      case 1:  // 1-D bar element
+      case line:  // 1-D bar element
          return getElementFaces1D(FacesNode);
-         break;
-      case 2: // 2-D quadrilateral element
+      case quadri: // 2-D quadrilateral element
          return getElementFacesQuad(Face, FacesNode);
-         break;
-      case 3: // 3-D hexahedral element
+      case hex: // 3-D hexahedral element
          return getElementFacesHex(Face, FacesNode);
-         break;
-      case 4:  // 2-D triagular element
+      case tri:  // 2-D triagular element
          return getElementFacesTri(Face, FacesNode);
-         break;
-      case 5:  // 3-D tetrahedral element
+      case tet:  // 3-D tetrahedral element
          return getElementFacesTet(Face, FacesNode);
-         break;
-      case 6:
+      case prism:
          return getElementFacesPri(Face, FacesNode);
-         break; // 3-D prismatic element
+	  case pyramid:	
+		 return getElementFacesPyramid(Face, FacesNode);
+	  default:
+        break;
    }
    return 0;
 }

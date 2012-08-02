@@ -29,6 +29,7 @@ using namespace Mesh_Group;
 void Version()
 {
    cout<<"\nOpenGeoSys interface to partitioning tools"<<endl;
+   cout<<"\nCopyleft. If compiled with option USE_METIS_SOURCE, please refer to the license of METIS (or ohter tools)."<<endl;
    cout<<ver<<endl;
    cout<<"Written by wenqing.wang@ufz.de."<<endl<<endl;
 }

@@ -82,6 +82,7 @@ class Mesh
       long msh_no_tris;
       long msh_no_tets;
       long msh_no_pris;
+      long msh_no_pyra;
       int msh_max_dim;
 
 

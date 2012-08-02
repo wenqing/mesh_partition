@@ -316,34 +316,38 @@ void Mesh::ConstructGrid()
    msh_no_tris=0;
    msh_no_tets=0;
    msh_no_pris=0;
+   msh_no_pyra=0;
    for(e=0; e<e_size; e++)
    {
       thisElem0 = elem_vector[e];
       switch(thisElem0->getElementType())
       {
-         case 1:
+         case line:
             msh_no_line++;
             break;
-         case 2:
+         case quadri:
             msh_no_quad++;
             break;
-         case 3:
+         case hex:
             msh_no_hexs++;
             break;
-         case 4:
+         case tri:
             msh_no_tris++;
             break;
-         case 5:
+         case tet:
             msh_no_tets++;
             break;
-         case 6:
+         case prism:
             msh_no_pris++;
+            break;
+         case pyramid:
+            msh_no_pyra++;
             break;
       }
       // Compute volume meanwhile
       //thisElem0->ComputeVolume();
 
-      if(thisElem0->getElementType()==1) continue; // line element
+      if(thisElem0->getElementType() == line) continue; // line element
       thisElem0->getNodeIndeces(node_index_glb0);
       thisElem0->getNeighbors(Neighbors0);
       m0 = thisElem0->getFacesNumber();
@@ -363,7 +367,7 @@ void Mesh::ConstructGrid()
 
    }
    NodesNumber_Quadratic= (long)node_vector.size();
-   if((msh_no_hexs+msh_no_tets+msh_no_pris)>0) max_ele_dim=3;
+   if((msh_no_hexs+msh_no_tets+msh_no_pris+msh_no_pyra)>0) max_ele_dim=3;
    else if((msh_no_quad+msh_no_tris)>0) max_ele_dim=2;
    else max_ele_dim=1;
    //----------------------------------------------------------------------
@@ -509,7 +513,7 @@ void Mesh::GenerateHighOrderNodes()
       } //  for(i=0; i<nedges0; i++)
       // No neighors or no neighbor has new middle point
       //
-      if(thisElem0->getElementType()==2) // Quadrilateral
+      if(thisElem0->getElementType()==quadri) // Quadrilateral
       {
          x0=y0=z0=0.0;
          aNode = new Node((long)node_vector.size());
@@ -1304,7 +1308,7 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
    {
       a_elem = ele_vec[i];
       nne =  a_elem->getNodesNumber(useQuadratic);
-      if(useQuadratic&&a_elem->ele_Type==2)
+      if(useQuadratic&&a_elem->ele_Type == quadri)
          nne -= 1;
 
       size += nne;
@@ -1317,13 +1321,13 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
       a_elem = ele_vec[i];
 
       nne =  a_elem->getNodesNumber(useQuadratic);
-      if(useQuadratic&&a_elem->ele_Type==2)
+      if(useQuadratic&&a_elem->ele_Type == quadri)
          nne -= 1;
 
       os<<nne<<deli;
 
 
-      if(useQuadratic&&a_elem->ele_Type==5) // Tet
+      if(useQuadratic&&a_elem->ele_Type==tet) // Tet
       {
          for(k=0; k<7; k++)
          {
@@ -1373,19 +1377,19 @@ void Mesh::Write2METIS(ostream& os)
    int e_type =0;
    switch(elem_vector[0]->getElementType())
    {
-      case 1:
+      case line:
          cout<<"Not for 1D element"<<endl;
          exit(1);
-      case 2:
+      case quadri:
          e_type =4;
          break;
-      case 3:
+      case hex:
          e_type =3;
          break;
-      case 4:
+      case tri:
          e_type =1;
          break;
-      case 5:
+      case tet:
          e_type =2;
          break;
       case 6:

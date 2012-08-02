@@ -18,7 +18,7 @@ namespace Mesh_Group
 class Node;
 class Edge;
 class Mesh;
-
+enum ElemType {line, quadri, hex, tri, tet, prism, pyramid}; 
 //3.  Element declaration
 class Elem:public Grain
 {
@@ -189,7 +189,7 @@ class Elem:public Grain
       int PatchIndex;
       // Element type
       // 1 Line, 2 Quad, 3 Hex, 4 Tri, 5 Tet, 6 Pris
-      int ele_Type;
+      ElemType ele_Type;
       Elem* Owner;
       Math_Group::vec<long>   nodes_index;
       Math_Group::vec<long>   locnodes_index;
@@ -209,7 +209,7 @@ class Elem:public Grain
       int getElementFacesHex(const int Face, int *FaceNode);
       int getElementFacesTet(const int Face, int *FaceNode);
       int getElementFacesPri(const int Face, int *FaceNode);
-
+      int getElementFacesPyramid(const int Face, int *FaceNode);
       friend class Mesh;
 
 };
