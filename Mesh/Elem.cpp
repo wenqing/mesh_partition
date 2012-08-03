@@ -532,7 +532,7 @@ void Elem::WriteSubDOM(ostream& os, const long node_id_shift, bool quad) const
 {
    int nn = getNodesNumber(quad);
 
-   os<<PatchIndex<<deli<<ele_Type<<deli<<nn<<deli;
+   os<<PatchIndex<<deli<<ele_Type+1<<deli<<nn<<deli;
    for(int i=0; i<nn; i++)
    {
 //      nodes_index[i] = nodes[i]->getIndex();
