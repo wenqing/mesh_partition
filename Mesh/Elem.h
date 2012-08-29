@@ -7,6 +7,9 @@
 #include"SymMatrix.h"
 #include "Grain.h"
 
+
+//#define BUILD_MESH_EDGE
+
 //------------------------------------------------------
 //   Topology declartion of geometrical element.
 //   WW. 06.2005
@@ -19,6 +22,8 @@ class Node;
 class Edge;
 class Mesh;
 enum ElemType {line, quadri, hex, tri, tet, prism, pyramid}; 
+
+
 //3.  Element declaration
 class Elem:public Grain
 {
@@ -106,6 +111,7 @@ class Elem:public Grain
       //
       long getLocalNodeIndex(const int li) const;
 
+#ifdef BUILD_MESH_EDGE
       // Edges
       void getEdges(Math_Group::vec<Edge*>&  ele_edges)
       {
@@ -124,6 +130,7 @@ class Elem:public Grain
       {
          for (int i=0; i<nedges; i++) edges_orientation[i]= ori_edg[i];
       }
+#endif
       // Neighbors
       void setNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
       {
@@ -194,8 +201,11 @@ class Elem:public Grain
       Math_Group::vec<long>   nodes_index;
       Math_Group::vec<long>   locnodes_index;
       Math_Group::vec<Node*>  nodes;
+
+#ifdef BUILD_MESH_EDGE
       Math_Group::vec<Edge*>  edges;
       Math_Group::vec<int>  edges_orientation;
+#endif
       Math_Group::vec<Elem*>  neighbors;
       //vec<Elem*>  sons;
   

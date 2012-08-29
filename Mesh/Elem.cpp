@@ -14,6 +14,73 @@ namespace Mesh_Group
 
 using namespace std;
 using namespace Math_Group;
+
+
+int EdgeLocalNodeIndex [] =
+{
+    // Line, 3 entries
+	0, 1, 2,
+	// quadri, 4 edges, 12 entries. sh: 3
+	0, 1, 4, 
+    1, 2, 5,
+	2, 3, 6,
+	3, 0, 7, 
+	// hex, 12 edges, 36 entries. sh: 15
+	0, 1, 8, 
+	1, 2, 9,
+	2, 3, 10,
+	3, 0, 11, 
+	4, 5, 12, 
+	5, 6, 13,
+	6, 7, 14,
+	7, 4, 15, 
+	4, 0, 16, 
+	5, 1, 17,
+	6, 2, 18,
+	7, 3, 19,
+	//tri, 3 edges, 9 entries. sh: 51     
+	0, 1, 3, 
+    1, 2, 4,
+	2, 0, 5,
+	//tet, 6 edges, 18 entries. sh: 60
+	0, 1, 4, 
+    1, 2, 5,
+	2, 0, 6,
+	0, 3, 7, 
+    1, 3, 8,
+	2, 3, 9,
+	//prism, 9 edges, 27 entries. sh: 78 
+	0, 1, 6, 
+    1, 2, 7,
+	2, 0, 8,
+	3, 4, 9, 
+    4, 5, 10,
+	5, 3, 11,
+	0, 3, 12,
+	1, 4, 13,
+	2, 5, 15,
+	//pyramid, 8 edges, 24 entries. sh: 105
+	0, 1, 5,
+	0, 2, 6,
+	0, 3, 7,
+	0, 4, 8,
+	1, 2, 9,
+	2, 3, 10,
+	3, 4, 11,
+	4, 1, 12
+};
+int EdgeLocalIndexArrayElemShift [] =
+{  
+	0, //Line
+	3, //quad
+	15, //hex
+	51, //tri
+	60, //tet
+	78, //prism
+	106 //pyramid
+};
+
+
 //-----------------------------------------------------
 //2. Mesh
 //    WW. 06.2005
@@ -35,7 +102,9 @@ Elem::~Elem()
    nodes_index.resize(0);
    locnodes_index.resize(0);
    nodes.resize(0);
+#ifdef BUILD_MESH_EDGE
    edges.resize(0);
+#endif
    neighbors.resize(0);
    ghost_nodes.resize(0);
 }
@@ -44,7 +113,7 @@ Elem::~Elem()
 Elem::  Elem( const int Index,  Elem* onwer, const int Face):
    Grain(Index), Owner(onwer)
 {
-   int i, j, k, n, ne;
+   int i, n;
    static int faceIndex_loc[10];
    static int edgeIndex_loc[10];
 //  Owner = onwer;
@@ -142,6 +211,10 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
       nodes[i] = Owner->nodes[faceIndex_loc[i]];
       nodes[i]->boundayC = 'B';
    }
+
+#ifdef BUILD_MESH_EDGE
+   int j, k, ne;
+
    // Face edges
    ne = Owner->getEdgesNumber();
    edges.resize(nnodes);
@@ -167,6 +240,8 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
          }
       }
    }
+#endif
+
 }
 
 //    WW. 06.2005
@@ -407,6 +482,8 @@ void Elem::Read(istream& is, int fileType)
    neighbors.resize(nfaces);
    for(int i=0; i<nfaces; i++)
       neighbors[i] = NULL;
+
+#ifdef BUILD_MESH_EDGE 
    edges.resize(nedges);
    edges_orientation.resize(nedges);
    for(int i=0; i<nedges; i++)
@@ -414,6 +491,7 @@ void Elem::Read(istream& is, int fileType)
       edges[i] = NULL;
       edges_orientation[i] = 1;
    }
+#endif
 }
 //  WW. 03.2009
 void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
@@ -671,83 +749,15 @@ void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
    }
 }
 
-
-
-
 //   WW  06.2005
 //   WW  08.2012
 void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
 {
-   int i_buff = 0; 		
-   switch(ele_Type)
-   {
-      case line:
-         break; // 1-D bar element
-      case quadri: // 2-D quadrilateral element
-         EdgeNodes[0] = Edge;
-         EdgeNodes[1] = (Edge+1)%4;
-         break;
-      case hex: // 3-D hexahedral element
-         if(Edge<8)
-         {
-            EdgeNodes[0] = Edge;
-            EdgeNodes[1] = (Edge+1)%4+4*(int)(Edge/4);
-         }
-         else
-         {
-            i_buff = Edge%4;
-            EdgeNodes[0] = i_buff;
-            EdgeNodes[1] = i_buff + 4;
-         }
-         break;
-      case tri:  // 2-D triagular element
-         EdgeNodes[0] = Edge;
-         EdgeNodes[1] = (Edge+1)%3;
-         break;
-      case tet:  // 3-D tetrahedra
-         if(Edge<3)
-         {
-            EdgeNodes[0] = Edge;
-            EdgeNodes[1] = (Edge+1)%3;
-         }
-         else
-         {
-            EdgeNodes[0] = 3;
-            EdgeNodes[1] = (Edge+1)%3;
-         }
-
-         break;
-      case prism: // 3-D prismatic element
-         if(Edge<6)
-         {
-            EdgeNodes[0] = Edge;
-            EdgeNodes[1] = (Edge+1)%3+3*(int)(Edge/3);
-         }
-         else
-         {
-		    i_buff = Edge%3;
-            EdgeNodes[0] = i_buff;
-            EdgeNodes[1] = i_buff + 3;
-         }
-         break;
-      case pyramid: // 08.2012. WW
-         if(Edge<4) // off bottom
-         {
-            EdgeNodes[0] = 0;
-            EdgeNodes[1] = Edge+1;
-         }
-         else
-         {
-            i_buff = Edge - 3;  
-            EdgeNodes[0] = i_buff;
-            EdgeNodes[1] = (i_buff+1)%4;
-         }
-         break;
-	  default:
-		 break; 	
-   }
+   const int start_index  = EdgeLocalIndexArrayElemShift[ele_Type] + Edge*3; 	
+   EdgeNodes[0] = EdgeLocalNodeIndex[start_index];
+   EdgeNodes[1] = EdgeLocalNodeIndex[start_index + 1];
+   EdgeNodes[2] = EdgeLocalNodeIndex[start_index + 2];
 }
-
 
 /**************************************************************************
 GetElementFaceNodes

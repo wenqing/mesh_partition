@@ -11,6 +11,7 @@
 #include "Edge.h"
 #include "Elem.h"
 
+//#define BUILD_MESH_EDGE
 
 //------------------------------------------------------
 //   Topology definition of geometrical element.
@@ -145,21 +146,26 @@ void Mesh::ConstructGrid()
 {
    int counter;
    int i, j, k, ii, jj, m0, m, n0, n;
-   int nnodes0, nedges0, nedges;
+   int nnodes0;
    long e, ei, ee,  e_size,  e_size_l;
    bool done;
    double x_sum,y_sum,z_sum;
 
-   int edgeIndex_loc0[2];
-   int edgeIndex_loc[2];
    int faceIndex_loc0[10];
    int faceIndex_loc[10];
    vec<Node*> e_nodes0(20);
    vec<long> node_index_glb(20);
    vec<long> node_index_glb0(20);
+
+#ifdef BUILD_MESH_EDGE
+   int nedges0, nedges;
+   int edgeIndex_loc0[3];
+   int edgeIndex_loc[3];
    vec<int> Edge_Orientation(15);
    vec<Edge*> Edges(15);
    vec<Edge*> Edges0(15);
+   Edge_Orientation = 1;
+#endif
    vec<Elem*> Neighbors(15);
    vec<Elem*> Neighbors0(15);
 
@@ -176,7 +182,6 @@ void Mesh::ConstructGrid()
    e_size = (long)elem_vector.size();
    NodesNumber_Linear= (long)node_vector.size();
 
-   Edge_Orientation = 1;
    //----------------------------------------------------------------------
    // set neighbors of node
    ConnectedElements2Node();
@@ -245,6 +250,7 @@ void Mesh::ConstructGrid()
       }
       thisElem0->setNeighbors(Neighbors0);
 
+#ifdef BUILD_MESH_EDGE
       // --------------------------------
       // Edges
       nedges0 = thisElem0->getEdgesNumber();
@@ -302,13 +308,18 @@ void Mesh::ConstructGrid()
          } // new edges
       } //  for(i=0; i<nedges0; i++)
       //
-      // set edges and nodes
-      thisElem0->setOrder(false);
+	  // set edges nodes
       thisElem0->setEdges_Orientation(Edge_Orientation);
       thisElem0->setEdges(Edges0);
+
+#endif  //BUILD_MESH_EDGE
+
+	  // set nodes
+      thisElem0->setOrder(false);
       // Resize is true
       thisElem0->setNodes(e_nodes0, true);
    }// Over elements
+
    // set faces on surfaces and others
    msh_no_line=0;  // Should be members of mesh
    msh_no_quad=0;
@@ -413,13 +424,17 @@ void Mesh::ConstructGrid()
    e_nodes0.resize(0);
    node_index_glb.resize(0);
    node_index_glb0.resize(0);
+
+#ifdef BUILD_MESH_EDGE
    Edge_Orientation.resize(0);
    Edges.resize(0);
    Edges0.resize(0);
-   Neighbors.resize(0);
-   Neighbors0.resize(0);
    e_edgeNodes0.resize(0);
    e_edgeNodes.resize(0);
+#endif
+
+   Neighbors.resize(0);
+   Neighbors0.resize(0);
 
    finish = clock();
    cout<<"\nCPU time elapsed in constructing topology of grids: "
@@ -436,7 +451,8 @@ void Mesh::GenerateHighOrderNodes()
    int i, k, ii;
    int nnodes0, nedges0, nedges;
    long e, ei, ee,  e_size,  e_size_l;
-   int edgeIndex_loc0[2];
+   int edgeIndex_loc0[3];
+   int edgeIndex_loc1[3];
    bool done;
    double x0,y0,z0;
 
@@ -449,7 +465,9 @@ void Mesh::GenerateHighOrderNodes()
    Elem *thisElem0=NULL;
    Elem *thisElem=NULL;
    Edge *thisEdge0=NULL;
+#ifdef BUILD_MESH_EDGE
    Edge *thisEdge=NULL;
+#endif
    //----------------------------------------------------------------------
    // Loop over elements
    e_size = (long)elem_vector.size();
@@ -461,12 +479,16 @@ void Mesh::GenerateHighOrderNodes()
       for(i=0; i<nnodes0; i++) // Nodes
          e_nodes0[i] = thisElem0->getNode(i);
       // --------------------------------
+
       // Edges
       nedges0 = thisElem0->getEdgesNumber();
       // Check if there is any neighbor that has new middle points
       for(i=0; i<nedges0; i++)
       {
+#ifdef BUILD_MESH_EDGE
          thisEdge0 = thisElem0->getEdge(i);
+#endif
+
          thisElem0->getLocalIndices_EdgeNodes(i, edgeIndex_loc0);
          // Check neighbors
          done = false;
@@ -476,25 +498,38 @@ void Mesh::GenerateHighOrderNodes()
             for(ei=0; ei<e_size_l; ei++)
             {
                ee = e_nodes0[edgeIndex_loc0[k]]->ElementsRelated[ei];
-               if(ee==e) continue;
+               if(ee==e) 
+                  continue;
                thisElem = elem_vector[ee];
-               nedges = thisElem->getEdgesNumber();
-               // Edges of neighbors
-               for(ii=0; ii<nedges; ii++)
-               {
-                  thisEdge = thisElem->getEdge(ii);
-                  if(*thisEdge0==*thisEdge)
+               
+			   // If this element already proccessed
+			   if(thisElem->nodes.Size() == thisElem->getNodesNumberHQ())
+			   {
+                  nedges = thisElem->getEdgesNumber();
+                  // Edges of neighbors
+                  for(ii=0; ii<nedges; ii++)
                   {
-                     aNode = thisEdge->getNode(2);
-                     if(aNode) // The middle point exist
-                     {
-                        e_nodes0[nnodes0] = aNode;
-                        nnodes0++;
+                     thisElem->getLocalIndices_EdgeNodes(ii, edgeIndex_loc1);
+
+					 const long ena0 = thisElem0->getNodeIndex(edgeIndex_loc0[0]);
+					 const long ena1 = thisElem0->getNodeIndex(edgeIndex_loc0[1]);
+					 const long enb0 = thisElem->getNodeIndex(edgeIndex_loc1[0]);
+					 const long enb1 = thisElem->getNodeIndex(edgeIndex_loc1[1]);
+
+					 if(   (( ena0 == enb0 ) && (ena1 == enb1))
+                        || (( ena0 == enb1 ) && (ena1 == enb0))
+                       )						
+					 {
+                        aNode = thisElem->getNode(edgeIndex_loc1[2]);
+                        e_nodes0[edgeIndex_loc0[2]] = aNode;
                         done = true;
                         break;
-                     }
-                  }
-               } //  for(ii=0; ii<nedges; ii++)
+					 }
+
+                  } //  for(ii=0; ii<nedges; ii++)
+
+			   }
+
                if(done) break;
             } // for(ei=0; ei<e_size_l; ei++)
             if(done) break;
@@ -502,24 +537,29 @@ void Mesh::GenerateHighOrderNodes()
          if(!done)
          {
             aNode = new Node((long)node_vector.size());
-            aNode->setX(0.5*(thisEdge0->getNode(0)->X()+thisEdge0->getNode(1)->X()));
-            aNode->setY(0.5*(thisEdge0->getNode(0)->Y()+thisEdge0->getNode(1)->Y()));
-            aNode->setZ(0.5*(thisEdge0->getNode(0)->Z()+thisEdge0->getNode(1)->Z()));
-            e_nodes0[nnodes0] = aNode;
+            const Node *na = thisElem0->getNode(edgeIndex_loc0[0]); 
+            const Node *nb = thisElem0->getNode(edgeIndex_loc0[1]); 
+            aNode->setX(0.5*(na->X() + nb->X()));
+            aNode->setY(0.5*(na->Y() + nb->Y()));
+            aNode->setZ(0.5*(na->Z() + nb->Z()));
+            e_nodes0[edgeIndex_loc0[2]] = aNode;
+
+#ifdef BUILD_MESH_EDGE
             thisEdge0->setNode(2, aNode);
-            nnodes0++;
+#endif
             node_vector.push_back(aNode);
          }
       } //  for(i=0; i<nedges0; i++)
-      // No neighors or no neighbor has new middle point
+ 
+	  // No neighors or no neighbor has new middle point
       //
       if(thisElem0->getElementType()==quadri) // Quadrilateral
       {
          x0=y0=z0=0.0;
          aNode = new Node((long)node_vector.size());
-         e_nodes0[nnodes0] = aNode;
+         e_nodes0[8] = aNode;
          nnodes0 = thisElem0->nnodes;
-         for(i=0; i<nnodes0; i++) // Nodes
+         for(i=0; i<8; i++) // Nodes
          {
             x0 += e_nodes0[i]->X();
             y0 += e_nodes0[i]->Y();

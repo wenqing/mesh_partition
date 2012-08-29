@@ -24,6 +24,29 @@ extern "C" {
 using namespace std;
 using namespace Mesh_Group;
 
+
+/// returns used heap size in bytes or negative if heap is corrupted.
+#ifdef WIN32
+long HeapUsed()
+{
+    _HEAPINFO info = { 0, 0, 0 };
+    long used = 0;
+    int rc;
+
+    while ((rc=_heapwalk(&info)) == _HEAPOK)
+    {
+        if (info._useflag == _USEDENTRY)
+            used += (long)info._size;
+        }
+    if (rc != _HEAPEND && rc != _HEAPEMPTY)
+        used = (used?-used:-1);
+
+    return used;
+}
+#endif
+
+
+
 #define ver "V2.0. 2012"
 
 void Version()
@@ -257,6 +280,9 @@ int main(int argc, char* argv[])
          cout<<"\n***Compute mesh topology"<<endl;
          a_mesh->ConstructGrid();
 
+		 /// Partition mesh if metis source is include
+         if(nparts>1)
+		 {
 #ifdef USE_METIS_SOURCE
          int argc_m;
          argc_m = 3;
@@ -277,6 +303,8 @@ int main(int argc, char* argv[])
 //            exit(1);
 //         }
 #endif
+		 }
+
          cout<<"\n***Prepare subdomain mesh"<<endl;
          if(part_type == by_element)
             a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, out_subdom);
@@ -293,6 +321,11 @@ int main(int argc, char* argv[])
       default:
          break;
    }
+
+
+#ifdef WIN32
+  cout<<"\n\tMemory usage: "<< HeapUsed()/1024./1024.<<"MB"<<endl;
+#endif
 
    delete a_mesh;
 
