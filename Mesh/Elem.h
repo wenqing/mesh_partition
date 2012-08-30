@@ -6,6 +6,7 @@
 #include"vec.h"
 #include"SymMatrix.h"
 #include "Grain.h"
+#include "Node.h"
 
 
 //#define BUILD_MESH_EDGE
@@ -72,11 +73,8 @@ class Elem:public Grain
          return ele_dim;
       }
       std::string getName() const;
-      void setJacobian(const Math_Group::SymMatrix& Jac)
-      {
-         Jacobian = Jac;
-      }
-      void setVolume(const double Vol)
+
+	  void setVolume(const double Vol)
       {
          Volume = Vol;
       }
@@ -86,14 +84,14 @@ class Elem:public Grain
       }
 
       // Nodes
-      void getNodeIndeces(Math_Group::vec<long>&  node_index) const
+      void getNodeIndeces(long  *node_index) const
       {
-         for (int i=0; i< (int) nodes_index.Size(); i++)
-            node_index[i]= nodes_index[i];
+         for (int i=0; i< (int) nodes.Size(); i++)
+			 node_index[i]= nodes[i]->index;
       }
       long getNodeIndex(const int loc_lndex) const
       {
-         return nodes_index[loc_lndex];
+		  return nodes[loc_lndex]->index;
       }
       void setNodes(Math_Group::vec<Node*>&  ele_nodes, const bool ReSize=false);
       void getNodes(Math_Group::vec<Node*>&  ele_nodes)
@@ -155,7 +153,7 @@ class Elem:public Grain
       }
       void AllocateLocalIndexVector()
       {
-         locnodes_index.resize(nodes_index.Size());
+         locnodes_index.resize(nodes.Size());
       }
       void setDomainIndex(const int dom)
       {
@@ -172,8 +170,13 @@ class Elem:public Grain
 
       int getFaceType();
 
+      void setOrder(const bool order)
+      {
+         quadratic = order;
+      }
+
       // Output
-      void Read(std::istream& is = std::cin, int fileType=1);
+	  void Read(std::istream& is, Mesh_Group::Mesh *mesh, int fileType);
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
       void WriteGSmsh(std::ostream& os, bool quad = false) const;
@@ -191,14 +194,18 @@ class Elem:public Grain
       int sub_dom;
       int no_faces_on_surface;
       //
+
+      // High order
+      bool quadratic;
+
       double Volume;
-      Math_Group::SymMatrix Jacobian;
-      int PatchIndex;
+
+	  int PatchIndex;
       // Element type
       // 1 Line, 2 Quad, 3 Hex, 4 Tri, 5 Tet, 6 Pris
       ElemType ele_Type;
       Elem* Owner;
-      Math_Group::vec<long>   nodes_index;
+      //Math_Group::vec<long>   nodes_index;
       Math_Group::vec<long>   locnodes_index;
       Math_Group::vec<Node*>  nodes;
 

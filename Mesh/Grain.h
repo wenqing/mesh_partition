@@ -12,7 +12,6 @@
 
 namespace Mesh_Group
 {
-enum BCType  { INTERIOR, DIRCHLET, NEUMANN, CAUCHY, BOUNDARY };
 //enum Element_Type  {Line, Quad, Hex, Tri, Tet, Pris };
 
 //1.  Mesh declaration
@@ -28,15 +27,6 @@ class Grain
          return false;
       }
 
-      // Set members
-      void secBC(const char BC_type)
-      {
-         boundayC = BC_type;
-      }
-      void setOrder(const bool order)
-      {
-         quadratic = order;
-      }
       void Marking(const bool state)
       {
          mark = state;
@@ -50,41 +40,14 @@ class Grain
       {
          return mark;
       }
-      bool Dirichlet() const
-      {
-         return (BCType(boundayC) == DIRCHLET);
-      }
-      bool Neumann()   const
-      {
-         return (BCType(boundayC) == NEUMANN);
-      }
-      bool Cauchy ()   const
-      {
-         return (BCType(boundayC) == CAUCHY);
-      }
-      bool onBoundary() const
-      {
-         return (BCType(boundayC) == BOUNDARY);
-      }
-      bool Interior() const
-      {
-         return (BCType(boundayC) == INTERIOR);
-      }
 
       // Output
       virtual void output(std::ostream& os = std::cout) const {};
    protected:
       long index;
-      char boundayC;
       // Towards special purpose,
       // e.g. marked to be refined or active
       bool mark;
-      // High order
-      bool quadratic;
-
-      // delimitor
-      std::string deli;
-
 };
 
 } //end namespace

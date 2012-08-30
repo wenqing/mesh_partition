@@ -4,6 +4,7 @@
 
 #include "Node.h"
 #include "Edge.h"
+#include "Mesh.h"
 
 //------------------------------------------------------
 //   Topology definition of geometrical element.
@@ -93,13 +94,13 @@ Elem::Elem(const int Index):Grain(Index)
    PatchIndex = 0;
    //
    Volume = 0.0;
+   quadratic = false;
 
    Owner = NULL;
 }
 //    WW. 06.2005
 Elem::~Elem()
 {
-   nodes_index.resize(0);
    locnodes_index.resize(0);
    nodes.resize(0);
 #ifdef BUILD_MESH_EDGE
@@ -200,16 +201,11 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
 
    PatchIndex =  Owner->PatchIndex;
    quadratic = Owner->quadratic;
-   nodes_index.resize(n);
    nodes.resize(n);
 
-   boundayC='B';
    for(i=0; i<n; i++)
    {
-      nodes_index[i] =
-         Owner->nodes_index[faceIndex_loc[i]];
       nodes[i] = Owner->nodes[faceIndex_loc[i]];
-      nodes[i]->boundayC = 'B';
    }
 
 #ifdef BUILD_MESH_EDGE
@@ -281,7 +277,7 @@ long Elem::getLocalNodeIndex(const int li) const
 }
 
 //    WW. 06.2005
-void Elem::Read(istream& is, int fileType)
+void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
 {
    //fileType=0: msh
    //fileType=1: rfi
@@ -435,43 +431,45 @@ void Elem::Read(istream& is, int fileType)
 	  default:
 		break;	
    }
-   nodes_index.resize(nnodes);
+   nodes.resize(nnodes);
    //----------------------------------------------------------------------
    // 3 Reading element node data
+   long nidx = 0;
    switch(fileType)
    {
          //....................................................................
       case 0: // msh
          for(int i=0; i<nnodes; i++)
-            is>>nodes_index[i];
+         {   is >> nidx;		  
+             nodes[i] = mesh->node_vector[nidx];
+         }
          break;
          //....................................................................
       case 1: // rfi
          for(int i=0; i<nnodes; i++)
-            is>>nodes_index[i];
+         {   is >> nidx;		  
+             nodes[i] = mesh->node_vector[nidx];
+         }
          break;
          //....................................................................
       case 2: // gmsh
          for(int i=0; i<nnodes; i++)
-         {
-            is>>nodes_index[i];
-            nodes_index[i] -= 1;
+         {   is >> nidx;		  
+             nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
          //....................................................................
       case 3: // GMS
          for(int i=0; i<nnodes; i++)
-         {
-            is>>nodes_index[i];
-            nodes_index[i] -= 1;
+         {   is >> nidx;		  
+             nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
          //....................................................................
       case 4: // SOL
          for(int i=0; i<nnodes; i++)
-         {
-            is>>nodes_index[i];
-            nodes_index[i] -= 1;
+         {   is >> nidx;		  
+             nodes[i] = mesh->node_vector[nidx-1];
          }
          is >> PatchIndex;
          break;
@@ -560,7 +558,7 @@ void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
    }
    os<<index+1<<deli<<et<<deli<<ntags<<deli<<PatchIndex+1<<deli<<PatchIndex+1<<deli<<sdom_idx<<deli;
    for(int i=0; i<nn; i++)
-      os<<nodes_index[i]+1<<deli;
+      os<<nodes[i]->index + 1<<deli;
    os<<endl;
 }
 
@@ -610,11 +608,11 @@ void Elem::WriteSubDOM(ostream& os, const long node_id_shift, bool quad) const
 {
    int nn = getNodesNumber(quad);
 
-   os<<PatchIndex<<deli<<ele_Type+1<<deli<<nn<<deli;
+   os<<PatchIndex<<" "<<ele_Type+1<<" "<<nn<<" ";
    for(int i=0; i<nn; i++)
    {
 //      nodes_index[i] = nodes[i]->getIndex();
-      os<<nodes[i]->getIndex()-node_id_shift<<deli;
+      os<<nodes[i]->getIndex()-node_id_shift<<" ";
    }
    os<<endl;
 }
@@ -695,7 +693,7 @@ void Elem::Write_index(ostream& os) const
    else
    {
       for(int i=0; i<nnodes; i++)
-         os<<nodes_index[i]+1<<deli;
+         os<<nodes[i]->index + 1<<deli;
    }
    os<<endl;
 }
@@ -708,10 +706,11 @@ void Elem::WriteAll(ostream& os) const
    os<<"Index X Y Z: "<<endl;
    for(int i=0; i<nodes.Size(); i++)
    {
-      os<<nodes_index[i]
-        <<deli<<nodes[i]->X()
-        <<deli<<nodes[i]->Y()
-        <<deli<<nodes[i]->Z()<<endl;
+      const Node *anode = nodes[i];  
+      os<<anode->index
+        <<deli<<anode->X()
+        <<deli<<anode->Y()
+        <<deli<<anode->Z()<<endl;
    }
 }
 
@@ -743,12 +742,10 @@ void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
    if(ReSize)
    {
       nodes.resize(SizeV);
-      nodes_index.resize(SizeV);
    }
    for (int i=0; i< SizeV; i++)
    {
       nodes[i] = ele_nodes[i];
-      nodes_index[i] = nodes[i]->getIndex();
    }
 }
 
@@ -797,8 +794,8 @@ int Elem::getElementFacesTri(const int Face, int *FaceNode)
    else
    {
       FaceNode[0] = Face;
-      FaceNode[1] = Face+3;
-      FaceNode[2] = (Face+1)%3;
+      FaceNode[1] = (Face+1)%3;
+      FaceNode[2] = Face+3;
       return 3;
    }
 }
@@ -825,8 +822,8 @@ int Elem::getElementFacesQuad(const int Face, int *FaceNode)
    else
    {
       FaceNode[0] = Face;
-      FaceNode[1] = Face+4;
-      FaceNode[2] = (Face+1)%4;
+      FaceNode[1] = (Face+1)%4;
+      FaceNode[2] = Face+4;
       return 3;
    }
 }

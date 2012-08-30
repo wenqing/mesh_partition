@@ -131,11 +131,12 @@ int main(int argc, char* argv[])
          // Number of partitions
          if(s_buff.find("-np")!=string::npos)
          {
-            size_t pos;
-            pos = s_buff.find_first_of("p");
-            s_buff = s_buff.substr(pos+1);
-            nparts = atoi(s_buff.c_str());
-            str_nparts = s_buff;
+            //size_t pos;
+            //pos = s_buff.find_first_of("p");
+            //s_buff = s_buff.substr(pos+1);
+            //str_nparts = s_buff;
+            nparts = atoi( argv[i+1]);
+            str_nparts =  argv[i+1];
          }
 
          if(s_buff.find("ogs2metis")!=string::npos)
@@ -206,11 +207,13 @@ int main(int argc, char* argv[])
 
             if(s_buff.find("-np")!=string::npos)
             {
-               size_t pos;
-               pos = s_buff.find_first_of("p");
-               s_buff = s_buff.substr(pos+1);
-               nparts = atoi(s_buff.c_str());
-               str_nparts = s_buff;
+               //size_t pos;
+               //pos = s_buff.find_first_of("p");
+               //s_buff = s_buff.substr(pos+1);
+               //nparts = atoi(s_buff.c_str());
+               //str_nparts = s_buff;
+               ss >> str_nparts;
+			   nparts = atoi(str_nparts.c_str());
             }
             if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
             {

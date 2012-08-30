@@ -85,7 +85,7 @@ class Mesh
       long msh_no_pyra;
       int msh_max_dim;
 
-
+	  friend class Elem;
 };
 
 }

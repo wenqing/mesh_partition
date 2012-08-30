@@ -19,14 +19,11 @@ Node:: Node(const int Index, const double x,
    Coordinate[0] = x;
    Coordinate[1] =y;
    Coordinate[2] =z;
-   boundayC = 'I';
-
    local_index = -1;
 }
 //    WW. 06.2005
 void Node::operator = (const Node& n)
 {
-   boundayC = n.boundayC;
    index = n.index;
    mark = n.mark;
    Coordinate[0] = n.Coordinate[0];
@@ -45,16 +42,16 @@ bool Node::operator == (const Node& n)
 // Output
 void Node::Write(ostream& os) const
 {
-   os<<setw(14)<<index<<deli;
-   os<<Coordinate[0]<<deli
-      <<Coordinate[1]<<deli
+   os<<setw(14)<<" "<<" ";
+   os<<Coordinate[0]<<" "
+      <<Coordinate[1]<<" "
       <<Coordinate[2]<<endl;
 }
 
 void Node::WriteCoordinates(std::ostream& os) const
 {
-   os <<Coordinate[0]<<deli
-       <<Coordinate[1]<<deli
+   os <<Coordinate[0]<<" "
+       <<Coordinate[1]<<" "
        <<Coordinate[2]<<endl;
 }
 

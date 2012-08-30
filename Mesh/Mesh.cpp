@@ -75,16 +75,17 @@ void Mesh::ConnectedNodes(bool quadratic)
          for(l=0; l<m_ele->getNodesNumber(quadratic); l++)
          {
             exist = false;
+            const long nidx = m_ele->nodes[l]->index; 
             for(k=0; k<(int)m_nod->NodesRelated.size(); k++)
             {
-               if(m_nod->NodesRelated[k]==m_ele->nodes_index[l])
+				if(m_nod->NodesRelated[k] == nidx)
                {
                   exist = true;
                   break;
                }
             }
             if(!exist)
-               m_nod->NodesRelated.push_back(m_ele->nodes_index[l]);
+               m_nod->NodesRelated.push_back(nidx);
          }
       }
    }
@@ -154,8 +155,8 @@ void Mesh::ConstructGrid()
    int faceIndex_loc0[10];
    int faceIndex_loc[10];
    vec<Node*> e_nodes0(20);
-   vec<long> node_index_glb(20);
-   vec<long> node_index_glb0(20);
+   long node_index_glb[20];
+   long node_index_glb0[20];
 
 #ifdef BUILD_MESH_EDGE
    int nedges0, nedges;
@@ -211,7 +212,8 @@ void Mesh::ConstructGrid()
             for(ei=0; ei<e_size_l; ei++)
             {
                ee = e_nodes0[faceIndex_loc0[k]]->ElementsRelated[ei];
-               if(ee==e) continue;
+               if(ee==e) 
+				   continue;
                thisElem = elem_vector[ee];
                thisElem->getNodeIndeces(node_index_glb);
                thisElem->getNeighbors(Neighbors);
@@ -422,8 +424,6 @@ void Mesh::ConstructGrid()
    ConnectedNodes(false);
    //
    e_nodes0.resize(0);
-   node_index_glb.resize(0);
-   node_index_glb0.resize(0);
 
 #ifdef BUILD_MESH_EDGE
    Edge_Orientation.resize(0);
@@ -1025,7 +1025,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
             for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
             {
                a_node = a_elem->nodes[k];
-               i = a_elem->nodes_index[k];
+			   i = a_elem->nodes[k]->index;
                if(sdom_marked[i]) // Already in other subdomains
                   continue;
 
@@ -1056,7 +1056,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
             {
                a_node = a_elem->nodes[k];
                // Since a_elem->nodes_index[k] is not touched
-               i = a_elem->nodes_index[k];
+			   i = a_elem->nodes[k]->index;
                if(sdom_marked[i]) // Already in other subdomains
                   continue;
 
@@ -1486,7 +1486,7 @@ void Mesh::ReadGrid(istream& is)
    for(i=0; i<ne; i++)
    {
       Elem* newElem = new Elem(i);
-      newElem->Read(is);
+      newElem->Read(is, this, 1);
       newElem->Marking(true);
       elem_vector.push_back(newElem);
       counter++;
@@ -1551,7 +1551,7 @@ void Mesh::ReadGridGeoSys(istream& is)
          for(i=0; i<no_elements; i++)
          {
             newElem = new Elem(i);
-            newElem->Read(is, 0);
+            newElem->Read(is, this, 0);
             newElem->Marking(true);
             elem_vector.push_back(newElem);
          }

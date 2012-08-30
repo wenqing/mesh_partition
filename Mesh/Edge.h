@@ -40,12 +40,22 @@ class Edge:public Grain
       {
          return nodes_of_edges[l_index];
       }
+
+      void setOrder(const bool order)
+      {
+         quadratic = order;
+      }
+ 
       // Operator
       void operator = (Edge& edg);
       bool operator == (Edge& edg);
+
       // Output
       void Write(std::ostream& osm = std::cout) const;
    private:
+      // High order
+      bool quadratic;
+
       Math_Group::vec<Node*>  nodes_of_edges;
       friend class Elem;
 };

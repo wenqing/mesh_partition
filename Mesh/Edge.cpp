@@ -35,7 +35,6 @@ Edge::~Edge()
 //    WW. 06.2005
 void Edge::operator = (Edge& ed)
 {
-   boundayC = ed.boundayC;
    index = ed.index;
    mark = ed.mark;
    for(int i=0; i<nodes_of_edges.Size(); i++)
