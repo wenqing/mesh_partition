@@ -678,6 +678,7 @@ void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
 //    WW. 06.2005
 void Elem::WriteIndex(ostream& os) const
 {
+    string deli = " ";
    os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
    for(int i=0; i<nnodes; i++)
       os<<nodes[i]->index<<deli;
@@ -685,6 +686,7 @@ void Elem::WriteIndex(ostream& os) const
 }
 void Elem::Write_index(ostream& os) const
 {
+    string deli = " ";
    if(nodes.Size()>0)
    {
       for(int i=0; i<nnodes; i++)
@@ -700,6 +702,7 @@ void Elem::Write_index(ostream& os) const
 //    WW. 06.2005
 void Elem::WriteAll(ostream& os) const
 {
+    string deli = " ";
    os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
    //if(index==0)
    os<<"Index X Y Z: "<<endl;
