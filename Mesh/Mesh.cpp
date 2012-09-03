@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include <sstream>
 #include <cstdlib>
 #include <iomanip>
 #include <cmath>
@@ -490,6 +491,8 @@ void Mesh::GenerateHighOrderNodes()
 #endif
 
          thisElem0->getLocalIndices_EdgeNodes(i, edgeIndex_loc0);
+         const long ena0 = thisElem0->getNodeIndex(edgeIndex_loc0[0]);
+		 const long ena1 = thisElem0->getNodeIndex(edgeIndex_loc0[1]);
          // Check neighbors
          done = false;
          for(k=0; k<2; k++)
@@ -511,8 +514,6 @@ void Mesh::GenerateHighOrderNodes()
                   {
                      thisElem->getLocalIndices_EdgeNodes(ii, edgeIndex_loc1);
 
-					 const long ena0 = thisElem0->getNodeIndex(edgeIndex_loc0[0]);
-					 const long ena1 = thisElem0->getNodeIndex(edgeIndex_loc0[1]);
 					 const long enb0 = thisElem->getNodeIndex(edgeIndex_loc1[0]);
 					 const long enb1 = thisElem->getNodeIndex(edgeIndex_loc1[1]);
 
@@ -618,7 +619,6 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 {
    string str;
    string stro;
-   char str_buf[3];
    int dom;
    int max_dom;
    int k,kk;
@@ -629,12 +629,15 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 
    string deli = " ";
    //
-   sprintf(str_buf, "%d",num_parts);
 
+   string s_nparts;
+   stringstream ss;
+   ss << num_parts;
+   ss >> s_nparts;
+   ss.clear();
 
-   string s_nparts = str_buf;
-   str = fname + ".mesh.epart." + str_buf;
-   stro = fname + "." + str_buf +"ddc";
+   str = fname + ".mesh.epart." + s_nparts;
+   stro = fname + "." + s_nparts +"ddc";
 
    //namef = ".mesh.epart."; //+str_buf;
    ifstream part_in;
@@ -771,9 +774,12 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 
       if(osdom)
       {
-         sprintf(str_buf, "%d",k);
+         string i_nparts;
+         ss << k;
+         ss >> i_nparts;
+         ss.clear();
 
-         string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"subdomains.msh";
+         string name_f = fname+"_"+i_nparts+"_of_"+s_nparts+"subdomains.msh";
          fstream test_out;
          test_out.open(name_f.c_str(), ios::out|ios::trunc );
 
@@ -825,12 +831,12 @@ Partition a mesh ny nodes
 02.2012 WW
 */
 
-void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, const bool is_quad, const bool osdom)
+void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, const std::string mat_fname, 
+	                                   const int num_parts, const bool is_quad, const bool osdom)
 {
 
    string f_iparts;
    string o_part_msh;
-   char str_buf[128];
    long dom;
    int k,kk;
    long i,j;
@@ -844,12 +850,88 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
    Node *a_node = NULL;
    Elem *a_elem = NULL;
    //
-   sprintf(str_buf, "%d",num_parts);
 
+   // Material data partitioning
+   int num_data = 0;
+   vector<string> m_headers;
+   vector<size_t> m_header_marker_per_data;
+   vector<string> m_datanames;
+   vector<long> m_ele_idx; 
+   vector<double> m_ele_val;
 
-   string s_nparts = str_buf;
-   f_iparts = fname + ".mesh.npart." + str_buf;
-   //o_part_msh = fname + "." + str_buf +"mesh";
+   if(mat_fname.size() !=0)
+   {
+	   string line_buffer;
+       string mat_fname_abs = fpath + mat_fname; 
+
+	   ifstream is_mat(mat_fname_abs.c_str());
+	   if(!is_mat.good())
+	   {
+           cout<<"Material data file "<<mat_fname_abs<<" does not exist"<<endl;
+		   exit(1);
+	   } 
+       is_mat >> num_data;
+	   m_datanames.resize(num_data);
+	   m_header_marker_per_data.resize(num_data +1 );
+	   m_header_marker_per_data[0] = 0;
+       for(k=0; k<num_data; k++)
+	   {
+           string data_name; 
+	       is_mat >> m_datanames[k];
+	        m_datanames[k] = fpath + m_datanames[k];
+       }
+	   is_mat.close();
+
+	   // Read each data file
+       for(k=0; k<num_data; k++)
+	   {
+		   is_mat.open(m_datanames[k].c_str());
+           if(!is_mat.good())
+	       {
+              cout<<"Material data file "<<m_datanames[k]<<" does not exist"<<endl;
+		      exit(1);
+	       } 
+		   while(!is_mat.eof())
+		   {
+              getline(is_mat, line_buffer);
+		      if(line_buffer.find("$DATA")!=string::npos)
+		      {
+			      m_headers.push_back(line_buffer);
+                  const size_t ne = elem_vector.size();
+				  for(size_t ie = 0; ie<ne; ie++)
+				  {
+                     long index;
+			         double m_val;
+				     is_mat >> index >> m_val;
+				     m_ele_idx.push_back(index);
+				     m_ele_val.push_back(m_val);
+				  } 
+		      } 
+		      else if(line_buffer.find("#STOP")!=string::npos)
+		      {
+			      break;
+		      } 
+		      else if(line_buffer.size()>0)
+		      {
+			      m_headers.push_back(line_buffer);
+		      }             
+		   }
+		   m_header_marker_per_data[k+1] = m_headers.size();
+		   is_mat.close();		    
+       }
+   } 
+
+   // Convert int to string
+   string s_nparts;
+   stringstream ss;
+   ss << num_parts;
+   ss >> s_nparts;
+   ss.clear();
+
+   
+
+   f_iparts = fname + ".mesh.npart." + s_nparts;
+   //o_part_msh = fname + "." + s_nparts +"mesh";
 
 
    ifstream npart_in(f_iparts.c_str());
@@ -1149,12 +1231,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          nmb_element_idxs_g += static_cast<long>(ghost_subdom_elements[j]->ghost_nodes.size());
       }
 
-
-      sprintf(str_buf, "%d", idom);
+	  string dom_str;
+      ss << idom;
+      ss >> dom_str;
+      ss.clear();
 #ifdef OUTPUT_TO_DIFF_FILES
       // Make output of this subdomain for simulation
-      //string name_f = fname+"_"+str_buf+"_of_"+s_nparts+"_subdomains.msh";
-      string name_f = fname+"_"+str_buf+".msh";
+      //string name_f = fname+"_"+dom_str+"_of_"+s_nparts+"_subdomains.msh";
+      string name_f = fname+"_"+dom_str+".msh";
       fstream os_subd(name_f.c_str(), ios::out|ios::trunc );
       //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
       //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
@@ -1196,6 +1280,37 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          }
          os_subd<<endl;
       }
+
+	  //----------------------------------------------------------------------------------
+      /// Material data partitioning
+	  if( num_data > 0)
+	  {
+          ofstream os_mat;
+          for(int mm = 0; mm<num_data; mm++)
+		  {
+              string mat_ofile_name = m_datanames[mm] + dom_str;
+			  os_mat.open(mat_ofile_name.c_str(), ios::trunc);
+			  for(size_t mh = m_header_marker_per_data[mm]; mh<m_header_marker_per_data[mm+1]; mh++ )
+			  {
+                 os_mat<<m_headers[mh]<<endl;
+			  }
+              for(j=0; j<nei_size; j++)
+			  {
+				 const long entry_index = in_subdom_elements[j]->getIndex() * mm;
+				 os_mat<<j<<deli<<m_ele_val[entry_index]<<endl; 
+			  }
+              for(j=0; j<ne_g; j++)
+              {
+				  const long entry_index  = ghost_subdom_elements[j]->getIndex() * mm;
+				 os_mat<<j+nei_size<<deli<<m_ele_val[entry_index]<<endl; 
+              }
+			  os_mat<<"#STOP"<<endl;
+
+			  os_mat.close();
+		  }
+	  }
+	  //----------------------------------------------------------------------------------
+
 #ifdef OUTPUT_TO_DIFF_FILES
       os_subd.clear();
       os_subd.close();
@@ -1205,7 +1320,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          //-----------------------------------------------------------
          /// VTK output
          // Elements in this subdomain
-         f_iparts = fname+"_"+str_buf+"_of_"+s_nparts+"_subdomains.vtk";
+         f_iparts = fname+"_"+dom_str+"_of_"+s_nparts+"_subdomains.vtk";
          //f_iparts = fname+"_"+str_buf+".vtk";
          ofstream os(f_iparts.c_str(), ios::out|ios::trunc);
 
@@ -1215,7 +1330,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const int num_parts, 
          os.close();
 
          //// Ghost elements in this subdomain
-         f_iparts = fname+"_"+str_buf+"_ghost_of_"+s_nparts+"_subdomains.vtk";
+         f_iparts = fname+"_"+dom_str+"_ghost_of_"+s_nparts+"_subdomains.vtk";
          ////f_iparts = fname+"_"+str_buf+"ghost.vtk";
          os.open(f_iparts.c_str(), ios::out|ios::trunc);
          WriteVTK_Nodes(os, sbd_nodes, nnodes_previous_sdom);

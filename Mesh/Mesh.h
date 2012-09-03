@@ -37,8 +37,8 @@ class Mesh
                                           const int sbd_index, const long node_shift = 0);
 
       void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts, const bool osdom);
-      void ConstructSubDomain_by_Nodes(const std::string fname,  const int num_parts,
-                                       const bool is_quad, const bool osdom);
+      void ConstructSubDomain_by_Nodes(const std::string fname, const std::string fpath, const std::string mat_fname,
+		                               const int num_parts, const bool is_quad, const bool osdom);
 
       void ConnectedNodes(bool quadratic);
       void ConnectedElements2Node(bool quadratic=false);

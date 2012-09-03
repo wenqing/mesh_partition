@@ -98,17 +98,6 @@ Elem::Elem(const int Index):Grain(Index)
 
    Owner = NULL;
 }
-//    WW. 06.2005
-Elem::~Elem()
-{
-   locnodes_index.resize(0);
-   nodes.resize(0);
-#ifdef BUILD_MESH_EDGE
-   edges.resize(0);
-#endif
-   neighbors.resize(0);
-   ghost_nodes.resize(0);
-}
 
 //    WW. 06.2005
 Elem::  Elem( const int Index,  Elem* onwer, const int Face):
@@ -231,14 +220,25 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
             if(faceIndex_loc[i]==edgeIndex_loc[1]&&
                   faceIndex_loc[k]==edgeIndex_loc[0] )
                edges_orientation[i] = -1;
-            edges[i]->boundayC = 'B';
             break;
          }
       }
    }
 #endif
-
 }
+
+//    WW. 06.2005
+Elem::~Elem()
+{
+   locnodes_index.resize(0);
+   nodes.resize(0);
+#ifdef BUILD_MESH_EDGE
+   edges.resize(0);
+#endif
+   neighbors.resize(0);
+   ghost_nodes.resize(0);
+}
+
 
 //    WW. 06.2005
 string Elem::getName() const
@@ -729,7 +729,7 @@ void Elem::MarkingNodes(bool maker)
 
    for (int i=0; i< SizeV; i++)
    {
-      nodes[i]->Marking(false);
+       nodes[i]->Marking(maker);
    }
 }
 

@@ -186,6 +186,9 @@ class Elem:public Grain
       void WriteAll(std::ostream& os = std::cout) const;
       void WriteNeighbors(std::ostream& os = std::cout) const;
    private:
+      // High order
+      bool quadratic;
+
       int nnodes;
       int nnodesHQ;
       int ele_dim;         // Dimension of element
@@ -194,10 +197,6 @@ class Elem:public Grain
       int sub_dom;
       int no_faces_on_surface;
       //
-
-      // High order
-      bool quadratic;
-
       double Volume;
 
 	  int PatchIndex;

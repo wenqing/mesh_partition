@@ -62,15 +62,16 @@ void OptionList()
                     " to convert ogs mesh file into the partitioning tool input file for domain decomposition,"
                     " and to use the paritioning tool's results to partition"
                     "the ogs finite element meshes for parallel computing.\n"
-                    "Note: input mesh file must only contain linear elements";
+                    "Note: input mesh file must be given with its absolute path if option -mat is used.";
    cout << s_intro<<endl<<endl;
    cout << "Tasks:\n  --version\n  --help\n  --ogs2metis\n  --metis2ogs\n"<<endl;
    cout << "Option for --metis2ogs task:"<<endl;
-   cout << "  -q           generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
-   cout << "  -np[number]  number of partitions. There must be no space between np and number"<<endl;
-   cout << "  -e           partition by element (non overlapped subdomain)"<<endl;
-   cout << "  -n           partition by node (overlapped subdomain)"<<endl;
-   cout << "  -odom        output subdomain mesh"<<endl;
+   cout << "  -q                : generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
+   cout << "  -np [number]      : define the number of partitions."<<endl;
+   cout << "  -e                : partition by element (non overlapped subdomain)"<<endl;
+   cout << "  -n                : partition by node (overlapped subdomain)"<<endl;
+   cout << "  -mat [file name without path]  : specify a file that contains file name of element-wsie material data."<<endl;
+   cout << "  -odom             : output subdomain mesh"<<endl;
 }
 
 void FindFileNameInCommand(stringstream &ss, string &fname)
@@ -105,6 +106,7 @@ int main(int argc, char* argv[])
    string s_buff;
    string fname;
    string fpath;
+   string mat_file_name = "";
 
    int nparts = 1;
    string str_nparts;
@@ -138,6 +140,13 @@ int main(int argc, char* argv[])
             nparts = atoi( argv[i+1]);
             str_nparts =  argv[i+1];
          }
+
+         // Number of partitions
+         if(s_buff.find("-mat")!=string::npos)
+         {
+            mat_file_name = argv[i+1];
+         }
+
 
          if(s_buff.find("ogs2metis")!=string::npos)
          {
@@ -215,6 +224,12 @@ int main(int argc, char* argv[])
                ss >> str_nparts;
 			   nparts = atoi(str_nparts.c_str());
             }
+
+            if(s_buff.find("-mat")!=string::npos)
+            {
+               ss >> mat_file_name;
+            }
+
             if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
             {
                fname = s_buff;
@@ -318,7 +333,7 @@ int main(int argc, char* argv[])
                a_mesh->GenerateHighOrderNodes();
             }
 
-            a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), nparts, quad, out_subdom);
+            a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), fpath, mat_file_name, nparts, quad, out_subdom);
          }
          break;
       default:
