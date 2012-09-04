@@ -856,7 +856,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    vector<string> m_headers;
    vector<size_t> m_header_marker_per_data;
    vector<string> m_datanames;
-   vector<long> m_ele_idx; 
+   //vector<long> m_ele_idx; 
    vector<double> m_ele_val;
 
    if(mat_fname.size() !=0)
@@ -903,7 +903,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
                      long index;
 			         double m_val;
 				     is_mat >> index >> m_val;
-				     m_ele_idx.push_back(index);
+				     //m_ele_idx.push_back(index);
 				     m_ele_val.push_back(m_val);
 				  } 
 		      } 
@@ -917,6 +917,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
 		      }             
 		   }
 		   m_header_marker_per_data[k+1] = m_headers.size();
+		   is_mat.clear();
 		   is_mat.close();		    
        }
    } 
@@ -981,6 +982,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
   vector<long> nnodes_sdom_quadratic_elements(num_parts);
   vector<size_t> position_node_file(num_parts);
 
+  const long ne_total = static_cast<long>(elem_vector.size());
+
   vector<Node*> sbd_nodes;
   for(int idom=0; idom<num_parts; idom++)
    {
@@ -1016,7 +1019,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       // Un-making all nodes and elements of the whole mesh
       for(j=0; j<nn; j++)
          node_vector[j]->Marking(false);
-      for(j=0; j<static_cast<long>(elem_vector.size()); j++)
+      for(j=0; j<ne_total; j++)
          elem_vector[j]->Marking(false);
       // Only select nodes in this subdomain
       for(j=0; j<size_sbd_nodes0; j++)
@@ -1034,7 +1037,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          a_node = sbd_nodes[j + nnodes_previous_sdom];
 
          // Search the elements connected to this nodes
-         for(k=0; k<static_cast<long>(a_node->ElementsRelated.size()); k++)
+		 const long ne_rel = static_cast<long>(a_node->ElementsRelated.size()); 
+         for(k=0; k<ne_rel; k++)
          {
             a_elem = elem_vector[a_node->ElementsRelated[k]];
 
@@ -1294,18 +1298,20 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
 			  {
                  os_mat<<m_headers[mh]<<endl;
 			  }
+
+			  const long e_shift = ne_total*mm;
               for(j=0; j<nei_size; j++)
 			  {
-				 const long entry_index = in_subdom_elements[j]->getIndex() * mm;
+				 const long entry_index = in_subdom_elements[j]->getIndex() + e_shift;
 				 os_mat<<j<<deli<<m_ele_val[entry_index]<<endl; 
 			  }
               for(j=0; j<ne_g; j++)
               {
-				  const long entry_index  = ghost_subdom_elements[j]->getIndex() * mm;
+				  const long entry_index  = ghost_subdom_elements[j]->getIndex() + e_shift;
 				 os_mat<<j+nei_size<<deli<<m_ele_val[entry_index]<<endl; 
               }
 			  os_mat<<"#STOP"<<endl;
-
+			  os_mat.clear();
 			  os_mat.close();
 		  }
 	  }
@@ -1326,6 +1332,22 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
 
          WriteVTK_Nodes(os, sbd_nodes, nnodes_previous_sdom);
          WriteVTK_Elements_of_Subdomain(os, in_subdom_elements, idom+1, node_id_shift);
+
+         /// Material data partitioning
+	     if( num_data > 0)
+	     {
+			 for(int mm = 0; mm<num_data; mm++)
+		     {
+    		     // Partition
+                 os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
+			     const long e_shift = ne_total*mm;
+				 for(i=0; i<nei_size; i++)
+				 {
+				   const long entry_index = in_subdom_elements[i]->getIndex() + e_shift;
+				   os<<m_ele_val[entry_index]<<endl; 
+				 }
+			 }
+ 	     }		  
          os.clear();
          os.close();
 
@@ -1335,6 +1357,20 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          os.open(f_iparts.c_str(), ios::out|ios::trunc);
          WriteVTK_Nodes(os, sbd_nodes, nnodes_previous_sdom);
          WriteVTK_Elements_of_Subdomain(os, ghost_subdom_elements, 0, node_id_shift);
+	     if( num_data > 0)
+	     {
+			 for(int mm = 0; mm<num_data; mm++)
+		     {
+    		     // Partition
+                 os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
+			     const long e_shift = ne_total*mm;
+				 for(i=0; i<ne_g; i++)
+				 {
+				   const long entry_index = ghost_subdom_elements[i]->getIndex() + e_shift;
+				   os<<m_ele_val[entry_index]<<endl; 
+				 }
+			 }
+ 	     }		  
          os.clear();
          os.close();
          //-----------------------------------------------------------
