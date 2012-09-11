@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
 
    Version();
    if(argc>1)
-   {
-      for(int i=0; i<argc; i++)
+   { 
+      for(int i=1; i<argc; i++)
       {
          s_buff = argv[i];
          if(s_buff.compare("-e") == 0)
@@ -156,20 +156,20 @@ int main(int argc, char* argv[])
          {
             this_task = metis2ogs;
          }
-         else if(s_buff.find("help")!=string::npos)
+         else if(s_buff.find("--help")!=string::npos)
          {
             //Version();
             OptionList();
             exit(0);
          }
-         else if(s_buff.find("version")!=string::npos)
+         else if(s_buff.find("--version")!=string::npos)
          {
             cout<<ver;
             exit(0);
          }
 
 
-         if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
+         if(  s_buff[0] != '-')
          {
             fname = s_buff;
          }
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
                ss >> mat_file_name;
             }
 
-            if(   !(s_buff.find("-")!=string::npos || s_buff.find("--")!=string::npos) )
+            if(  s_buff[0] != '-' )
             {
                fname = s_buff;
             } 
@@ -264,6 +264,12 @@ int main(int argc, char* argv[])
       cerr<<("Error: cannot open msh file . It may not exist !");
       exit(1);
    }
+
+   cout<<"File name is: "<<fname<<endl;
+   if(fpath.size()>0)
+     cout<<"File path is: "<<fpath<<endl;
+   else
+     cout<<"File path is: ./ "<<endl;
 
 
    clock_t elp_time;

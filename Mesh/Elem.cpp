@@ -62,13 +62,13 @@ int EdgeLocalNodeIndex [] =
 	2, 5, 15,
 	//pyramid, 8 edges, 24 entries. sh: 105
 	0, 1, 5,
-	0, 2, 6,
-	0, 3, 7,
-	0, 4, 8,
-	1, 2, 9,
-	2, 3, 10,
-	3, 4, 11,
-	4, 1, 12
+	1, 2, 6,
+	2, 3, 7,
+	3, 0, 8,
+	4, 0, 9,
+	4, 1, 10,
+	4, 2, 11,
+	4, 3, 12
 };
 int EdgeLocalIndexArrayElemShift [] =
 {  
@@ -98,7 +98,7 @@ Elem::Elem(const int Index):Grain(Index)
 
    Owner = NULL;
 }
-
+// Face element
 //    WW. 06.2005
 Elem::  Elem( const int Index,  Elem* onwer, const int Face):
    Grain(Index), Owner(onwer)
@@ -113,81 +113,42 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
       case line:  // 1-D bar element
          break;
       case quadri: // 2-D quadrilateral element
-         nnodes = 2;
-         nnodesHQ = 3;
-         ele_dim = 1;
          ele_Type = line;
-         nfaces = 2;
-         nedges = 0;
          break;
       case hex: // 3-D hexahedral element
-         nnodes = 4;
-         nnodesHQ = 8;
-         ele_dim = 2;
          ele_Type = quadri;
-         nfaces = 4;
-         nedges = 4;
          break;
       case tri:  // 2-D triagular element
-         nnodes = 2;
-         nnodesHQ = 3;
-         ele_dim = 1;
          ele_Type = line;
-         nfaces = 2;
-         nedges = 0;
          break;
       case tet:  // 3-D tetrahedral element
-         nnodes = 3;
-         nnodesHQ = 6;
-         ele_dim = 2;
          ele_Type = tri;
-         nfaces = 3;
-         nedges = 3;
          break;
       case prism:
          if(Face<2)
          {
-            nnodes = 3;
-            nnodesHQ = 6;
-            ele_dim = 2;
             ele_Type = tri;
-            nfaces = 3;
-            nedges = 3;
          }
          else
          {
-            nnodes = 4;
-            nnodesHQ = 8;
-            ele_dim = 2;
             ele_Type = quadri;
-            nfaces = 4;
-            nedges = 4;
          }
          break; // 3-D prismatic element
       case pyramid:
-         if(Face > 0)
+         if(Face == 0) // Bottom
          {
-            nnodes = 3;
-            nnodesHQ = 6;
-            ele_dim = 2;
-            ele_Type = tri;
-            nfaces = 3;
-            nedges = 3;
-         }
-         else // Bottom
-         {
-            nnodes = 4;
-            nnodesHQ = 8;
-            ele_dim = 2;
             ele_Type = quadri;
-            nfaces = 4;
-            nedges = 4;
+         }
+         else 
+         {
+            ele_Type = tri;
          }
          break; // 3-D prismatic element
 	  default:
 		 break;
    }
 
+   Init();
    PatchIndex =  Owner->PatchIndex;
    quadratic = Owner->quadratic;
    nodes.resize(n);
@@ -239,6 +200,64 @@ Elem::~Elem()
    ghost_nodes.resize(0);
 }
 
+void Elem::Init()
+{
+   // 2 Element configuration
+   switch(ele_Type)
+   {
+      case line:
+         nnodes = 2;
+         nnodesHQ = 3;
+         ele_dim = 1;
+         nfaces = 2;
+         nedges = 0;
+         break;
+      case quadri:
+         nnodes = 4;
+         nnodesHQ = 9;
+         ele_dim = 2;
+         nfaces = 4;
+         nedges = 4;
+         break;
+      case hex:
+         nnodes = 8;
+         nnodesHQ = 20;
+         ele_dim = 3;
+         nfaces = 6;
+         nedges = 12;
+         break;
+      case tri:
+         nnodes = 3;
+         nnodesHQ = 6;
+         ele_dim = 2;
+         nfaces = 3;
+         nedges = 3;
+         break;
+      case tet:
+         nnodes = 4;
+         nnodesHQ = 10;
+         ele_dim = 3;
+         nfaces = 4;
+         nedges = 6;
+         break;
+      case prism:
+         nnodes = 6;
+         nnodesHQ = 15;
+         ele_dim = 3;
+         nfaces = 5;
+         nedges = 9;
+         break;
+      case pyramid:
+         nnodes = 5;
+         nnodesHQ = 14;
+         ele_dim = 3;
+         nfaces = 5;
+         nedges = 8;
+         break;
+	  default:
+		break;	
+   }
+}
 
 //    WW. 06.2005
 string Elem::getName() const
@@ -377,60 +396,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    }
    //----------------------------------------------------------------------
    // 2 Element configuration
-   switch(ele_Type)
-   {
-      case line:
-         nnodes = 2;
-         nnodesHQ = 3;
-         ele_dim = 1;
-         nfaces = 2;
-         nedges = 0;
-         break;
-      case quadri:
-         nnodes = 4;
-         nnodesHQ = 9;
-         ele_dim = 2;
-         nfaces = 4;
-         nedges = 4;
-         break;
-      case hex:
-         nnodes = 8;
-         nnodesHQ = 20;
-         ele_dim = 3;
-         nfaces = 6;
-         nedges = 12;
-         break;
-      case tri:
-         nnodes = 3;
-         nnodesHQ = 6;
-         ele_dim = 2;
-         nfaces = 3;
-         nedges = 3;
-         break;
-      case tet:
-         nnodes = 4;
-         nnodesHQ = 10;
-         ele_dim = 3;
-         nfaces = 4;
-         nedges = 6;
-         break;
-      case prism:
-         nnodes = 6;
-         nnodesHQ = 15;
-         ele_dim = 3;
-         nfaces = 5;
-         nedges = 9;
-         break;
-      case pyramid:
-         nnodes = 5;
-         nnodesHQ = 14;
-         ele_dim = 3;
-         nfaces = 5;
-         nedges = 8;
-         break;
-	  default:
-		break;	
-   }
+   Init();
    nodes.resize(nnodes);
    //----------------------------------------------------------------------
    // 3 Reading element node data
@@ -1084,61 +1050,21 @@ int Elem::getElementFacesPyramid(const int Face, int *FaceNode)
    switch(Face)
    {
       case 0:
-         nn= 4; 
-         FaceNode[0] = 1;
-         FaceNode[1] = 2;
-         FaceNode[2] = 3;
-         FaceNode[3] = 4;
+         nn= 4;
+         FaceNode[0] = 0;
+         FaceNode[1] = 1;
+         FaceNode[2] = 2;
+         FaceNode[3] = 3;
          if(quadratic)
          {
-            FaceNode[4] = 9 ;
-            FaceNode[5] = 10;
-            FaceNode[6] = 11;
-            FaceNode[7] = 12;
-            FaceNode[9] = 3;
-            nn = 9;
+            FaceNode[4] = 5 ;
+            FaceNode[5] = 6;
+            FaceNode[6] = 7;
+            FaceNode[7] = 8;
+            nn = 8;
          }
          break;
       case 1:
-         nn = 3;
-         FaceNode[0] = 0;
-         FaceNode[1] = 2;
-         FaceNode[2] = 1;
-         if(quadratic)
-         {
-            nn = 6;
-            FaceNode[3] = 6 ;
-            FaceNode[4] = 9;
-            FaceNode[5] = 5;
-         }
-         break;
-      case 2:
-         nn = 3;
-         FaceNode[0] = 0;
-         FaceNode[1] = 3;
-         FaceNode[2] = 2;
-         if(quadratic)
-         {
-			nn = 6;  
-            FaceNode[3] = 7 ;
-            FaceNode[4] = 10;
-            FaceNode[5] = 6;
-         }
-         break;
-      case 3:
-         nn = 3;
-         FaceNode[0] = 0;
-         FaceNode[1] = 4;
-         FaceNode[2] = 3;
-         if(quadratic)
-         {
-            nn = 6;
-            FaceNode[3] = 8 ;
-            FaceNode[4] = 11;
-            FaceNode[5] = 7;
-         }
-         break;
-      case 4:
          nn = 3;
          FaceNode[0] = 0;
          FaceNode[1] = 1;
@@ -1147,8 +1073,47 @@ int Elem::getElementFacesPyramid(const int Face, int *FaceNode)
          {
             nn = 6;
             FaceNode[3] = 5 ;
+            FaceNode[4] = 10;
+            FaceNode[5] = 9;
+         }
+         break;
+      case 2:
+         nn = 3;
+         FaceNode[0] = 1;
+         FaceNode[1] = 2;
+         FaceNode[2] = 4;
+         if(quadratic)
+         {
+            nn = 6;
+            FaceNode[3] = 6 ;
+            FaceNode[4] = 11;
+            FaceNode[5] = 10;
+         }
+         break;
+      case 3:
+         nn = 3;
+         FaceNode[0] = 2;
+         FaceNode[1] = 3;
+         FaceNode[2] = 4;
+         if(quadratic)
+         {
+            nn = 6;
+            FaceNode[3] = 7 ;
             FaceNode[4] = 12;
-            FaceNode[5] = 8;
+            FaceNode[5] = 11;
+         }
+         break;
+      case 4:
+         nn = 3;
+         FaceNode[0] = 3;
+         FaceNode[1] = 0;
+         FaceNode[2] = 4;
+         if(quadratic)
+         {
+            nn = 6;
+            FaceNode[3] = 8 ;
+            FaceNode[4] = 9;
+            FaceNode[5] = 12;
          }
          break;
    }

@@ -35,6 +35,7 @@ class Elem:public Grain
 
       ~Elem();
 
+	  void Init();
       // Operator
       // virtual void operator = (const Elem& elem);
 
