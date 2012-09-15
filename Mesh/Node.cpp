@@ -42,7 +42,7 @@ bool Node::operator == (const Node& n)
 // Output
 void Node::Write(ostream& os) const
 {
-   os<<setw(14)<<" "<<" ";
+   os<<setw(14)<<index<<" ";
    os<<Coordinate[0]<<" "
       <<Coordinate[1]<<" "
       <<Coordinate[2]<<endl;
