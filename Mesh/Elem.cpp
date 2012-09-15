@@ -93,7 +93,6 @@ Elem::Elem(const int Index):Grain(Index)
    ele_dim = 1;         // Dimension of element
    PatchIndex = 0;
    //
-   Volume = 0.0;
    quadratic = false;
 
    Owner = NULL;

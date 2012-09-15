@@ -75,15 +75,6 @@ class Elem:public Grain
       }
       std::string getName() const;
 
-	  void setVolume(const double Vol)
-      {
-         Volume = Vol;
-      }
-      double getVolume() const
-      {
-         return Volume;
-      }
-
       // Nodes
       void getNodeIndeces(long  *node_index) const
       {
@@ -198,7 +189,6 @@ class Elem:public Grain
       int sub_dom;
       int no_faces_on_surface;
       //
-      double Volume;
 
 	  int PatchIndex;
       // Element type
