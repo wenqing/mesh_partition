@@ -987,6 +987,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
   vector<Node*> sbd_nodes;
   for(int idom=0; idom<num_parts; idom++)
    {
+
+      cout << "Process partition: " << idom << endl;    
+ 
       nmb_element_idxs = 0;
       nmb_element_idxs_g = 0;
 
