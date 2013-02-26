@@ -70,9 +70,13 @@ class Mesh
       // All nodes
       std::vector<Node*> node_vector;
       // All edges
+#ifdef BUILD_MESH_EDGE
       std::vector<Edge*> edge_vector;
+#endif
       // All surface feces
+#ifdef BUILD_MESH_FACE
       std::vector<Elem*> face_vector;
+#endif
       // All elements
       std::vector<Elem*> elem_vector;
 
