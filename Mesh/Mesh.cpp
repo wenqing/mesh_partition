@@ -41,13 +41,19 @@ Mesh::~Mesh()
       delete node_vector[i];
    node_vector.clear();
    // Edges
+#ifdef BUILD_MESH_EDGE
    for(i=0; i<(long)edge_vector.size(); i++)
       delete edge_vector[i];
    edge_vector.clear();
+#endif
+
+#ifdef BUILD_MESH_FACE
    // Surface faces
    for(i=0; i<(long)face_vector.size(); i++)
       delete face_vector[i];
    face_vector.clear();
+#endif
+
    // Element
    for(i=0; i<(long)elem_vector.size(); i++)
       delete elem_vector[i];
@@ -366,7 +372,8 @@ void Mesh::ConstructGrid()
       thisElem0->getNeighbors(Neighbors0);
       m0 = thisElem0->getFacesNumber();
 
-      // Check face on surface
+#ifdef BUILD_MESH_FACE
+	  // Check face on surface
       for(i=0; i<m0; i++) // Faces
       {
          if(Neighbors0[i])
@@ -377,6 +384,7 @@ void Mesh::ConstructGrid()
          face_vector.push_back(newFace);
          Neighbors0[i] = newFace;
       }
+#endif
       thisElem0->setNeighbors(Neighbors0);
 
    }
@@ -987,6 +995,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
   vector<Node*> sbd_nodes;
   for(int idom=0; idom<num_parts; idom++)
    {
+
+      cout << "Process partition: " << idom << endl;    
+ 
       nmb_element_idxs = 0;
       nmb_element_idxs_g = 0;
 

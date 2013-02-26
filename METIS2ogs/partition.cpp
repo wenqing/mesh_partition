@@ -66,7 +66,7 @@ void OptionList()
    cout << s_intro<<endl<<endl;
    cout << "Tasks:\n  --version\n  --help\n  --ogs2metis\n  --metis2ogs\n"<<endl;
    cout << "Option for --metis2ogs task:"<<endl;
-   cout << "  -q                : generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
+   //A bug here cout << "  -q                : generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
    cout << "  -np [number]      : define the number of partitions."<<endl;
    cout << "  -e                : partition by element (non overlapped subdomain)"<<endl;
    cout << "  -n                : partition by node (overlapped subdomain)"<<endl;
@@ -111,7 +111,6 @@ int main(int argc, char* argv[])
    int nparts = 1;
    string str_nparts;
 
-   Version();
    if(argc>1)
    { 
       for(int i=1; i<argc; i++)
@@ -158,7 +157,7 @@ int main(int argc, char* argv[])
          }
          else if(s_buff.find("--help")!=string::npos)
          {
-            //Version();
+            Version();
             OptionList();
             exit(0);
          }
@@ -179,6 +178,7 @@ int main(int argc, char* argv[])
    else //terminal
    {
       OptionList();
+      Version(); 
       cout<<"\nInput task, options and file name (non extension):\n ";
 
       getline(cin, s_buff);
