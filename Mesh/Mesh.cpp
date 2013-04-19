@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cfloat>
 #include <limits>
-
+#include <set>
 
 #include "Node.h"
 #include "Edge.h"
@@ -831,6 +831,19 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    //delete nod_dom;
 }
 
+struct ConnEdge
+{
+	long first;
+	long second;
+	ConnEdge(long i, long j) : first(i), second(j) {};
+};
+
+inline bool operator<(const ConnEdge& lhs, const ConnEdge& rhs)
+{
+  if (lhs.first != rhs.first) return lhs.first < rhs.first;
+  else return lhs.second < rhs.second;
+}
+
 /*!
 \brief void Mesh::ConstructSubDomain_by_Nodes
 
@@ -982,6 +995,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    os_subd.setf(ios::scientific);
 #endif
 
+   //
+   string cct_file_name = fname + ".cct";
+   fstream cct_file(cct_file_name.c_str(), ios::out|ios::trunc );
 
   long node_id_shift = 0;
   long nnodes_previous_sdom = 0;
@@ -998,6 +1014,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
 
       cout << "Process partition: " << idom << endl;    
  
+      //typedef std::pair<long,long> ConnEdge;
+	  std::vector<std::set<ConnEdge> > vec_neighbors(num_parts);
       nmb_element_idxs = 0;
       nmb_element_idxs_g = 0;
 
@@ -1066,8 +1084,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
                {
                   ng_nodes.push_back(kk);
                }
-               else
+               else {
                   g_nodes.push_back(kk);
+               }
             }
 
             // All nodes of this element are inside this subdomain
@@ -1086,6 +1105,17 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
                   a_elem->ghost_nodes[kk] = ng_nodes[kk];
 
             }
+
+            // overlapping edges
+        	for (size_t ig=0; ig<g_nodes.size(); ig++) {
+        		long ig_id = a_elem->getNode(g_nodes[ig])->global_index;
+        		long ig_dom = dom_idx[ig_id];
+        		for (size_t ing=0; ing<ng_nodes.size(); ing++) {
+            		long ing_id = a_elem->getNode(ng_nodes[ing])->global_index;
+            		vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
+            	}
+            }
+
             a_elem->Marking(true);
 
             ng_nodes.clear();
@@ -1297,6 +1327,27 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       }
 
 	  //----------------------------------------------------------------------------------
+      size_t n_nei = 0;
+      for (size_t ii=0; ii<vec_neighbors.size(); ii++) {
+    	  if (!vec_neighbors[ii].empty()) n_nei++;
+      }
+      cct_file << "#COMMUNICATION_TABLE\n";
+      cct_file << "  $MYRANK\n";
+      cct_file << "    " << idom << "\n";
+      cct_file << "  $NNEIGHBORS\n";
+      cct_file << "    " << n_nei << "\n";
+      for (size_t ii=0; ii<vec_neighbors.size(); ii++) {
+    	  std::set<ConnEdge> &edges = vec_neighbors[ii];
+    	  if (edges.empty()) continue;
+          cct_file << "  $NEIGHBOR\n";
+          cct_file << "    " << ii << "\n";
+          cct_file << "    " << edges.size() << "\n";
+          for (std::set<ConnEdge>::iterator itr=edges.begin(); itr!=edges.end(); ++itr) {
+              cct_file << "    " << itr->first << " " << itr->second << "\n";
+          }
+      }
+
+      //----------------------------------------------------------------------------------
       /// Material data partitioning
 	  if( num_data > 0)
 	  {
@@ -1446,6 +1497,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    }
    os<<"#STOP"<<endl;
    os.close();
+
+   cct_file<<"#STOP"<<endl;
+   cct_file.close();
 }
 
 // 02.2012. WW
