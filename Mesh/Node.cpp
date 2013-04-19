@@ -13,7 +13,7 @@ using namespace std;
 //1.  Node declaration
 //    WW. 06.2005
 Node:: Node(const int Index, const double x,
-            const double y, const double z):Grain(Index)
+            const double y, const double z):Grain(Index),global_index(Index)
 {
    Coordinate = new double[3];
    Coordinate[0] = x;

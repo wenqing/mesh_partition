@@ -20,7 +20,7 @@ class Mesh;
 class Node:public Grain
 {
    public:
-      Node(const int Index):Grain(Index)
+      Node(const int Index):Grain(Index), global_index(Index)
       {
          Coordinate = new double[3];
       }
@@ -87,6 +87,7 @@ class Node:public Grain
    private:
       double *Coordinate;
       long local_index; // For domain decomposition
+      long global_index;
       std::vector<long>  ElementsRelated;
       std::vector<long>  NodesRelated;
       friend class Mesh_Group::Edge;
