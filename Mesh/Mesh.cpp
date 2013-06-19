@@ -568,7 +568,7 @@ void Mesh::GenerateHighOrderNodes()
          aNode = new Node((long)node_vector.size());
          e_nodes0[8] = aNode;
          nnodes0 = thisElem0->nnodes;
-         for(i=0; i<8; i++) // Nodes
+         for(i=0; i<nnodes0; i++) // Nodes
          {
             x0 += e_nodes0[i]->X();
             y0 += e_nodes0[i]->Y();
