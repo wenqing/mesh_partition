@@ -831,20 +831,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    //delete nod_dom;
 }
 
-#if 0
-struct ConnEdge
-{
-	long first;
-	long second;
-	ConnEdge(long i, long j) : first(i), second(j) {};
-};
-
-inline bool operator<(const ConnEdge& lhs, const ConnEdge& rhs)
-{
-  if (lhs.first != rhs.first) return lhs.first < rhs.first;
-  else return lhs.second < rhs.second;
-}
-#else
+// NW
 struct ConnEdge
 {
 	Node* first;
@@ -857,7 +844,7 @@ inline bool operator<(const ConnEdge& lhs, const ConnEdge& rhs)
   if (lhs.first->getIndex() != rhs.first->getIndex()) return lhs.first->getIndex() < rhs.first->getIndex();
   else return lhs.second->getIndex() < rhs.second->getIndex();
 }
-#endif
+
 
 /*!
 \brief void Mesh::ConstructSubDomain_by_Nodes
