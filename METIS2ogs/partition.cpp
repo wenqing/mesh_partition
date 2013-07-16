@@ -29,19 +29,19 @@ using namespace Mesh_Group;
 #ifdef WIN32
 long HeapUsed()
 {
-    _HEAPINFO info = { 0, 0, 0 };
-    long used = 0;
-    int rc;
+   _HEAPINFO info = { 0, 0, 0 };
+   long used = 0;
+   int rc;
 
-    while ((rc=_heapwalk(&info)) == _HEAPOK)
-    {
-        if (info._useflag == _USEDENTRY)
-            used += (long)info._size;
-        }
-    if (rc != _HEAPEND && rc != _HEAPEMPTY)
-        used = (used?-used:-1);
+   while ((rc=_heapwalk(&info)) == _HEAPOK)
+   {
+      if (info._useflag == _USEDENTRY)
+         used += (long)info._size;
+   }
+   if (rc != _HEAPEND && rc != _HEAPEMPTY)
+      used = (used?-used:-1);
 
-    return used;
+   return used;
 }
 #endif
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
    string str_nparts;
 
    if(argc>1)
-   { 
+   {
       for(int i=1; i<argc; i++)
       {
          s_buff = argv[i];
@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
    else //terminal
    {
       OptionList();
-      Version(); 
+      Version();
       cout<<"\nInput task, options and file name (non extension):\n ";
 
       getline(cin, s_buff);
@@ -216,15 +216,15 @@ int main(int argc, char* argv[])
 
             if(s_buff.compare("-q") == 0)
             {
-                quad = true;
+               quad = true;
             }
             if(s_buff.compare("-odom") == 0)
             {
-                out_subdom = true;
+               out_subdom = true;
             }
             if(s_buff.compare("-cct") == 0)
             {
-                out_cct = true;
+               out_cct = true;
             }
             if(s_buff.compare("-ogsmsh") == 0)
             {
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
                //nparts = atoi(s_buff.c_str());
                //str_nparts = s_buff;
                ss >> str_nparts;
-			   nparts = atoi(str_nparts.c_str());
+               nparts = atoi(str_nparts.c_str());
             }
 
             if(s_buff.find("-mat")!=string::npos)
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
             if(  s_buff[0] != '-' )
             {
                fname = s_buff;
-            } 
+            }
          }
       }
       ss.clear();
@@ -284,9 +284,9 @@ int main(int argc, char* argv[])
 
    cout<<"File name is: "<<fname<<endl;
    if(fpath.size()>0)
-     cout<<"File path is: "<<fpath<<endl;
+      cout<<"File path is: "<<fpath<<endl;
    else
-     cout<<"File path is: ./ "<<endl;
+      cout<<"File path is: ./ "<<endl;
 
 
    clock_t elp_time;
@@ -321,20 +321,20 @@ int main(int argc, char* argv[])
          cout<<"\n***Compute mesh topology"<<endl;
          a_mesh->ConstructGrid();
 
-		 /// Partition mesh if metis source is include
+         /// Partition mesh if metis source is include
          if(nparts>1)
-		 {
+         {
 #ifdef USE_METIS_SOURCE
-         int argc_m;
-         argc_m = 3;
-         char *argv_m[3];
-         argv_m[0] = "-";
-         s_buff = fname + ".mesh";
+            int argc_m;
+            argc_m = 3;
+            char *argv_m[3];
+            argv_m[0] = "-";
+            s_buff = fname + ".mesh";
 
-         argv_m[1] = &s_buff[0];
-         argv_m[2] = &str_nparts[0];
+            argv_m[1] = &s_buff[0];
+            argv_m[2] = &str_nparts[0];
 
-         metis_main(argc_m, argv_m);
+            metis_main(argc_m, argv_m);
 //#else
 //         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
 
@@ -344,7 +344,7 @@ int main(int argc, char* argv[])
 //            exit(1);
 //         }
 #endif
-		 }
+         }
 
          cout<<"\n***Prepare subdomain mesh"<<endl;
          if(part_type == by_element)
@@ -365,7 +365,7 @@ int main(int argc, char* argv[])
 
 
 #ifdef WIN32
-  cout<<"\n\tMemory usage: "<< HeapUsed()/1024./1024.<<"MB"<<endl;
+   cout<<"\n\tMemory usage: "<< HeapUsed()/1024./1024.<<"MB"<<endl;
 #endif
 
    delete a_mesh;

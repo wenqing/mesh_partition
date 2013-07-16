@@ -45,15 +45,15 @@ void Node::Write(ostream& os) const
 {
    os<<setw(14)<<index<<" ";
    os<<Coordinate[0]<<" "
-      <<Coordinate[1]<<" "
-      <<Coordinate[2]<<endl;
+     <<Coordinate[1]<<" "
+     <<Coordinate[2]<<endl;
 }
 
 void Node::WriteCoordinates(std::ostream& os) const
 {
    os <<Coordinate[0]<<" "
-       <<Coordinate[1]<<" "
-       <<Coordinate[2]<<endl;
+      <<Coordinate[1]<<" "
+      <<Coordinate[2]<<endl;
 }
 
 //    WW. 06.2005

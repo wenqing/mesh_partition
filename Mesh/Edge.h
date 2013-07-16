@@ -45,7 +45,7 @@ class Edge:public Grain
       {
          quadratic = order;
       }
- 
+
       // Operator
       void operator = (Edge& edg);
       bool operator == (Edge& edg);

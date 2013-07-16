@@ -23,7 +23,7 @@ class Node:public Grain
       Node(const long Index):Grain(Index), global_index(Index)
       {
          Coordinate = new double[3];
-		 index_org = index;
+         index_org = index;
       }
       Node(const long Index, const double x,
            const double y, const double z=0.0);
@@ -89,7 +89,7 @@ class Node:public Grain
       double *Coordinate;
       long local_index; // For domain decomposition
       long global_index;
-	  size_t index_org; // For quad elements in ddc
+      size_t index_org; // For quad elements in ddc
       std::vector<long>  ElementsRelated;
       std::vector<long>  NodesRelated;
       friend class Mesh_Group::Edge;

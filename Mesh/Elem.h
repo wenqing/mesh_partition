@@ -22,7 +22,7 @@ namespace Mesh_Group
 class Node;
 class Edge;
 class Mesh;
-enum ElemType {line, quadri, hex, tri, tet, prism, pyramid}; 
+enum ElemType {line, quadri, hex, tri, tet, prism, pyramid};
 
 
 //3.  Element declaration
@@ -35,7 +35,7 @@ class Elem:public Grain
 
       ~Elem();
 
-	  void Init();
+      void Init();
       // Operator
       // virtual void operator = (const Elem& elem);
 
@@ -79,11 +79,11 @@ class Elem:public Grain
       void getNodeIndeces(long  *node_index) const
       {
          for (int i=0; i< (int) nodes.Size(); i++)
-			 node_index[i]= nodes[i]->index;
+            node_index[i]= nodes[i]->index;
       }
       long getNodeIndex(const int loc_lndex) const
       {
-		  return nodes[loc_lndex]->index;
+         return nodes[loc_lndex]->index;
       }
       void setNodes(Math_Group::vec<Node*>&  ele_nodes, const bool ReSize=false);
       void getNodes(Math_Group::vec<Node*>&  ele_nodes)
@@ -168,7 +168,7 @@ class Elem:public Grain
       }
 
       // Output
-	  void Read(std::istream& is, Mesh_Group::Mesh *mesh, int fileType);
+      void Read(std::istream& is, Mesh_Group::Mesh *mesh, int fileType);
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
       void WriteGSmsh(std::ostream& os, bool quad = false) const;
@@ -190,7 +190,7 @@ class Elem:public Grain
       int no_faces_on_surface;
       //
 
-	  int PatchIndex;
+      int PatchIndex;
       // Element type
       // 1 Line, 2 Quad, 3 Hex, 4 Tri, 5 Tet, 6 Pris
       ElemType ele_Type;
@@ -205,8 +205,8 @@ class Elem:public Grain
 #endif
       Math_Group::vec<Elem*>  neighbors;
       //vec<Elem*>  sons;
-  
-      int nnodes_gl; //> number of ghost nodes for linear element 
+
+      int nnodes_gl; //> number of ghost nodes for linear element
       std::vector<int>  ghost_nodes;
 
       // Private methods

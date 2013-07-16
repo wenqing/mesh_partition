@@ -83,10 +83,10 @@ void Mesh::ConnectedNodes(bool quadratic)
          for(l=0; l<m_ele->getNodesNumber(quadratic); l++)
          {
             exist = false;
-            const long nidx = m_ele->nodes[l]->index; 
+            const long nidx = m_ele->nodes[l]->index;
             for(k=0; k<(int)m_nod->NodesRelated.size(); k++)
             {
-                if(m_nod->NodesRelated[k] == nidx)
+               if(m_nod->NodesRelated[k] == nidx)
                {
                   exist = true;
                   break;
@@ -220,8 +220,8 @@ void Mesh::ConstructGrid()
             for(ei=0; ei<e_size_l; ei++)
             {
                ee = e_nodes0[faceIndex_loc0[k]]->ElementsRelated[ei];
-               if(ee==e) 
-                   continue;
+               if(ee==e)
+                  continue;
                thisElem = elem_vector[ee];
                thisElem->getNodeIndeces(node_index_glb);
                thisElem->getNeighbors(Neighbors);
@@ -510,10 +510,10 @@ void Mesh::GenerateHighOrderNodes()
             for(ei=0; ei<e_size_l; ei++)
             {
                ee = e_nodes0[edgeIndex_loc0[k]]->ElementsRelated[ei];
-               if(ee==e) 
+               if(ee==e)
                   continue;
                thisElem = elem_vector[ee];
-               
+
                // If this element already proccessed
                if(thisElem->nodes.Size() == thisElem->getNodesNumberHQ())
                {
@@ -527,7 +527,7 @@ void Mesh::GenerateHighOrderNodes()
                      const long enb1 = thisElem->getNodeIndex(edgeIndex_loc1[1]);
 
                      if(   (( ena0 == enb0 ) && (ena1 == enb1))
-                        || (( ena0 == enb1 ) && (ena1 == enb0))
+                           || (( ena0 == enb1 ) && (ena1 == enb0))
                        )
                      {
                         aNode = thisElem->getNode(edgeIndex_loc1[2]);
@@ -546,8 +546,8 @@ void Mesh::GenerateHighOrderNodes()
          }//for(k=0;k<2;k++)
          if(!done)
          {
-            const Node *na = thisElem0->getNode(edgeIndex_loc0[0]); 
-            const Node *nb = thisElem0->getNode(edgeIndex_loc0[1]); 
+            const Node *na = thisElem0->getNode(edgeIndex_loc0[0]);
+            const Node *nb = thisElem0->getNode(edgeIndex_loc0[1]);
             aNode = new Node((long)node_vector.size());
             aNode->setX(0.5*(na->X() + nb->X()));
             aNode->setY(0.5*(na->Y() + nb->Y()));
@@ -561,7 +561,7 @@ void Mesh::GenerateHighOrderNodes()
             node_vector.push_back(aNode);
          }
       } //  for(i=0; i<nedges0; i++)
- 
+
       // No neighors or no neighbor has new middle point
       //
       if(thisElem0->getElementType()==quadri) // Quadrilateral
@@ -577,7 +577,7 @@ void Mesh::GenerateHighOrderNodes()
          y0 /= 4.;
          z0 /= 4.;
 
-		 aNode = new Node((long)node_vector.size());
+         aNode = new Node((long)node_vector.size());
          aNode->setX(x0);
          aNode->setY(y0);
          aNode->setZ(z0);
@@ -837,15 +837,15 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 // NW
 struct ConnEdge
 {
-    Node* first;
-    Node* second;
-    ConnEdge(Node* i, Node* j) : first(i), second(j) {};
+   Node* first;
+   Node* second;
+   ConnEdge(Node* i, Node* j) : first(i), second(j) {};
 };
 
 inline bool operator<(const ConnEdge& lhs, const ConnEdge& rhs)
 {
-  if (lhs.first->getIndex() != rhs.first->getIndex()) return lhs.first->getIndex() < rhs.first->getIndex();
-  else return lhs.second->getIndex() < rhs.second->getIndex();
+   if (lhs.first->getIndex() != rhs.first->getIndex()) return lhs.first->getIndex() < rhs.first->getIndex();
+   else return lhs.second->getIndex() < rhs.second->getIndex();
 }
 
 /**
@@ -855,9 +855,9 @@ inline bool operator<(const ConnEdge& lhs, const ConnEdge& rhs)
 */
 template<typename T> std::string number2str(T d)
 {
-std::stringstream out;
-out << d;
-return out.str();
+   std::stringstream out;
+   out << d;
+   return out.str();
 }
 
 /*!
@@ -868,7 +868,7 @@ Partition a mesh ny nodes
 02.2012 WW
 */
 
-void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, const std::string mat_fname, 
+void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, const std::string mat_fname,
                                        const int num_parts, const bool is_quad, const bool osdom,  const bool out_renum_gsmsh, const bool out_cct)
 {
 
@@ -893,71 +893,71 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    vector<string> m_headers;
    vector<size_t> m_header_marker_per_data;
    vector<string> m_datanames;
-   //vector<long> m_ele_idx; 
+   //vector<long> m_ele_idx;
    vector<double> m_ele_val;
 
    if(mat_fname.size() !=0)
    {
-       string line_buffer;
-       string mat_fname_abs = fpath + mat_fname; 
+      string line_buffer;
+      string mat_fname_abs = fpath + mat_fname;
 
-       ifstream is_mat(mat_fname_abs.c_str());
-       if(!is_mat.good())
-       {
-           cout<<"Material data file "<<mat_fname_abs<<" does not exist"<<endl;
-           exit(1);
-       }
-       is_mat >> num_data;
-       m_datanames.resize(num_data);
-       m_header_marker_per_data.resize(num_data +1 );
-       m_header_marker_per_data[0] = 0;
-       for(k=0; k<num_data; k++)
-       {
-           string data_name; 
-           is_mat >> m_datanames[k];
-            m_datanames[k] = fpath + m_datanames[k];
-       }
-       is_mat.close();
+      ifstream is_mat(mat_fname_abs.c_str());
+      if(!is_mat.good())
+      {
+         cout<<"Material data file "<<mat_fname_abs<<" does not exist"<<endl;
+         exit(1);
+      }
+      is_mat >> num_data;
+      m_datanames.resize(num_data);
+      m_header_marker_per_data.resize(num_data +1 );
+      m_header_marker_per_data[0] = 0;
+      for(k=0; k<num_data; k++)
+      {
+         string data_name;
+         is_mat >> m_datanames[k];
+         m_datanames[k] = fpath + m_datanames[k];
+      }
+      is_mat.close();
 
-       // Read each data file
-       for(k=0; k<num_data; k++)
-       {
-           is_mat.open(m_datanames[k].c_str());
-           if(!is_mat.good())
-           {
-              cout<<"Material data file "<<m_datanames[k]<<" does not exist"<<endl;
-              exit(1);
-           }
-           while(!is_mat.eof())
-           {
-              getline(is_mat, line_buffer);
-              if(line_buffer.find("$DATA")!=string::npos)
-              {
-                  m_headers.push_back(line_buffer);
-                  const size_t ne = elem_vector.size();
-                  for(size_t ie = 0; ie<ne; ie++)
-                  {
-                     long index;
-                     double m_val;
-                     is_mat >> index >> m_val;
-                     //m_ele_idx.push_back(index);
-                     m_ele_val.push_back(m_val);
-                  }
-              }
-              else if(line_buffer.find("#STOP")!=string::npos)
-              {
-                  break;
-              }
-              else if(line_buffer.size()>0)
-              {
-                  m_headers.push_back(line_buffer);
-              }
-           }
-           m_header_marker_per_data[k+1] = m_headers.size();
-           is_mat.clear();
-           is_mat.close();
-       }
-   } 
+      // Read each data file
+      for(k=0; k<num_data; k++)
+      {
+         is_mat.open(m_datanames[k].c_str());
+         if(!is_mat.good())
+         {
+            cout<<"Material data file "<<m_datanames[k]<<" does not exist"<<endl;
+            exit(1);
+         }
+         while(!is_mat.eof())
+         {
+            getline(is_mat, line_buffer);
+            if(line_buffer.find("$DATA")!=string::npos)
+            {
+               m_headers.push_back(line_buffer);
+               const size_t ne = elem_vector.size();
+               for(size_t ie = 0; ie<ne; ie++)
+               {
+                  long index;
+                  double m_val;
+                  is_mat >> index >> m_val;
+                  //m_ele_idx.push_back(index);
+                  m_ele_val.push_back(m_val);
+               }
+            }
+            else if(line_buffer.find("#STOP")!=string::npos)
+            {
+               break;
+            }
+            else if(line_buffer.size()>0)
+            {
+               m_headers.push_back(line_buffer);
+            }
+         }
+         m_header_marker_per_data[k+1] = m_headers.size();
+         is_mat.clear();
+         is_mat.close();
+      }
+   }
 
    //--------------------------------------------------------------------------
    // Read a METIS node partitioned file
@@ -998,9 +998,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    string name_f = fname+"_partitioned_"+ s_nparts + ".msh";
    fstream os_subd(name_f.c_str(), ios::out|ios::trunc );
    name_f = "Subdomain mesh "
-           "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
+            "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
             "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
-       "Total integer variables of elements;Total integer variables of ghost elements  ";
+            "Total integer variables of elements;Total integer variables of ghost elements  ";
    os_subd<<name_f<<endl;
    os_subd<<num_parts<<endl;
    setw(14);
@@ -1011,24 +1011,25 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
 
    //
 
-  long node_id_shift = 0;
-  long nnodes_previous_sdom = 0;
-  vector<long> nnodes_sdom_start(num_parts);
-  vector<long> nnodes_sdom_linear_elements(num_parts);
-  vector<long> nnodes_sdom_quadratic_elements(num_parts);
-  vector<size_t> position_node_file(num_parts);
+   long node_id_shift = 0;
+   long nnodes_previous_sdom = 0;
+   vector<long> nnodes_sdom_start(num_parts);
+   vector<long> nnodes_sdom_linear_elements(num_parts);
+   vector<long> nnodes_sdom_quadratic_elements(num_parts);
+   vector<size_t> position_node_file(num_parts);
 
-  const long ne_total = static_cast<long>(elem_vector.size());
+   const long ne_total = static_cast<long>(elem_vector.size());
 
-  vector<Node*> sbd_nodes;
-  std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors(num_parts); //NW
-  for(int idom=0; idom<num_parts; idom++)
+   vector<Node*> sbd_nodes;
+   std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors(num_parts); //NW
+   for(int idom=0; idom<num_parts; idom++)
    {
-  if (out_cct) {
-      vec_neighbors[idom].resize(num_parts);
-}
-      cout << "Process partition: " << idom << endl;    
- 
+      if (out_cct)
+      {
+         vec_neighbors[idom].resize(num_parts);
+      }
+      cout << "Process partition: " << idom << endl;
+
       nmb_element_idxs = 0;
       nmb_element_idxs_g = 0;
 
@@ -1095,7 +1096,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
                {
                   ng_nodes.push_back(kk);
                }
-               else {
+               else
+               {
                   g_nodes.push_back(kk);
                }
             }
@@ -1118,17 +1120,20 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             }
 
             // overlapping edges
-  if (out_cct) {
-            for (size_t ig=0; ig<g_nodes.size(); ig++) {
-                long ig_id = a_elem->getNode(g_nodes[ig])->global_index; //index; //;
-                long ig_dom = dom_idx[ig_id];
-                for (size_t ing=0; ing<ng_nodes.size(); ing++) {
-                    //long ing_id = a_elem->getNode(ng_nodes[ing])->index; //global_index;
-                    vec_neighbors[idom][ig_dom].insert(ConnEdge(a_elem->getNode(ng_nodes[ing]), a_elem->getNode(g_nodes[ig]))); // inner node - ghost node
-                    //vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
-                }
+            if (out_cct)
+            {
+               for (size_t ig=0; ig<g_nodes.size(); ig++)
+               {
+                  long ig_id = a_elem->getNode(g_nodes[ig])->global_index; //index; //;
+                  long ig_dom = dom_idx[ig_id];
+                  for (size_t ing=0; ing<ng_nodes.size(); ing++)
+                  {
+                     //long ing_id = a_elem->getNode(ng_nodes[ing])->index; //global_index;
+                     vec_neighbors[idom][ig_dom].insert(ConnEdge(a_elem->getNode(ng_nodes[ing]), a_elem->getNode(g_nodes[ig]))); // inner node - ghost node
+                     //vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
+                  }
+               }
             }
-}
             a_elem->Marking(true);
 
             ng_nodes.clear();
@@ -1165,7 +1170,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
             {
                a_node = a_elem->nodes[k];
-			   i = a_elem->nodes[k]->index_org;
+               i = a_elem->nodes[k]->index_org;
                if(sdom_marked[i]) // Already in other subdomains
                   continue;
 
@@ -1196,7 +1201,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             {
                a_node = a_elem->nodes[k];
                // Since a_elem->nodes_index[k] is not touched
-			   i = a_elem->nodes[k]->index_org;
+               i = a_elem->nodes[k]->index_org;
                if(sdom_marked[i]) // Already in other subdomains
                   continue;
 
@@ -1265,7 +1270,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             new_node_idx++;
 
             if(k < a_elem->getNodesNumber())
-                sdom_nnodes++;
+               sdom_nnodes++;
          }
 
       }
@@ -1278,7 +1283,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       nmb_element_idxs =  3*nei;
       for(j=0; j<nei; j++)
       {
-         nmb_element_idxs += in_subdom_elements[j]->getNodesNumber(is_quad);  
+         nmb_element_idxs += in_subdom_elements[j]->getNodesNumber(is_quad);
       }
       const long neg = static_cast<long>( ghost_subdom_elements.size());
       //  mat index, element type, number of element, number of ghost nodes, number of ghost nodes of high order elements
@@ -1300,13 +1305,13 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
 
 
       name_f = "Subdomain mesh "
-           "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
-            "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
-       "Total integer variables of elements;Total integer variables of ghost elements  ";
+               "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
+               "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
+               "Total integer variables of elements;Total integer variables of ghost elements  ";
       os_subd<<name_f<<endl;
 #endif
       os_subd<<size_sbd_nodes<<deli<<sdom_nnodes<<deli<<in_subdom_elements.size()
-            <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
+             <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
              <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
              <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
 
@@ -1341,31 +1346,31 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       /// Material data partitioning
       if( num_data > 0)
       {
-          ofstream os_mat;
-          for(int mm = 0; mm<num_data; mm++)
-          {
-              string mat_ofile_name = m_datanames[mm] + dom_str;
-              os_mat.open(mat_ofile_name.c_str(), ios::trunc);
-              for(size_t mh = m_header_marker_per_data[mm]; mh<m_header_marker_per_data[mm+1]; mh++ )
-              {
-                 os_mat<<m_headers[mh]<<endl;
-              }
+         ofstream os_mat;
+         for(int mm = 0; mm<num_data; mm++)
+         {
+            string mat_ofile_name = m_datanames[mm] + dom_str;
+            os_mat.open(mat_ofile_name.c_str(), ios::trunc);
+            for(size_t mh = m_header_marker_per_data[mm]; mh<m_header_marker_per_data[mm+1]; mh++ )
+            {
+               os_mat<<m_headers[mh]<<endl;
+            }
 
-              const long e_shift = ne_total*mm;
-              for(j=0; j<nei_size; j++)
-              {
-                 const long entry_index = in_subdom_elements[j]->getIndex() + e_shift;
-                 os_mat<<j<<deli<<m_ele_val[entry_index]<<endl;
-              }
-              for(j=0; j<ne_g; j++)
-              {
-                  const long entry_index  = ghost_subdom_elements[j]->getIndex() + e_shift;
-                 os_mat<<j+nei_size<<deli<<m_ele_val[entry_index]<<endl;
-              }
-              os_mat<<"#STOP"<<endl;
-              os_mat.clear();
-              os_mat.close();
-          }
+            const long e_shift = ne_total*mm;
+            for(j=0; j<nei_size; j++)
+            {
+               const long entry_index = in_subdom_elements[j]->getIndex() + e_shift;
+               os_mat<<j<<deli<<m_ele_val[entry_index]<<endl;
+            }
+            for(j=0; j<ne_g; j++)
+            {
+               const long entry_index  = ghost_subdom_elements[j]->getIndex() + e_shift;
+               os_mat<<j+nei_size<<deli<<m_ele_val[entry_index]<<endl;
+            }
+            os_mat<<"#STOP"<<endl;
+            os_mat.clear();
+            os_mat.close();
+         }
       }
       //----------------------------------------------------------------------------------
 
@@ -1377,7 +1382,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       {
          //-----------------------------------------------------------
          /// VTK output
-		 ouput_vtk_part_info = true;
+         ouput_vtk_part_info = true;
          // Elements in this subdomain
          f_iparts = fname+"_"+dom_str+"_of_"+s_nparts+"_subdomains.vtk";
          //f_iparts = fname+"_"+str_buf+".vtk";
@@ -1389,18 +1394,18 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          /// Material data partitioning
          if( num_data > 0)
          {
-             for(int mm = 0; mm<num_data; mm++)
-             {
-                 // Partition
-                 os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
-                 const long e_shift = ne_total*mm;
-                 for(i=0; i<nei_size; i++)
-                 {
-                   const long entry_index = in_subdom_elements[i]->getIndex() + e_shift;
-                   os<<m_ele_val[entry_index]<<endl;
-                 }
-             }
-          }
+            for(int mm = 0; mm<num_data; mm++)
+            {
+               // Partition
+               os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
+               const long e_shift = ne_total*mm;
+               for(i=0; i<nei_size; i++)
+               {
+                  const long entry_index = in_subdom_elements[i]->getIndex() + e_shift;
+                  os<<m_ele_val[entry_index]<<endl;
+               }
+            }
+         }
          os.clear();
          os.close();
 
@@ -1412,18 +1417,18 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          WriteVTK_Elements_of_Subdomain(os, ghost_subdom_elements, 0, node_id_shift);
          if( num_data > 0)
          {
-             for(int mm = 0; mm<num_data; mm++)
-             {
-                 // Partition
-                 os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
-                 const long e_shift = ne_total*mm;
-                 for(i=0; i<ne_g; i++)
-                 {
-                   const long entry_index = ghost_subdom_elements[i]->getIndex() + e_shift;
-                   os<<m_ele_val[entry_index]<<endl;
-                 }
-             }
-          }
+            for(int mm = 0; mm<num_data; mm++)
+            {
+               // Partition
+               os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
+               const long e_shift = ne_total*mm;
+               for(i=0; i<ne_g; i++)
+               {
+                  const long entry_index = ghost_subdom_elements[i]->getIndex() + e_shift;
+                  os<<m_ele_val[entry_index]<<endl;
+               }
+            }
+         }
          os.clear();
          os.close();
          //-----------------------------------------------------------
@@ -1437,49 +1442,54 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       ghost_subdom_elements.clear();
    }
 
-  //----------------------------------------------------------------------------------
-  if (out_cct) {
+   //----------------------------------------------------------------------------------
+   if (out_cct)
+   {
       string cct_file_name = fname + "_" + s_nparts + ".cct";
       fstream cct_file(cct_file_name.c_str(), ios::out|ios::trunc );
-      for (size_t idom=0; idom<vec_neighbors.size(); idom++) {
-          size_t n_nei = 0;
-          for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++) {
-              if (!vec_neighbors[idom][ii].empty()) n_nei++;
-          }
-          cct_file << "#COMMUNICATION_TABLE\n";
-          cct_file << "  $MYRANK\n";
-          cct_file << "    " << idom << "\n";
-          cct_file << "  $NNEIGHBORS\n";
-          cct_file << "    " << n_nei << "\n";
-          for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++) {
-              std::set<ConnEdge> &edges = vec_neighbors[idom][ii];
-              if (edges.empty()) continue;
-              cct_file << "  $NEIGHBOR\n";
-              cct_file << "    " << ii << "\n";
-              cct_file << "    " << edges.size() << "\n";
-              for (std::set<ConnEdge>::iterator itr=edges.begin(); itr!=edges.end(); ++itr) {
-                  cct_file << "    " << itr->first->local_index << " " << itr->second->local_index << "\n";
-        //              cct_file << "    " << itr->first << " " << itr->second << "\n";
-              }
-          }
+      for (size_t idom=0; idom<vec_neighbors.size(); idom++)
+      {
+         size_t n_nei = 0;
+         for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++)
+         {
+            if (!vec_neighbors[idom][ii].empty()) n_nei++;
+         }
+         cct_file << "#COMMUNICATION_TABLE\n";
+         cct_file << "  $MYRANK\n";
+         cct_file << "    " << idom << "\n";
+         cct_file << "  $NNEIGHBORS\n";
+         cct_file << "    " << n_nei << "\n";
+         for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++)
+         {
+            std::set<ConnEdge> &edges = vec_neighbors[idom][ii];
+            if (edges.empty()) continue;
+            cct_file << "  $NEIGHBOR\n";
+            cct_file << "    " << ii << "\n";
+            cct_file << "    " << edges.size() << "\n";
+            for (std::set<ConnEdge>::iterator itr=edges.begin(); itr!=edges.end(); ++itr)
+            {
+               cct_file << "    " << itr->first->local_index << " " << itr->second->local_index << "\n";
+               //              cct_file << "    " << itr->first << " " << itr->second << "\n";
+            }
+         }
       }
       cct_file<<"#STOP"<<endl;
       cct_file.close();
-  }
+   }
 
-  //----------------------------------------------------------------------------------
+   //----------------------------------------------------------------------------------
 
 #ifdef OUTPUT_TO_SINGLE_FILE
    // Rewrite nodes wwith new node index
-   
+
    long end = 0;
    for(int idom=0; idom<num_parts; idom++)
    {
       const long start = nnodes_sdom_start[idom];
       if(idom < num_parts-1)
-          end = nnodes_sdom_start[idom+1];
+         end = nnodes_sdom_start[idom+1];
       else
-          end = static_cast<long>(sbd_nodes.size());
+         end = static_cast<long>(sbd_nodes.size());
 
       os_subd.seekp(position_node_file[idom]);
       for(i=start; i<end; i++)
@@ -1489,7 +1499,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          a_node->Write(os_subd);
       }
    }
-   
+
    os_subd.clear();
    os_subd.close();
 #endif
@@ -1510,9 +1520,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          for(i=start; i<end; i++)
          {
             a_node = sbd_nodes[i];
-            a_node->index = a_node->local_index;					
+            a_node->index = a_node->local_index;
             a_node->Write(os);
-	    }
+         }
       }
 
       os<<" $ELEMENTS\n"<<elem_vector.size()<<endl;
@@ -1521,7 +1531,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
          elem_vector[e]->WriteGSmsh(os);
       }
       os<<"#STOP"<<endl;
-	  os.clear();
+      os.clear();
       os.close();
    }
 
@@ -1545,18 +1555,18 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       {
          a_node = sbd_nodes[i];
          a_node->index = a_node->local_index;
-		 if(useQuadratic)
-		 {
-			 a_node->index -= quad_nn;
-		 }
+         if(useQuadratic)
+         {
+            a_node->index -= quad_nn;
+         }
 
          os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
       }
-      
-	  if(useQuadratic)
-	  {
-	     quad_nn += nnodes_sdom_quadratic_elements[idom] - end;
-	  }  
+
+      if(useQuadratic)
+      {
+         quad_nn += nnodes_sdom_quadratic_elements[idom] - end;
+      }
    }
    useQuadratic = false;
    WriteVTK_Elements_of_Subdomain(os, elem_vector, 0);

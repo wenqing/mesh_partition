@@ -19,66 +19,66 @@ using namespace Math_Group;
 
 int EdgeLocalNodeIndex [] =
 {
-    // Line, 3 entries
-	0, 1, 2,
-	// quadri, 4 edges, 12 entries. sh: 3
-	0, 1, 4, 
-    1, 2, 5,
-	2, 3, 6,
-	3, 0, 7, 
-	// hex, 12 edges, 36 entries. sh: 15
-	0, 1, 8, 
-	1, 2, 9,
-	2, 3, 10,
-	3, 0, 11, 
-	4, 5, 12, 
-	5, 6, 13,
-	6, 7, 14,
-	7, 4, 15, 
-	4, 0, 16, 
-	5, 1, 17,
-	6, 2, 18,
-	7, 3, 19,
-	//tri, 3 edges, 9 entries. sh: 51     
-	0, 1, 3, 
-    1, 2, 4,
-	2, 0, 5,
-	//tet, 6 edges, 18 entries. sh: 60
-	0, 1, 4, 
-    1, 2, 5,
-	2, 0, 6,
-	0, 3, 7, 
-    1, 3, 8,
-	2, 3, 9,
-	//prism, 9 edges, 27 entries. sh: 78 
-	0, 1, 6, 
-    1, 2, 7,
-	2, 0, 8,
-	3, 4, 9, 
-    4, 5, 10,
-	5, 3, 11,
-	0, 3, 12,
-	1, 4, 13,
-	2, 5, 15,
-	//pyramid, 8 edges, 24 entries. sh: 105
-	0, 1, 5,
-	1, 2, 6,
-	2, 3, 7,
-	3, 0, 8,
-	4, 0, 9,
-	4, 1, 10,
-	4, 2, 11,
-	4, 3, 12
+   // Line, 3 entries
+   0, 1, 2,
+   // quadri, 4 edges, 12 entries. sh: 3
+   0, 1, 4,
+   1, 2, 5,
+   2, 3, 6,
+   3, 0, 7,
+   // hex, 12 edges, 36 entries. sh: 15
+   0, 1, 8,
+   1, 2, 9,
+   2, 3, 10,
+   3, 0, 11,
+   4, 5, 12,
+   5, 6, 13,
+   6, 7, 14,
+   7, 4, 15,
+   4, 0, 16,
+   5, 1, 17,
+   6, 2, 18,
+   7, 3, 19,
+   //tri, 3 edges, 9 entries. sh: 51
+   0, 1, 3,
+   1, 2, 4,
+   2, 0, 5,
+   //tet, 6 edges, 18 entries. sh: 60
+   0, 1, 4,
+   1, 2, 5,
+   2, 0, 6,
+   0, 3, 7,
+   1, 3, 8,
+   2, 3, 9,
+   //prism, 9 edges, 27 entries. sh: 78
+   0, 1, 6,
+   1, 2, 7,
+   2, 0, 8,
+   3, 4, 9,
+   4, 5, 10,
+   5, 3, 11,
+   0, 3, 12,
+   1, 4, 13,
+   2, 5, 15,
+   //pyramid, 8 edges, 24 entries. sh: 105
+   0, 1, 5,
+   1, 2, 6,
+   2, 3, 7,
+   3, 0, 8,
+   4, 0, 9,
+   4, 1, 10,
+   4, 2, 11,
+   4, 3, 12
 };
 int EdgeLocalIndexArrayElemShift [] =
-{  
-	0, //Line
-	3, //quad
-	15, //hex
-	51, //tri
-	60, //tet
-	78, //prism
-	106 //pyramid
+{
+   0, //Line
+   3, //quad
+   15, //hex
+   51, //tri
+   60, //tet
+   78, //prism
+   106 //pyramid
 };
 
 
@@ -138,13 +138,13 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
          {
             ele_Type = quadri;
          }
-         else 
+         else
          {
             ele_Type = tri;
          }
          break; // 3-D prismatic element
-	  default:
-		 break;
+      default:
+         break;
    }
 
    Init();
@@ -253,8 +253,8 @@ void Elem::Init()
          nfaces = 5;
          nedges = 8;
          break;
-	  default:
-		break;	
+      default:
+         break;
    }
 }
 
@@ -379,8 +379,8 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
             case 7:
                ele_Type = pyramid;
                break;
-			default:
-			   break;		
+            default:
+               break;
          }
          index--;
          break;
@@ -405,36 +405,41 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
          //....................................................................
       case 0: // msh
          for(int i=0; i<nnodes; i++)
-         {   is >> nidx;		  
-             nodes[i] = mesh->node_vector[nidx];
+         {
+            is >> nidx;
+            nodes[i] = mesh->node_vector[nidx];
          }
          break;
          //....................................................................
       case 1: // rfi
          for(int i=0; i<nnodes; i++)
-         {   is >> nidx;		  
-             nodes[i] = mesh->node_vector[nidx];
+         {
+            is >> nidx;
+            nodes[i] = mesh->node_vector[nidx];
          }
          break;
          //....................................................................
       case 2: // gmsh
          for(int i=0; i<nnodes; i++)
-         {   is >> nidx;		  
-             nodes[i] = mesh->node_vector[nidx-1];
+         {
+            is >> nidx;
+            nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
          //....................................................................
       case 3: // GMS
          for(int i=0; i<nnodes; i++)
-         {   is >> nidx;		  
-             nodes[i] = mesh->node_vector[nidx-1];
+         {
+            is >> nidx;
+            nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
          //....................................................................
       case 4: // SOL
          for(int i=0; i<nnodes; i++)
-         {   is >> nidx;		  
-             nodes[i] = mesh->node_vector[nidx-1];
+         {
+            is >> nidx;
+            nodes[i] = mesh->node_vector[nidx-1];
          }
          is >> PatchIndex;
          break;
@@ -446,7 +451,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    for(int i=0; i<nfaces; i++)
       neighbors[i] = NULL;
 
-#ifdef BUILD_MESH_EDGE 
+#ifdef BUILD_MESH_EDGE
    edges.resize(nedges);
    edges_orientation.resize(nedges);
    for(int i=0; i<nedges; i++)
@@ -632,7 +637,7 @@ void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
             os<< "24 "<<endl;
             break;
          default:
-            cout<<"Warning: quadratic element is not available for prism and pyramid elements"<<endl;				
+            cout<<"Warning: quadratic element is not available for prism and pyramid elements"<<endl;
             break;
       }
    }
@@ -641,7 +646,7 @@ void Elem::WriteVTK_Type(ostream& os,  bool isquad) const
 //    WW. 06.2005
 void Elem::WriteIndex(ostream& os) const
 {
-    string deli = " ";
+   string deli = " ";
    os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
    for(int i=0; i<nnodes; i++)
       os<<nodes[i]->index<<deli;
@@ -649,7 +654,7 @@ void Elem::WriteIndex(ostream& os) const
 }
 void Elem::Write_index(ostream& os) const
 {
-    string deli = " ";
+   string deli = " ";
    if(nodes.Size()>0)
    {
       for(int i=0; i<nnodes; i++)
@@ -665,13 +670,13 @@ void Elem::Write_index(ostream& os) const
 //    WW. 06.2005
 void Elem::WriteAll(ostream& os) const
 {
-    string deli = " ";
+   string deli = " ";
    os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
    //if(index==0)
    os<<"Index X Y Z: "<<endl;
    for(int i=0; i<nodes.Size(); i++)
    {
-      const Node *anode = nodes[i];  
+      const Node *anode = nodes[i];
       os<<anode->index
         <<deli<<anode->X()
         <<deli<<anode->Y()
@@ -694,7 +699,7 @@ void Elem::MarkingNodes(bool maker)
 
    for (int i=0; i< SizeV; i++)
    {
-       nodes[i]->Marking(maker);
+      nodes[i]->Marking(maker);
    }
 }
 
@@ -718,7 +723,7 @@ void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
 //   WW  08.2012
 void  Elem::getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes)
 {
-   const int start_index  = EdgeLocalIndexArrayElemShift[ele_Type] + Edge*3; 	
+   const int start_index  = EdgeLocalIndexArrayElemShift[ele_Type] + Edge*3;
    EdgeNodes[0] = EdgeLocalNodeIndex[start_index];
    EdgeNodes[1] = EdgeLocalNodeIndex[start_index + 1];
    EdgeNodes[2] = EdgeLocalNodeIndex[start_index + 2];
@@ -1148,10 +1153,10 @@ int Elem::getElementFaceNodes(const int Face, int *FacesNode)
          return getElementFacesTet(Face, FacesNode);
       case prism:
          return getElementFacesPri(Face, FacesNode);
-	  case pyramid:	
-		 return getElementFacesPyramid(Face, FacesNode);
-	  default:
-        break;
+      case pyramid:
+         return getElementFacesPyramid(Face, FacesNode);
+      default:
+         break;
    }
    return 0;
 }
