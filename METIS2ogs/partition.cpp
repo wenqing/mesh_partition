@@ -72,6 +72,7 @@ void OptionList()
    cout << "  -n                : partition by node (overlapped subdomain)"<<endl;
    cout << "  -mat [file name without path]  : specify a file that contains file name of element-wsie material data."<<endl;
    cout << "  -odom             : output subdomain mesh"<<endl;
+   cout << "  -cct              : output a CCT file for FCT (overlapped subdomain)"<<endl;
 }
 
 void FindFileNameInCommand(stringstream &ss, string &fname)
@@ -100,6 +101,7 @@ int main(int argc, char* argv[])
 
    bool quad = false;
    bool out_subdom = false;
+   bool out_cct = false;
 
    //ios::pos_type position;
 
@@ -129,6 +131,9 @@ int main(int argc, char* argv[])
             out_subdom = true;
          }
 
+         if(s_buff.compare("-cct") == 0)
+            out_cct = true;
+
          // Number of partitions
          if(s_buff.find("-np")!=string::npos)
          {
@@ -145,7 +150,6 @@ int main(int argc, char* argv[])
          {
             mat_file_name = argv[i+1];
          }
-
 
          if(s_buff.find("ogs2metis")!=string::npos)
          {
@@ -212,6 +216,10 @@ int main(int argc, char* argv[])
             if(s_buff.compare("-odom") == 0)
             {
                 out_subdom = true;
+            }
+            if(s_buff.compare("-cct") == 0)
+            {
+                out_cct = true;
             }
 
             if(s_buff.find("-np")!=string::npos)
@@ -339,7 +347,7 @@ int main(int argc, char* argv[])
                a_mesh->GenerateHighOrderNodes();
             }
 
-            a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), fpath, mat_file_name, nparts, quad, out_subdom);
+            a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), fpath, mat_file_name, nparts, quad, out_subdom, out_cct);
          }
          break;
       default:

@@ -866,7 +866,7 @@ Partition a mesh ny nodes
 */
 
 void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, const std::string mat_fname, 
-                                       const int num_parts, const bool is_quad, const bool osdom)
+                                       const int num_parts, const bool is_quad, const bool osdom, const bool out_cct)
 {
 
    string f_iparts;
@@ -1432,32 +1432,34 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    }
 
   //----------------------------------------------------------------------------------
-  string cct_file_name = fname + ".cct";
-  fstream cct_file(cct_file_name.c_str(), ios::out|ios::trunc );
-  for (size_t idom=0; idom<vec_neighbors.size(); idom++) {
-      size_t n_nei = 0;
-      for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++) {
-          if (!vec_neighbors[idom][ii].empty()) n_nei++;
-      }
-      cct_file << "#COMMUNICATION_TABLE\n";
-      cct_file << "  $MYRANK\n";
-      cct_file << "    " << idom << "\n";
-      cct_file << "  $NNEIGHBORS\n";
-      cct_file << "    " << n_nei << "\n";
-      for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++) {
-          std::set<ConnEdge> &edges = vec_neighbors[idom][ii];
-          if (edges.empty()) continue;
-          cct_file << "  $NEIGHBOR\n";
-          cct_file << "    " << ii << "\n";
-          cct_file << "    " << edges.size() << "\n";
-          for (std::set<ConnEdge>::iterator itr=edges.begin(); itr!=edges.end(); ++itr) {
-              cct_file << "    " << itr->first->local_index << " " << itr->second->local_index << "\n";
-    //              cct_file << "    " << itr->first << " " << itr->second << "\n";
+  if (out_cct) {
+      string cct_file_name = fname + "_" + s_nparts + ".cct";
+      fstream cct_file(cct_file_name.c_str(), ios::out|ios::trunc );
+      for (size_t idom=0; idom<vec_neighbors.size(); idom++) {
+          size_t n_nei = 0;
+          for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++) {
+              if (!vec_neighbors[idom][ii].empty()) n_nei++;
+          }
+          cct_file << "#COMMUNICATION_TABLE\n";
+          cct_file << "  $MYRANK\n";
+          cct_file << "    " << idom << "\n";
+          cct_file << "  $NNEIGHBORS\n";
+          cct_file << "    " << n_nei << "\n";
+          for (size_t ii=0; ii<vec_neighbors[idom].size(); ii++) {
+              std::set<ConnEdge> &edges = vec_neighbors[idom][ii];
+              if (edges.empty()) continue;
+              cct_file << "  $NEIGHBOR\n";
+              cct_file << "    " << ii << "\n";
+              cct_file << "    " << edges.size() << "\n";
+              for (std::set<ConnEdge>::iterator itr=edges.begin(); itr!=edges.end(); ++itr) {
+                  cct_file << "    " << itr->first->local_index << " " << itr->second->local_index << "\n";
+        //              cct_file << "    " << itr->first << " " << itr->second << "\n";
+              }
           }
       }
+      cct_file<<"#STOP"<<endl;
+      cct_file.close();
   }
-  cct_file<<"#STOP"<<endl;
-  cct_file.close();
 
   //----------------------------------------------------------------------------------
 
