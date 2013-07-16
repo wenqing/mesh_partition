@@ -32,7 +32,7 @@ class Grain
          mark = state;
       }
       // Get members
-      long getIndex() const
+      size_t getIndex() const
       {
          return index;
       }
@@ -44,7 +44,7 @@ class Grain
       // Output
       virtual void output(std::ostream& os = std::cout) const {};
    protected:
-      long index;
+      size_t index;
       // Towards special purpose,
       // e.g. marked to be refined or active
       bool mark;

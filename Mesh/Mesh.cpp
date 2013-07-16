@@ -31,6 +31,7 @@ Mesh::Mesh(bool quad)
    axisymmetry=false;
    max_ele_dim = 0;
 
+   ouput_vtk_part_info = true;
 }
 
 Mesh::~Mesh()
@@ -545,12 +546,13 @@ void Mesh::GenerateHighOrderNodes()
          }//for(k=0;k<2;k++)
          if(!done)
          {
-            aNode = new Node((long)node_vector.size());
             const Node *na = thisElem0->getNode(edgeIndex_loc0[0]); 
             const Node *nb = thisElem0->getNode(edgeIndex_loc0[1]); 
+            aNode = new Node((long)node_vector.size());
             aNode->setX(0.5*(na->X() + nb->X()));
             aNode->setY(0.5*(na->Y() + nb->Y()));
             aNode->setZ(0.5*(na->Z() + nb->Z()));
+
             e_nodes0[edgeIndex_loc0[2]] = aNode;
 
 #ifdef BUILD_MESH_EDGE
@@ -565,21 +567,22 @@ void Mesh::GenerateHighOrderNodes()
       if(thisElem0->getElementType()==quadri) // Quadrilateral
       {
          x0=y0=z0=0.0;
-         aNode = new Node((long)node_vector.size());
-         e_nodes0[8] = aNode;
-         nnodes0 = thisElem0->nnodes;
-         for(i=0; i<8; i++) // Nodes
+         for(i=0; i<4; i++) // Nodes
          {
             x0 += e_nodes0[i]->X();
             y0 += e_nodes0[i]->Y();
             z0 += e_nodes0[i]->Z();
          }
-         x0 /= (double)nnodes0;
-         y0 /= (double)nnodes0;
-         z0 /= (double)nnodes0;
+         x0 /= 4.;
+         y0 /= 4.;
+         z0 /= 4.;
+
+		 aNode = new Node((long)node_vector.size());
          aNode->setX(x0);
          aNode->setY(y0);
          aNode->setZ(z0);
+
+         e_nodes0[8] = aNode;
          node_vector.push_back(aNode);
       }
       // Set edges and nodes
@@ -866,7 +869,7 @@ Partition a mesh ny nodes
 */
 
 void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, const std::string mat_fname, 
-                                       const int num_parts, const bool is_quad, const bool osdom, const bool out_cct)
+                                       const int num_parts, const bool is_quad, const bool osdom,  const bool out_renum_gsmsh, const bool out_cct)
 {
 
    string f_iparts;
@@ -1021,8 +1024,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
   std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors(num_parts); //NW
   for(int idom=0; idom<num_parts; idom++)
    {
+  if (out_cct) {
       vec_neighbors[idom].resize(num_parts);
-
+}
       cout << "Process partition: " << idom << endl;    
  
       nmb_element_idxs = 0;
@@ -1114,6 +1118,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             }
 
             // overlapping edges
+  if (out_cct) {
             for (size_t ig=0; ig<g_nodes.size(); ig++) {
                 long ig_id = a_elem->getNode(g_nodes[ig])->global_index; //index; //;
                 long ig_dom = dom_idx[ig_id];
@@ -1123,7 +1128,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
                     //vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
                 }
             }
-
+}
             a_elem->Marking(true);
 
             ng_nodes.clear();
@@ -1160,7 +1165,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
             {
                a_node = a_elem->nodes[k];
-               i = a_elem->nodes[k]->index;
+			   i = a_elem->nodes[k]->index_org;
                if(sdom_marked[i]) // Already in other subdomains
                   continue;
 
@@ -1191,7 +1196,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
             {
                a_node = a_elem->nodes[k];
                // Since a_elem->nodes_index[k] is not touched
-               i = a_elem->nodes[k]->index;
+			   i = a_elem->nodes[k]->index_org;
                if(sdom_marked[i]) // Already in other subdomains
                   continue;
 
@@ -1372,6 +1377,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       {
          //-----------------------------------------------------------
          /// VTK output
+		 ouput_vtk_part_info = true;
          // Elements in this subdomain
          f_iparts = fname+"_"+dom_str+"_of_"+s_nparts+"_subdomains.vtk";
          //f_iparts = fname+"_"+str_buf+".vtk";
@@ -1488,12 +1494,49 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
    os_subd.close();
 #endif
 
-   f_iparts = fname + "_renum_"+ s_nparts +".msh";
-   ofstream os(f_iparts.c_str(), ios::out|ios::trunc);
+   ofstream os;
+   if(out_renum_gsmsh)
+   {
+      f_iparts = fname + "_renum_"+ s_nparts +".msh";
+      os.open(f_iparts.c_str(), ios::out|ios::trunc);
 
-   // Output renumbered mesh
-   os<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
-   os<<" $NODES\n"<<NodesNumber_Linear<<endl;
+      // Output renumbered mesh
+      os<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
+      os<<" $NODES\n"<<NodesNumber_Linear<<endl;
+      for(int idom=0; idom<num_parts; idom++)
+      {
+         const long start = nnodes_sdom_start[idom];
+         const long end = nnodes_sdom_linear_elements[idom];
+         for(i=start; i<end; i++)
+         {
+            a_node = sbd_nodes[i];
+            a_node->index = a_node->local_index;					
+            a_node->Write(os);
+	    }
+      }
+
+      os<<" $ELEMENTS\n"<<elem_vector.size()<<endl;
+      for(size_t e=0; e<elem_vector.size(); e++)
+      {
+         elem_vector[e]->WriteGSmsh(os);
+      }
+      os<<"#STOP"<<endl;
+	  os.clear();
+      os.close();
+   }
+
+   // Output VTK
+   f_iparts = fname + "_renum_"+ s_nparts +".vtk";
+   os.open(f_iparts.c_str(), ios::out|ios::trunc);
+   ouput_vtk_part_info = false;
+
+   os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n"<<endl;
+   os<<"DATASET UNSTRUCTURED_GRID"<<endl;
+   os<<"POINTS "<< NodesNumber_Linear<<" double"<<endl;
+   setw(14);
+   os.precision(14);
+
+   size_t quad_nn = 0;
    for(int idom=0; idom<num_parts; idom++)
    {
       const long start = nnodes_sdom_start[idom];
@@ -1502,18 +1545,29 @@ void Mesh::ConstructSubDomain_by_Nodes(const string fname, const string fpath, c
       {
          a_node = sbd_nodes[i];
          a_node->index = a_node->local_index;
-         a_node->Write(os);
-      }
-   }
-   sbd_nodes.clear();
+		 if(useQuadratic)
+		 {
+			 a_node->index -= quad_nn;
+		 }
 
-   os<<" $ELEMENTS\n"<<elem_vector.size()<<endl;
-   for(size_t e=0; e<elem_vector.size(); e++)
-   {
-      elem_vector[e]->WriteGSmsh(os);
+         os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
+      }
+      
+	  if(useQuadratic)
+	  {
+	     quad_nn += nnodes_sdom_quadratic_elements[idom] - end;
+	  }  
    }
-   os<<"#STOP"<<endl;
+   useQuadratic = false;
+   WriteVTK_Elements_of_Subdomain(os, elem_vector, 0);
+
+   os<<"POINT_DATA " << NodesNumber_Linear << endl;
+
+   os.clear();
    os.close();
+
+
+   sbd_nodes.clear();
 }
 
 // 02.2012. WW
@@ -1596,26 +1650,9 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
 
       os<<nne<<deli;
 
-
-      if(useQuadratic&&a_elem->ele_Type==tet) // Tet
+      for(k=0; k<nne; k++)
       {
-         for(k=0; k<7; k++)
-         {
-            os << a_elem->nodes[k]->getIndex() - node_shift<< deli;
-         }
-
-         for(k=0; k<3; k++)
-         {
-            j = (k+2)%3+7;
-            os << a_elem->nodes[j]->getIndex() - node_shift<< deli;
-         }
-      }
-      else
-      {
-         for(k=0; k<nne; k++)
-         {
-            os << a_elem->nodes[k]->getIndex() - node_shift<< deli;
-         }
+         os << a_elem->nodes[k]->getIndex() - node_shift<< deli;
       }
 
       os << endl;
@@ -1631,11 +1668,14 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
    }
    os << endl;
 
-   // Partition
-   os<<"CELL_DATA "<<ne0<<endl;
-   os<<"SCALARS Partition int 1\nLOOKUP_TABLE default"<<endl;
-   for(i=0; i<ne0; i++)
-      os<<sbd_index<<endl;
+   if(ouput_vtk_part_info)
+   {
+      // Partition
+      os<<"CELL_DATA "<<ne0<<endl;
+      os<<"SCALARS Partition int 1\nLOOKUP_TABLE default"<<endl;
+      for(i=0; i<ne0; i++)
+         os<<sbd_index<<endl;
+   }
 
 }
 

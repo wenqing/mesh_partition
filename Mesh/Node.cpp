@@ -12,7 +12,7 @@ using namespace std;
 
 //1.  Node declaration
 //    WW. 06.2005
-Node:: Node(const int Index, const double x,
+Node:: Node(const long Index, const double x,
             const double y, const double z):Grain(Index),global_index(Index)
 {
    Coordinate = new double[3];
@@ -20,6 +20,7 @@ Node:: Node(const int Index, const double x,
    Coordinate[1] =y;
    Coordinate[2] =z;
    local_index = -1;
+   index_org = Index;
 }
 //    WW. 06.2005
 void Node::operator = (const Node& n)

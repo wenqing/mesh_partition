@@ -910,8 +910,8 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
          if(quadratic)
          {
             FaceNode[3] = 5 ;
-            FaceNode[4] = 8;
-            FaceNode[5] = 7;
+            FaceNode[4] = 9;
+            FaceNode[5] = 8;
          }
          break;
       case 1:
@@ -920,9 +920,9 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
          FaceNode[2] = 0;
          if(quadratic)
          {
-            FaceNode[3] = 8 ;
+            FaceNode[3] = 9 ;
             FaceNode[4] = 6;
-            FaceNode[5] = 9;
+            FaceNode[5] = 7;
          }
          break;
       case 2:
@@ -931,8 +931,8 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
          FaceNode[2] = 0;
          if(quadratic)
          {
-            FaceNode[3] = 7 ;
-            FaceNode[4] = 9;
+            FaceNode[3] = 8 ;
+            FaceNode[4] = 7;
             FaceNode[5] = 4;
          }
          break;
