@@ -7,8 +7,8 @@ do
 if [ -d $i ]; then
   cd $i
     echo "$PWD"
-    astyle.exe --style=allman -s3 -C -S -K  *.cpp 
-    astyle.exe --style=allman -s3 -C -S -K  *.h
+    astyle --style=allman -s3 -C -S -K  *.cpp 
+    astyle --style=allman -s3 -C -S -K  *.h
   cd ..
 fi
 

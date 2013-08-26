@@ -104,7 +104,6 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
 {
    int i, n;
    static int faceIndex_loc[10];
-   static int edgeIndex_loc[10];
 //  Owner = onwer;
    n = Owner->getElementFaceNodes(Face, faceIndex_loc);
    switch(Owner->ele_Type)
@@ -159,6 +158,7 @@ Elem::  Elem( const int Index,  Elem* onwer, const int Face):
 
 #ifdef BUILD_MESH_EDGE
    int j, k, ne;
+   static int edgeIndex_loc[10];
 
    // Face edges
    ne = Owner->getEdgesNumber();
@@ -585,6 +585,23 @@ void Elem::WriteSubDOM(ostream& os, const long node_id_shift, bool quad) const
       os<<nodes[i]->getIndex()-node_id_shift<<" ";
    }
    os<<endl;
+}
+//  WW. 07.2013
+int Elem::getDataArray4BinaryOut(long *ivar, const long node_id_shift, bool quad) const
+{
+   const int nn = getNodesNumber(quad) ;
+
+   ivar[0] = PatchIndex;
+   ivar[1] = ele_Type+1;
+   ivar[2] = nn;
+
+   for(int i=0; i<nn; i++)
+   {
+      ivar[i+3] = static_cast<long> (nodes[i]->getIndex()-node_id_shift);
+   }
+
+   return nn+3;
+
 }
 
 //  WW. 02.2012

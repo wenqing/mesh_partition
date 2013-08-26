@@ -16,6 +16,14 @@ class Edge;
 class Elem;
 class Mesh;
 
+typedef struct
+{
+   long id;
+   double x;
+   double y;
+   double z;
+} Node_Str;
+
 //2.  Node declaration
 class Node:public Grain
 {
@@ -83,6 +91,7 @@ class Node:public Grain
 
       // Output
       void Write(std::ostream& os = std::cout) const;
+      void WriteBIN(std::ostream& os = std::cout) const;
       void WriteCoordinates(std::ostream& os = std::cout) const;
 
    private:
@@ -90,8 +99,8 @@ class Node:public Grain
       long local_index; // For domain decomposition
       long global_index;
       size_t index_org; // For quad elements in ddc
-      std::vector<long>  ElementsRelated;
-      std::vector<long>  NodesRelated;
+      std::vector<size_t>  ElementsRelated;
+      std::vector<size_t>  NodesRelated;
       friend class Mesh_Group::Edge;
       friend class Mesh_Group::Elem;
       friend class Mesh_Group::Mesh;

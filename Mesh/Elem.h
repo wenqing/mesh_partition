@@ -79,9 +79,9 @@ class Elem:public Grain
       void getNodeIndeces(long  *node_index) const
       {
          for (int i=0; i< (int) nodes.Size(); i++)
-            node_index[i]= nodes[i]->index;
+            node_index[i]= static_cast<long>(nodes[i]->index);
       }
-      long getNodeIndex(const int loc_lndex) const
+      size_t getNodeIndex(const int loc_lndex) const
       {
          return nodes[loc_lndex]->index;
       }
@@ -173,6 +173,7 @@ class Elem:public Grain
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
       void WriteGSmsh(std::ostream& os, bool quad = false) const;
       void WriteSubDOM(std::ostream& os, const long node_id_shift, bool quad = false) const;
+      int getDataArray4BinaryOut(long *ivar, const long node_id_shift, bool quad = false) const;
       void WriteVTK_Type(std::ostream& os, bool isquad) const;
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;

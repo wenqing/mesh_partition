@@ -16,7 +16,18 @@ class Node;
 class Edge;
 class Elem;
 
-
+struct MeshPartConfig
+{
+   std::string fname;  /// file name
+   std::string fpath;  /// file path
+   std::string mat_fname; /// file name of material data (permeability and porosity)
+   int num_parts;  /// number of parittions
+   bool osdom;     /// flag to output subdomain mesh in vtk
+   bool out_renum_gsmsh;  /// flag to output the node index renumbered ogs mesh
+   bool is_vtk_out; ;  /// flag to output the node index renumbered vtk mesh
+   bool binary_output;  /// output binary file of the partitioned mesh
+   bool out_cct;  /// output of exended partitions for the flux corrected transport
+};
 /*!
    \class Mesh
 */
@@ -37,8 +48,7 @@ class Mesh
                                           const int sbd_index, const long node_shift = 0);
 
       void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts, const bool osdom);
-      void ConstructSubDomain_by_Nodes(const std::string fname, const std::string fpath, const std::string mat_fname,
-                                       const int num_parts, const bool is_quad, const bool osdom, const bool out_renum_gsmsh, const bool out_cct);
+      void ConstructSubDomain_by_Nodes(const MeshPartConfig mpc);
 
       void ConnectedNodes(bool quadratic);
       void ConnectedElements2Node(bool quadratic=false);

@@ -47,7 +47,7 @@ long HeapUsed()
 
 
 
-#define ver "V2.1. 2013"
+#define ver "V3.0. 07. 2013"
 
 void Version()
 {
@@ -71,7 +71,10 @@ void OptionList()
    cout << "  -e                : partition by element (non overlapped subdomain)"<<endl;
    cout << "  -n                : partition by node (overlapped subdomain)"<<endl;
    cout << "  -mat [file name without path]  : specify a file that contains file name of element-wsie material data."<<endl;
-   cout << "  -odom             : output subdomain mesh"<<endl;
+   cout << "  -asci             : ASCI output the partitioned mesh."<<endl;
+   cout << "  -nvtk             : do not output the vtk file for the node index renumbered whole mesh."<<endl;
+   cout << "  -ogsmsh           : output the renumbered ogs mesh."<<endl;
+   cout << "  -odom             : output subdomain mesh."<<endl;
    cout << "  -cct              : output a CCT file for FCT (overlapped subdomain)"<<endl;
 }
 
@@ -100,9 +103,14 @@ int main(int argc, char* argv[])
    PartType part_type = by_node;
 
    bool quad = false;
-   bool out_subdom = false;
-   bool out_cct = false;
-   bool out_renum_gsmsh = false;
+
+
+   Mesh_Group::MeshPartConfig mpc;
+   mpc.is_vtk_out = true;
+   mpc.osdom = false;
+   mpc.out_renum_gsmsh = false;
+   mpc.binary_output = true;
+   mpc.out_cct = false;
 
    //ios::pos_type position;
 
@@ -129,14 +137,23 @@ int main(int argc, char* argv[])
 
          if(s_buff.compare("-odom") == 0)
          {
-            out_subdom = true;
+            mpc.osdom = true;
          }
 
          if(s_buff.compare("-cct") == 0)
-            out_cct = true;
+            mpc.out_cct = true;
+
+         if(s_buff.find("-asci")!=string::npos)
+         {
+            mpc.binary_output = false;
+         }
          if(s_buff.compare("-ogsmsh") == 0)
          {
-            out_renum_gsmsh = true;
+            mpc.out_renum_gsmsh = true;
+         }
+         if(s_buff.compare("-nvtk") == 0)
+         {
+            mpc.is_vtk_out = false;
          }
 
          // Number of partitions
@@ -220,17 +237,25 @@ int main(int argc, char* argv[])
             }
             if(s_buff.compare("-odom") == 0)
             {
-               out_subdom = true;
+               mpc.osdom = true;
             }
             if(s_buff.compare("-cct") == 0)
             {
-               out_cct = true;
+               mpc.out_cct = true;
+            }
+            if(s_buff.compare("-asci") == 0)
+            {
+               mpc.binary_output = false;
             }
             if(s_buff.compare("-ogsmsh") == 0)
             {
-               out_renum_gsmsh = true;
+               mpc.out_renum_gsmsh = true;
             }
 
+            if(s_buff.compare("-nvtk") == 0)
+            {
+               mpc.is_vtk_out = false;
+            }
             if(s_buff.find("-np")!=string::npos)
             {
                //size_t pos;
@@ -348,15 +373,21 @@ int main(int argc, char* argv[])
 
          cout<<"\n***Prepare subdomain mesh"<<endl;
          if(part_type == by_element)
-            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, out_subdom);
+            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, mpc.osdom);
          else if(part_type == by_node)
          {
             if(quad)
             {
                a_mesh->GenerateHighOrderNodes();
+               a_mesh->setOrder(quad);
             }
 
-            a_mesh->ConstructSubDomain_by_Nodes(fname.c_str(), fpath, mat_file_name, nparts, quad, out_subdom, out_renum_gsmsh, out_cct);
+            mpc.fname = fname;
+            mpc.fpath = fpath;
+            mpc.mat_fname = mat_file_name;
+            mpc.num_parts = nparts;
+
+            a_mesh->ConstructSubDomain_by_Nodes(mpc);
          }
          break;
       default:

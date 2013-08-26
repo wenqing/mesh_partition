@@ -49,6 +49,19 @@ void Node::Write(ostream& os) const
      <<Coordinate[2]<<endl;
 }
 
+// WW 07.2013
+void Node::WriteBIN(ostream& os) const
+{
+
+   Node_Str nd;
+   nd.id = static_cast<long> (index);
+   nd.x = Coordinate[0];
+   nd.y = Coordinate[1];
+   nd.z = Coordinate[2];
+
+   os.write( reinterpret_cast <const char*> (&nd), sizeof(Node_Str));
+}
+
 void Node::WriteCoordinates(std::ostream& os) const
 {
    os <<Coordinate[0]<<" "
