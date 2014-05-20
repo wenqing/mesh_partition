@@ -10,11 +10,12 @@
 //   WW. 06.2005
 //------------------------------------------------------
 
+#include "Elem.h"
+
 namespace Mesh_Group
 {
 class Node;
 class Edge;
-class Elem;
 
 struct MeshPartConfig
 {
@@ -45,7 +46,7 @@ class Mesh
       void WriteVTK_Nodes(std::ostream& os);
       void WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start = 0);
       void WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec,
-                                          const int sbd_index, const long node_shift = 0);
+                                          const int sbd_index, const MyInt node_shift = 0);
 
       void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts, const bool osdom);
       void ConstructSubDomain_by_Nodes(const MeshPartConfig mpc);
@@ -62,8 +63,8 @@ class Mesh
       }
    private:
       // The following can be members of grid class
-      long NodesNumber_Linear;
-      long NodesNumber_Quadratic;
+      MyInt NodesNumber_Linear;
+      MyInt NodesNumber_Quadratic;
       bool useQuadratic;
       bool axisymmetry;
 
@@ -91,13 +92,13 @@ class Mesh
       // All elements
       std::vector<Elem*> elem_vector;
 
-      long msh_no_line;
-      long msh_no_quad;
-      long msh_no_hexs;
-      long msh_no_tris;
-      long msh_no_tets;
-      long msh_no_pris;
-      long msh_no_pyra;
+      MyInt msh_no_line;
+      MyInt msh_no_quad;
+      MyInt msh_no_hexs;
+      MyInt msh_no_tris;
+      MyInt msh_no_tets;
+      MyInt msh_no_pris;
+      MyInt msh_no_pyra;
       int msh_max_dim;
 
       friend class Elem;

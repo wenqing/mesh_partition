@@ -8,6 +8,7 @@
 #include "Grain.h"
 #include "Node.h"
 
+typedef int MyInt; //In case for PetscInt
 
 //#define BUILD_MESH_EDGE
 
@@ -19,7 +20,6 @@
 
 namespace Mesh_Group
 {
-class Node;
 class Edge;
 class Mesh;
 enum ElemType {line, quadri, hex, tri, tet, prism, pyramid};
@@ -173,10 +173,10 @@ class Elem:public Grain
       std::string getName() const;
 
       // Nodes
-      void getNodeIndeces(long  *node_index) const
+      void getNodeIndeces(MyInt  *node_index) const
       {
          for (int i=0; i< (int) nodes.Size(); i++)
-            node_index[i]= static_cast<long>(nodes[i]->index);
+            node_index[i]= static_cast<MyInt>(nodes[i]->index);
       }
       size_t getNodeIndex(const int loc_lndex) const
       {
@@ -194,9 +194,9 @@ class Elem:public Grain
       }
       void MarkingNodes(bool maker);
       //
-      void setLocalNodeIndex(const int li, const long n_lindex);
+      void setLocalNodeIndex(const int li, const MyInt n_lindex);
       //
-      long getLocalNodeIndex(const int li) const;
+      MyInt getLocalNodeIndex(const int li) const;
 
 #ifdef BUILD_MESH_EDGE
       // Edges
@@ -234,11 +234,11 @@ class Elem:public Grain
             ele_neighbors[i]= neighbors[i];
       }
       //Domain partition
-      long getDomNodeIndex(const int loc_index)
+      MyInt getDomNodeIndex(const int loc_index)
       {
          return locnodes_index[loc_index];
       }
-      void setDomNodeIndex(const int loc_index, const long dom_nindex)
+      void setDomNodeIndex(const int loc_index, const MyInt dom_nindex)
       {
          locnodes_index[loc_index] = dom_nindex;
       }
@@ -271,8 +271,8 @@ class Elem:public Grain
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
       void WriteGSmsh(std::ostream& os, bool quad = false) const;
-      void WriteSubDOM(std::ostream& os, const long node_id_shift, bool quad = false) const;
-      int getDataArray4BinaryOut(long *ivar, const long node_id_shift, bool quad = false) const;
+      void WriteSubDOM(std::ostream& os, const MyInt node_id_shift, bool quad = false) const;
+      int getDataArray4BinaryOut(MyInt *ivar, const MyInt node_id_shift, bool quad = false) const;
       void WriteVTK_Type(std::ostream& os, bool isquad) const;
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;
@@ -289,8 +289,8 @@ class Elem:public Grain
       // Element type
       // 1 Line, 2 Quad, 3 Hex, 4 Tri, 5 Tet, 6 Pris
       ElemType ele_Type;
-      //Math_Group::vec<long>   nodes_index;
-      Math_Group::vec<long>   locnodes_index;
+      //Math_Group::vec<MyInt>   nodes_index;
+      Math_Group::vec<MyInt>   locnodes_index;
       Math_Group::vec<Node*>  nodes;
 
 #ifdef BUILD_MESH_EDGE

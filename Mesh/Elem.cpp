@@ -119,12 +119,12 @@ string Elem::getName() const
 }
 
 
-void Elem::setLocalNodeIndex(const int li, const long n_lindex)
+void Elem::setLocalNodeIndex(const int li, const MyInt n_lindex)
 {
    nodes[li]->local_index = n_lindex;
 }
 
-long Elem::getLocalNodeIndex(const int li) const
+MyInt Elem::getLocalNodeIndex(const int li) const
 {
    return nodes[li]->local_index;
 }
@@ -239,7 +239,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    nodes.resize(nnodes);
    //----------------------------------------------------------------------
    // 3 Reading element node data
-   long nidx = 0;
+   MyInt nidx = 0;
    switch(fileType)
    {
       //....................................................................
@@ -415,7 +415,7 @@ void Elem::WriteGSmsh(ostream& os, bool quad) const
 }
 
 //  WW. 03.2012
-void Elem::WriteSubDOM(ostream& os, const long node_id_shift, bool quad) const
+void Elem::WriteSubDOM(ostream& os, const MyInt node_id_shift, bool quad) const
 {
    int nn = getNodesNumber(quad);
 
@@ -428,7 +428,7 @@ void Elem::WriteSubDOM(ostream& os, const long node_id_shift, bool quad) const
    os<<endl;
 }
 //  WW. 07.2013
-int Elem::getDataArray4BinaryOut(long *ivar, const long node_id_shift, bool quad) const
+int Elem::getDataArray4BinaryOut(MyInt *ivar, const MyInt node_id_shift, bool quad) const
 {
    const int nn = getNodesNumber(quad) ;
 
@@ -438,7 +438,7 @@ int Elem::getDataArray4BinaryOut(long *ivar, const long node_id_shift, bool quad
 
    for(int i=0; i<nn; i++)
    {
-      ivar[i+3] = static_cast<long> (nodes[i]->getIndex()-node_id_shift);
+      ivar[i+3] = static_cast<MyInt> (nodes[i]->getIndex()-node_id_shift);
    }
 
    return nn+3;

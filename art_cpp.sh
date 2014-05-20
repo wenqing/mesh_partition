@@ -9,6 +9,7 @@ if [ -d $i ]; then
     echo "$PWD"
     astyle --style=allman -s3 -C -S -K  *.cpp 
     astyle --style=allman -s3 -C -S -K  *.h
+    rm *.orig
   cd ..
 fi
 
