@@ -203,7 +203,7 @@ void Mesh::ConstructGrid()
    for(e=0; e<e_size; e++)
    {
       thisElem0 = elem_vector[e];
-      nnodes0 = thisElem0->nnodes; // Number of nodes for linear element
+      nnodes0 = thisElem0->getNodesNumber(); // Number of nodes for linear element
       thisElem0->getNodeIndeces(node_index_glb0);
       thisElem0->getNeighbors(Neighbors0);
       for(i=0; i<nnodes0; i++) // Nodes
@@ -488,7 +488,7 @@ void Mesh::GenerateHighOrderNodes()
    for(e=0; e<e_size; e++)
    {
       thisElem0 = elem_vector[e];
-      nnodes0 = thisElem0->nnodes; // Number of nodes for linear element
+      nnodes0 = thisElem0->getNodesNumber(); // Number of nodes for linear element
 //      thisElem0->GetNodeIndeces(node_index_glb0);
       for(i=0; i<nnodes0; i++) // Nodes
          e_nodes0[i] = thisElem0->getNode(i);
@@ -599,7 +599,7 @@ void Mesh::GenerateHighOrderNodes()
    for(e=0; e<e_size; e++)
    {
       thisElem0 = elem_vector[e];
-      for(i=thisElem0->nnodes; i<thisElem0->nnodesHQ; i++)
+      for(i=thisElem0->getNodesNumber(); i<thisElem0->getNodesNumberHQ(); i++)
       {
          done = false;
          aNode = thisElem0->getNode(i);
@@ -1201,7 +1201,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          for(j=0; j<nei; j++)
          {
             a_elem = in_subdom_elements[j];
-            for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
+            const int nnodes = a_elem->getNodesNumber();
+            const int nnodesHQ = a_elem->getNodesNumberHQ();
+
+            for(k=nnodes; k<nnodesHQ; k++)
                a_elem->nodes[k]->Marking(false);
          }
 
@@ -1209,7 +1212,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          for(j=0; j<neg; j++)
          {
             a_elem = ghost_subdom_elements[j];
-            for(k=0; k<a_elem->nnodesHQ; k++)
+            const int nnodesHQ = a_elem->getNodesNumberHQ();
+
+            for(k=0; k<nnodesHQ; k++)
                a_elem->nodes[k]->Marking(false);
          }
 
@@ -1218,7 +1223,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          for(j=0; j<nei; j++)
          {
             a_elem = in_subdom_elements[j];
-            for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
+            const int nnodes = a_elem->getNodesNumber();
+            const int nnodesHQ = a_elem->getNodesNumberHQ();
+
+            for(k=nnodes; k<nnodesHQ; k++)
             {
                a_node = a_elem->nodes[k];
                i = static_cast<long>(a_elem->nodes[k]->index_org);
@@ -1247,8 +1255,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          for(j=0; j<neg; j++)
          {
             a_elem = ghost_subdom_elements[j];
+            const int nnodes = a_elem->getNodesNumber();
+            const int nnodesHQ = a_elem->getNodesNumberHQ();
 
-            for(k=a_elem->nnodes; k<a_elem->nnodesHQ; k++)
+            for(k=nnodes; k<nnodesHQ; k++)
             {
                a_node = a_elem->nodes[k];
                // Since a_elem->nodes_index[k] is not touched
@@ -1274,8 +1284,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          for(j=0; j<neg; j++)
          {
             a_elem = ghost_subdom_elements[j];
+            const int nnodesHQ = a_elem->getNodesNumberHQ();
 
-            for(k=0; k<a_elem->nnodesHQ; k++)
+            for(k=0; k<nnodesHQ; k++)
             {
                if(a_elem->nodes[k]->getStatus())
                {

@@ -81,112 +81,6 @@ int EdgeLocalIndexArrayElemShift [] =
    106 //pyramid
 };
 
-
-//-----------------------------------------------------
-//2. Mesh
-//    WW. 06.2005
-Elem::Elem(const int Index):Grain(Index)
-{
-
-   nnodes = 0;
-   nnodesHQ = 0;
-   ele_dim = 1;         // Dimension of element
-   PatchIndex = 0;
-   //
-   quadratic = false;
-
-   Owner = NULL;
-}
-// Face element
-//    WW. 06.2005
-Elem::  Elem( const int Index,  Elem* onwer, const int Face):
-   Grain(Index), Owner(onwer)
-{
-   int i, n;
-   static int faceIndex_loc[10];
-//  Owner = onwer;
-   n = Owner->getElementFaceNodes(Face, faceIndex_loc);
-   switch(Owner->ele_Type)
-   {
-      case line:  // 1-D bar element
-         break;
-      case quadri: // 2-D quadrilateral element
-         ele_Type = line;
-         break;
-      case hex: // 3-D hexahedral element
-         ele_Type = quadri;
-         break;
-      case tri:  // 2-D triagular element
-         ele_Type = line;
-         break;
-      case tet:  // 3-D tetrahedral element
-         ele_Type = tri;
-         break;
-      case prism:
-         if(Face<2)
-         {
-            ele_Type = tri;
-         }
-         else
-         {
-            ele_Type = quadri;
-         }
-         break; // 3-D prismatic element
-      case pyramid:
-         if(Face == 0) // Bottom
-         {
-            ele_Type = quadri;
-         }
-         else
-         {
-            ele_Type = tri;
-         }
-         break; // 3-D prismatic element
-      default:
-         break;
-   }
-
-   Init();
-   PatchIndex =  Owner->PatchIndex;
-   quadratic = Owner->quadratic;
-   nodes.resize(n);
-
-   for(i=0; i<n; i++)
-   {
-      nodes[i] = Owner->nodes[faceIndex_loc[i]];
-   }
-
-#ifdef BUILD_MESH_EDGE
-   int j, k, ne;
-   static int edgeIndex_loc[10];
-
-   // Face edges
-   ne = Owner->getEdgesNumber();
-   edges.resize(nnodes);
-   edges_orientation.resize(nnodes);
-   edges_orientation = 1;
-   for(i=0; i<nnodes; i++)
-   {
-      k = (i+1)%nnodes;
-      for(j=0; j<ne; j++)
-      {
-         Owner->getLocalIndices_EdgeNodes(j, edgeIndex_loc);
-         if( (faceIndex_loc[i]==edgeIndex_loc[0]&&
-               faceIndex_loc[k]==edgeIndex_loc[1])||
-               (faceIndex_loc[i]==edgeIndex_loc[1]&&
-                faceIndex_loc[k]==edgeIndex_loc[0]) )
-         {
-            edges[i] = Owner->edges[j];
-            if(faceIndex_loc[i]==edgeIndex_loc[1]&&
-                  faceIndex_loc[k]==edgeIndex_loc[0] )
-               edges_orientation[i] = -1;
-            break;
-         }
-      }
-   }
-#endif
-}
-
 //    WW. 06.2005
 Elem::~Elem()
 {
@@ -197,65 +91,6 @@ Elem::~Elem()
 #endif
    neighbors.resize(0);
    ghost_nodes.resize(0);
-}
-
-void Elem::Init()
-{
-   // 2 Element configuration
-   switch(ele_Type)
-   {
-      case line:
-         nnodes = 2;
-         nnodesHQ = 3;
-         ele_dim = 1;
-         nfaces = 2;
-         nedges = 0;
-         break;
-      case quadri:
-         nnodes = 4;
-         nnodesHQ = 9;
-         ele_dim = 2;
-         nfaces = 4;
-         nedges = 4;
-         break;
-      case hex:
-         nnodes = 8;
-         nnodesHQ = 20;
-         ele_dim = 3;
-         nfaces = 6;
-         nedges = 12;
-         break;
-      case tri:
-         nnodes = 3;
-         nnodesHQ = 6;
-         ele_dim = 2;
-         nfaces = 3;
-         nedges = 3;
-         break;
-      case tet:
-         nnodes = 4;
-         nnodesHQ = 10;
-         ele_dim = 3;
-         nfaces = 4;
-         nedges = 6;
-         break;
-      case prism:
-         nnodes = 6;
-         nnodesHQ = 15;
-         ele_dim = 3;
-         nfaces = 5;
-         nedges = 9;
-         break;
-      case pyramid:
-         nnodes = 5;
-         nnodesHQ = 14;
-         ele_dim = 3;
-         nfaces = 5;
-         nedges = 8;
-         break;
-      default:
-         break;
-   }
 }
 
 //    WW. 06.2005
@@ -305,12 +140,14 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    int idummy, et;
    string buffer, name;
    idummy=et=-1;
+
+   int nnodes = 0;
 //   is.ignore(numeric_limits<int>::max(), '\n');
    //----------------------------------------------------------------------
    // 1 Reading element type data
    switch(fileType)
    {
-         //....................................................................
+      //....................................................................
       case 0: // msh
          is>>index>>PatchIndex;
          is>>buffer;
@@ -333,7 +170,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
          else if(name.find("pyra")!=string::npos)
             ele_Type = pyramid;
          break;
-         //....................................................................
+      //....................................................................
       case 1: // rfi
          is>>index>>PatchIndex>>name;
          if(name.find("line")!=string::npos)
@@ -351,7 +188,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
          else if(name.find("pyra")!=string::npos)
             ele_Type = pyramid;
          break;
-         //....................................................................
+      //....................................................................
       case 2: // gmsh
          int gmsh_patch_index;
          is>>index>>et>>gmsh_patch_index>>idummy>>nnodes;
@@ -384,25 +221,28 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
          }
          index--;
          break;
-         //....................................................................
+      //....................................................................
       case 3: // GMS
          ele_Type = tri;
          break;
-         //....................................................................
+      //....................................................................
       case 4: // SOL
          ele_Type = tri;
          break;
    }
    //----------------------------------------------------------------------
    // 2 Element configuration
-   Init();
+
+   if(fileType != 2) // if not gmsh file
+      nnodes = getNodesNumber();
+
    nodes.resize(nnodes);
    //----------------------------------------------------------------------
    // 3 Reading element node data
    long nidx = 0;
    switch(fileType)
    {
-         //....................................................................
+      //....................................................................
       case 0: // msh
          for(int i=0; i<nnodes; i++)
          {
@@ -410,7 +250,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
             nodes[i] = mesh->node_vector[nidx];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 1: // rfi
          for(int i=0; i<nnodes; i++)
          {
@@ -418,7 +258,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
             nodes[i] = mesh->node_vector[nidx];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 2: // gmsh
          for(int i=0; i<nnodes; i++)
          {
@@ -426,7 +266,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
             nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 3: // GMS
          for(int i=0; i<nnodes; i++)
          {
@@ -434,7 +274,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
             nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 4: // SOL
          for(int i=0; i<nnodes; i++)
          {
@@ -447,6 +287,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    is>>ws;
    //----------------------------------------------------------------------
    // Initialize topological properties
+   const int nfaces = getFacesNumber();
    neighbors.resize(nfaces);
    for(int i=0; i<nfaces; i++)
       neighbors[i] = NULL;
@@ -470,10 +311,10 @@ void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const
    int ntags=3;
    string deli = " ";
 
-   int nn = nnodes;
+   int nn = getNodesNumber();
    if(quadratic)
    {
-      nn = nnodesHQ;
+      nn = getNodesNumberHQ();
       switch(ele_Type)
       {
          case line:
@@ -665,7 +506,7 @@ void Elem::WriteIndex(ostream& os) const
 {
    string deli = " ";
    os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
-   for(int i=0; i<nnodes; i++)
+   for(int i=0; i<getNodesNumber(); i++)
       os<<nodes[i]->index<<deli;
    os<<endl;
 }
@@ -674,12 +515,12 @@ void Elem::Write_index(ostream& os) const
    string deli = " ";
    if(nodes.Size()>0)
    {
-      for(int i=0; i<nnodes; i++)
+      for(int i=0; i<getNodesNumber(); i++)
          os<<nodes[i]->index+1<<deli;
    }
    else
    {
-      for(int i=0; i<nnodes; i++)
+      for(int i=0; i<getNodesNumber(); i++)
          os<<nodes[i]->index + 1<<deli;
    }
    os<<endl;
@@ -704,15 +545,15 @@ void Elem::WriteAll(ostream& os) const
 void Elem::WriteNeighbors(ostream& os) const
 {
    os<<"Neighbors of "<<index<<endl;
-   for(int i=0; i<nfaces; i++)
+   for(int i=0; i<getFacesNumber(); i++)
       neighbors[i]->WriteAll(os);
    os<<"End neighbors of "<<index<<endl<<endl;;
 }
 
 void Elem::MarkingNodes(bool maker)
 {
-   int SizeV = nnodes;
-   if(quadratic) SizeV = nnodesHQ;
+   int SizeV = getNodesNumber();
+   if(quadratic) SizeV = getNodesNumberHQ();
 
    for (int i=0; i< SizeV; i++)
    {
@@ -724,8 +565,8 @@ void Elem::MarkingNodes(bool maker)
 //    WW. 06.2005
 void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
 {
-   int SizeV = nnodes;
-   if(quadratic) SizeV = nnodesHQ;
+   int SizeV = getNodesNumber();
+   if(quadratic) SizeV = getNodesNumberHQ();
    if(ReSize)
    {
       nodes.resize(SizeV);

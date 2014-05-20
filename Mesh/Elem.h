@@ -29,50 +29,147 @@ enum ElemType {line, quadri, hex, tri, tet, prism, pyramid};
 class Elem:public Grain
 {
    public:
-      Elem(const int Index);
-      // Faces: Face, local face index
-      Elem( const int Index, Elem* onwer, const int Face);
+      explicit Elem(const int Index) : Grain(Index), PatchIndex(0), quadratic(false)
+      {}
 
       ~Elem();
 
-      void Init();
-      // Operator
-      // virtual void operator = (const Elem& elem);
-
-      // Access to members
       int getNodesNumber() const
       {
-         return nnodes;
+         switch(ele_Type)
+         {
+            case line:
+               return 2;
+            case quadri:
+               return 4;
+            case hex:
+               return 8;
+            case tri:
+               return 3;
+            case tet:
+               return 4;
+            case prism:
+               return 6;
+            case pyramid:
+               return 5;
+            default:
+               break;
+         }
+         return 0;
       }
-      int getNodesNumber(bool quad) const
-      {
-         if(quad) return nnodesHQ;
-         else return nnodes;
-      }
+
       int getNodesNumberHQ() const
       {
-         return nnodesHQ;
+         switch(ele_Type)
+         {
+            case line:
+               return 3;
+            case quadri:
+               return 9;
+            case hex:
+               return 20;
+            case tri:
+               return 6;
+            case tet:
+               return 10;
+            case prism:
+               return 15;
+            case pyramid:
+               return 14;
+            default:
+               break;
+         }
+         return 0;
       }
+
+      int getNodesNumber(bool quad) const
+      {
+         if(quad) return getNodesNumberHQ();
+         else return getNodesNumber();
+      }
+
       int getEdgesNumber() const
       {
-         return nedges;
+         switch(ele_Type)
+         {
+            case line:
+               return 0;
+            case quadri:
+               return 4;
+            case hex:
+               return 12;
+            case tri:
+               return 3;
+            case tet:
+               return 6;
+            case prism:
+               return 9;
+            case pyramid:
+               return 8;
+            default:
+               break;
+         }
+         return 0;
       }
+
       int getFacesNumber() const
       {
-         return nfaces;
+         switch(ele_Type)
+         {
+            case line:
+               return 2;
+            case quadri:
+               return 4;
+            case hex:
+               return 6;
+            case tri:
+               return 3;
+            case tet:
+               return 4;
+            case prism:
+               return 5;
+            case pyramid:
+               return 5;
+            default:
+               break;
+         }
+         return 0;
       }
+
+      int Dim() const
+      {
+         switch(ele_Type)
+         {
+            case line:
+               return 1;
+            case quadri:
+               return 2;
+            case hex:
+               return 3;
+            case tri:
+               return 2;
+            case tet:
+               return 3;
+            case prism:
+               return 3;
+            case pyramid:
+               return 3;
+            default:
+               break;
+         }
+         return 0;
+      }
+
       int getElementType() const
       {
          return ele_Type;
       }
+
       int getPatchIndex() const
       {
          return PatchIndex;
       }
-      int Dim() const
-      {
-         return ele_dim;
-      }
+
       std::string getName() const;
 
       // Nodes
@@ -124,7 +221,8 @@ class Elem:public Grain
       // Neighbors
       void setNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
       {
-         for (int i=0; i< nfaces; i++) neighbors[i] = ele_neighbors[i];
+         for (int i=0; i<getFacesNumber(); i++)
+            neighbors[i] = ele_neighbors[i];
       }
       void setNeighbor(const int LocalIndex, Elem* ele_neighbor)
       {
@@ -132,7 +230,8 @@ class Elem:public Grain
       }
       void getNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
       {
-         for (int i=0; i< nfaces; i++) ele_neighbors[i]= neighbors[i];
+         for (int i=0; i<getFacesNumber(); i++)
+            ele_neighbors[i]= neighbors[i];
       }
       //Domain partition
       long getDomNodeIndex(const int loc_index)
@@ -182,11 +281,6 @@ class Elem:public Grain
       // High order
       bool quadratic;
 
-      int nnodes;
-      int nnodesHQ;
-      int ele_dim;         // Dimension of element
-      int nfaces;
-      int nedges;
       int sub_dom;
       int no_faces_on_surface;
       //
@@ -195,7 +289,6 @@ class Elem:public Grain
       // Element type
       // 1 Line, 2 Quad, 3 Hex, 4 Tri, 5 Tet, 6 Pris
       ElemType ele_Type;
-      Elem* Owner;
       //Math_Group::vec<long>   nodes_index;
       Math_Group::vec<long>   locnodes_index;
       Math_Group::vec<Node*>  nodes;
