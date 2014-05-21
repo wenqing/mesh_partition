@@ -4,6 +4,8 @@
 #include<string>
 #include<iostream>
 
+typedef int MyInt; //In case for PetscInt
+
 //------------------------------------------------------
 //   Topology declartion of geometrical element.
 //   WW. 06.2005
@@ -18,7 +20,11 @@ namespace Mesh_Group
 class Grain
 {
    public:
-      Grain(const int id);
+      Grain(const MyInt id)
+         : index(id), mark(false)
+      {
+      }
+
       virtual  ~Grain() {}
       // Operator
       virtual void operator = (const Grain & g) {}
@@ -32,7 +38,7 @@ class Grain
          mark = state;
       }
       // Get members
-      size_t getIndex() const
+      MyInt getIndex() const
       {
          return index;
       }
@@ -44,7 +50,7 @@ class Grain
       // Output
       virtual void output(std::ostream& os = std::cout) const {};
    protected:
-      size_t index;
+      MyInt index;
       // Towards special purpose,
       // e.g. marked to be refined or active
       bool mark;

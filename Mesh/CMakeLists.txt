@@ -2,11 +2,8 @@
 
 set( MESH_SOURCES
       Grain.h
-      Grain.cpp    
       Node.h
 	  Node.cpp
-      Edge.h
-      Edge.cpp
       Elem.h
       Elem.cpp
       Mesh.h

@@ -18,7 +18,7 @@ class Mesh;
 
 typedef struct
 {
-   long id;
+   MyInt id;
    double x;
    double y;
    double z;
@@ -28,12 +28,12 @@ typedef struct
 class Node:public Grain
 {
    public:
-      Node(const long Index):Grain(Index), global_index(Index)
+      Node(const MyInt Index):Grain(Index), global_index(Index)
       {
          Coordinate = new double[3];
          index_org = index;
       }
-      Node(const long Index, const double x,
+      Node(const MyInt Index, const double x,
            const double y, const double z=0.0);
       ~Node()
       {
@@ -80,11 +80,11 @@ class Node:public Grain
          return  Coordinate;
       }
 
-      void setLocalIndex(const long l_index)
+      void setLocalIndex(const MyInt l_index)
       {
          local_index = l_index;
       }
-      long getLocalIndex() const
+      MyInt getLocalIndex() const
       {
          return local_index;
       }
@@ -96,8 +96,8 @@ class Node:public Grain
 
    private:
       double *Coordinate;
-      long local_index; // For domain decomposition
-      long global_index;
+      MyInt local_index; // For domain decomposition
+      MyInt global_index;
       size_t index_org; // For quad elements in ddc
       std::vector<size_t>  ElementsRelated;
       std::vector<size_t>  NodesRelated;

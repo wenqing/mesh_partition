@@ -12,7 +12,7 @@ namespace Mesh_Group
 //-----------------------------------------------------
 //    WW. 06.2005
 //0. Base class
-Grain::Grain(const int id)
+Grain::Grain(const MyInt id)
 {
    index = id;
    mark = false;

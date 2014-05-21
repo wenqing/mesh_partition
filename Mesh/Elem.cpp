@@ -3,7 +3,6 @@
 #include <iomanip>
 
 #include "Node.h"
-#include "Edge.h"
 #include "Mesh.h"
 
 //------------------------------------------------------
@@ -291,16 +290,6 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    neighbors.resize(nfaces);
    for(int i=0; i<nfaces; i++)
       neighbors[i] = NULL;
-
-#ifdef BUILD_MESH_EDGE
-   edges.resize(nedges);
-   edges_orientation.resize(nedges);
-   for(int i=0; i<nedges; i++)
-   {
-      edges[i] = NULL;
-      edges_orientation[i] = 1;
-   }
-#endif
 }
 //  WW. 03.2009
 void Elem::WriteGmsh(ostream& os,  const int sdom_idx) const

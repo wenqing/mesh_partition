@@ -8,10 +8,6 @@
 #include "Grain.h"
 #include "Node.h"
 
-typedef int MyInt; //In case for PetscInt
-
-//#define BUILD_MESH_EDGE
-
 //------------------------------------------------------
 //   Topology declartion of geometrical element.
 //   WW. 06.2005
@@ -20,10 +16,8 @@ typedef int MyInt; //In case for PetscInt
 
 namespace Mesh_Group
 {
-class Edge;
 class Mesh;
 enum ElemType {line, quadri, hex, tri, tet, prism, pyramid};
-
 
 //3.  Element declaration
 class Elem:public Grain
@@ -198,26 +192,6 @@ class Elem:public Grain
       //
       MyInt getLocalNodeIndex(const int li) const;
 
-#ifdef BUILD_MESH_EDGE
-      // Edges
-      void getEdges(Math_Group::vec<Edge*>&  ele_edges)
-      {
-         for (int i=0; i<nedges; i++) ele_edges[i]= edges[i];
-      }
-      Edge* getEdge(const int index)
-      {
-         return edges[index];
-      }
-      void setEdges(Math_Group::vec<Edge*>&  ele_edges)
-      {
-         for (int i=0; i<nedges; i++) edges[i]= ele_edges[i];
-      }
-
-      void setEdges_Orientation(Math_Group::vec<int>&  ori_edg)
-      {
-         for (int i=0; i<nedges; i++) edges_orientation[i]= ori_edg[i];
-      }
-#endif
       // Neighbors
       void setNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
       {
@@ -292,13 +266,7 @@ class Elem:public Grain
       //Math_Group::vec<MyInt>   nodes_index;
       Math_Group::vec<MyInt>   locnodes_index;
       Math_Group::vec<Node*>  nodes;
-
-#ifdef BUILD_MESH_EDGE
-      Math_Group::vec<Edge*>  edges;
-      Math_Group::vec<int>  edges_orientation;
-#endif
       Math_Group::vec<Elem*>  neighbors;
-      //vec<Elem*>  sons;
 
       int nnodes_gl; //> number of ghost nodes for linear element
       std::vector<int>  ghost_nodes;
@@ -312,7 +280,6 @@ class Elem:public Grain
       int getElementFacesPri(const int Face, int *FaceNode);
       int getElementFacesPyramid(const int Face, int *FaceNode);
       friend class Mesh;
-
 };
 
 } //end namespace

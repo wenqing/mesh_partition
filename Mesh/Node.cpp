@@ -12,7 +12,7 @@ using namespace std;
 
 //1.  Node declaration
 //    WW. 06.2005
-Node:: Node(const long Index, const double x,
+Node:: Node(const MyInt Index, const double x,
             const double y, const double z):Grain(Index),global_index(Index)
 {
    Coordinate = new double[3];
@@ -54,7 +54,7 @@ void Node::WriteBIN(ostream& os) const
 {
 
    Node_Str nd;
-   nd.id = static_cast<long> (index);
+   nd.id = static_cast<MyInt> (index);
    nd.x = Coordinate[0];
    nd.y = Coordinate[1];
    nd.z = Coordinate[2];
