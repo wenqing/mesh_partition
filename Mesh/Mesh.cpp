@@ -1879,7 +1879,7 @@ void Mesh::ReadGrid(istream& is)
 
    // Read Nodes
    counter = 0;
-   node_vector.reserve(nn);
+   node_vector.resize(nn);
    for(i=0; i<nn; i++)
    {
       is>>ibuff>>x>>y>>z>>ws;
@@ -1898,7 +1898,7 @@ void Mesh::ReadGrid(istream& is)
 
    // Read Elements
    counter = 0;
-   elem_vector.reserve(ne);
+   elem_vector.resize(ne);
    for(i=0; i<ne; i++)
    {
       Elem* newElem = new Elem(i);
@@ -1953,7 +1953,7 @@ void Mesh::ReadGridGeoSys(istream& is)
       {
          is  >> no_nodes>>ws;
 
-         node_vector.reserve(no_nodes);
+         node_vector.resize(no_nodes);
          for(i=0; i<no_nodes; i++)
          {
             is>>ibuff>>x>>y>>z>>ws;
@@ -1967,7 +1967,7 @@ void Mesh::ReadGridGeoSys(istream& is)
       {
          is >> no_elements>>ws;
 
-         elem_vector.reserve(no_elements);
+         elem_vector.resize(no_elements);
 
          for(i=0; i<no_elements; i++)
          {

@@ -23,7 +23,9 @@ enum ElemType {line, quadri, hex, tri, tet, prism, pyramid};
 class Elem:public Grain
 {
    public:
-      explicit Elem(const int Index) : Grain(Index), PatchIndex(0), quadratic(false)
+      explicit Elem(const int Index) : Grain(Index),
+         quadratic(false), sub_dom(0), no_faces_on_surface(0),
+         PatchIndex(0), ele_Type(line), locnodes_index(NULL)
       {}
 
       ~Elem();
@@ -167,28 +169,35 @@ class Elem:public Grain
       std::string getName() const;
 
       // Nodes
-      void getNodeIndeces(MyInt  *node_index) const
+      void getNodeIndeces(MyInt *node_index) const
       {
          for (int i=0; i< (int) nodes.Size(); i++)
             node_index[i]= static_cast<MyInt>(nodes[i]->index);
       }
-      size_t getNodeIndex(const int loc_lndex) const
+
+      MyInt getNodeIndex(const int loc_lndex) const
       {
          return nodes[loc_lndex]->index;
       }
+
       void setNodes(Math_Group::vec<Node*>&  ele_nodes, const bool ReSize=false);
+
       void getNodes(Math_Group::vec<Node*>&  ele_nodes)
       {
          for (int i=0; i< (int) nodes.Size(); i++)
             ele_nodes[i]= nodes[i];
       }
+
       Node* getNode(const int i)
       {
          return nodes[i];
       }
+
       void MarkingNodes(bool maker);
+
       //
       void setLocalNodeIndex(const int li, const MyInt n_lindex);
+
       //
       MyInt getLocalNodeIndex(const int li) const;
 
@@ -198,38 +207,48 @@ class Elem:public Grain
          for (int i=0; i<getFacesNumber(); i++)
             neighbors[i] = ele_neighbors[i];
       }
+
       void setNeighbor(const int LocalIndex, Elem* ele_neighbor)
       {
          neighbors[LocalIndex] = ele_neighbor;
       }
+
       void getNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
       {
          for (int i=0; i<getFacesNumber(); i++)
             ele_neighbors[i]= neighbors[i];
       }
+
       //Domain partition
       MyInt getDomNodeIndex(const int loc_index)
       {
          return locnodes_index[loc_index];
       }
+
       void setDomNodeIndex(const int loc_index, const MyInt dom_nindex)
       {
          locnodes_index[loc_index] = dom_nindex;
       }
+
       void AllocateLocalIndexVector()
       {
-         locnodes_index.resize(nodes.Size());
+         if(!locnodes_index)
+            locnodes_index = new MyInt[nodes.Size()];
       }
+
       void setDomainIndex(const int dom)
       {
          sub_dom = dom;
       }
+
       int getDomainIndex() const
       {
          return sub_dom;
       }
+
       // Local indicis
       void getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes);
+
       int getElementFaceNodes(const int Face, int *FacesNode);
 
 
@@ -263,8 +282,8 @@ class Elem:public Grain
       // Element type
       // 1 Line, 2 Quad, 3 Hex, 4 Tri, 5 Tet, 6 Pris
       ElemType ele_Type;
-      //Math_Group::vec<MyInt>   nodes_index;
-      Math_Group::vec<MyInt>   locnodes_index;
+
+      MyInt *locnodes_index;
       Math_Group::vec<Node*>  nodes;
       Math_Group::vec<Elem*>  neighbors;
 

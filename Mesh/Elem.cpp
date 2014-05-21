@@ -83,11 +83,13 @@ int EdgeLocalIndexArrayElemShift [] =
 //    WW. 06.2005
 Elem::~Elem()
 {
-   locnodes_index.resize(0);
+   if(locnodes_index)
+   {
+      delete [] locnodes_index;
+      locnodes_index = NULL;
+   }
+
    nodes.resize(0);
-#ifdef BUILD_MESH_EDGE
-   edges.resize(0);
-#endif
    neighbors.resize(0);
    ghost_nodes.resize(0);
 }
