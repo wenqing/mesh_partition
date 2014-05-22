@@ -3,8 +3,6 @@
 
 #include<vector>
 
-#include"vec.h"
-#include"SymMatrix.h"
 #include "Grain.h"
 #include "Node.h"
 
@@ -25,7 +23,7 @@ class Elem:public Grain
    public:
       explicit Elem(const int Index) : Grain(Index),
          quadratic(false), sub_dom(0), no_faces_on_surface(0),
-         PatchIndex(0), ele_Type(line), locnodes_index(NULL)
+         PatchIndex(0), ele_Type(line), locnodes_index(NULL), nodes(NULL), neighbors(NULL)
       {}
 
       ~Elem();
@@ -169,10 +167,10 @@ class Elem:public Grain
       std::string getName() const;
 
       // Nodes
-      void getNodeIndeces(MyInt *node_index) const
+      void getNodeIndeces(MyInt *node_index, const bool quad = false) const
       {
-         for (int i=0; i< (int) nodes.Size(); i++)
-            node_index[i]= static_cast<MyInt>(nodes[i]->index);
+         for (int i=0; i< getNodesNumber(quad); i++)
+            node_index[i]= nodes[i]->index;
       }
 
       MyInt getNodeIndex(const int loc_lndex) const
@@ -180,12 +178,9 @@ class Elem:public Grain
          return nodes[loc_lndex]->index;
       }
 
-      void setNodes(Math_Group::vec<Node*>&  ele_nodes, const bool ReSize=false);
-
-      void getNodes(Math_Group::vec<Node*>&  ele_nodes)
+      Node **getNodes()
       {
-         for (int i=0; i< (int) nodes.Size(); i++)
-            ele_nodes[i]= nodes[i];
+         return nodes;
       }
 
       Node* getNode(const int i)
@@ -202,7 +197,7 @@ class Elem:public Grain
       MyInt getLocalNodeIndex(const int li) const;
 
       // Neighbors
-      void setNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
+      void setNeighbors(Elem **ele_neighbors)
       {
          for (int i=0; i<getFacesNumber(); i++)
             neighbors[i] = ele_neighbors[i];
@@ -213,10 +208,9 @@ class Elem:public Grain
          neighbors[LocalIndex] = ele_neighbor;
       }
 
-      void getNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
+      Elem** getNeighbors()
       {
-         for (int i=0; i<getFacesNumber(); i++)
-            ele_neighbors[i]= neighbors[i];
+         return neighbors;
       }
 
       //Domain partition
@@ -230,10 +224,11 @@ class Elem:public Grain
          locnodes_index[loc_index] = dom_nindex;
       }
 
+      // For partitioning by element
       void AllocateLocalIndexVector()
       {
          if(!locnodes_index)
-            locnodes_index = new MyInt[nodes.Size()];
+            locnodes_index = new MyInt[getNodesNumber()];
       }
 
       void setDomainIndex(const int dom)
@@ -246,11 +241,10 @@ class Elem:public Grain
          return sub_dom;
       }
 
-      // Local indicis
+      // Local indicies
       void getLocalIndices_EdgeNodes(const int Edge, int *EdgeNodes);
 
       int getElementFaceNodes(const int Face, int *FacesNode);
-
 
       int getFaceType();
 
@@ -260,7 +254,8 @@ class Elem:public Grain
       }
 
       // Output
-      void Read(std::istream& is, Mesh_Group::Mesh *mesh, int fileType);
+      void Read(std::istream& is, Mesh_Group::Mesh *mesh, int fileType, const bool high_order);
+
       void WriteIndex(std::ostream& os = std::cout) const;
       void WriteGmsh(std::ostream& os, const int sdom_idx = 0) const;
       void WriteGSmsh(std::ostream& os, bool quad = false) const;
@@ -270,6 +265,7 @@ class Elem:public Grain
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;
       void WriteNeighbors(std::ostream& os = std::cout) const;
+
    private:
       // High order
       bool quadratic;
@@ -284,8 +280,8 @@ class Elem:public Grain
       ElemType ele_Type;
 
       MyInt *locnodes_index;
-      Math_Group::vec<Node*>  nodes;
-      Math_Group::vec<Elem*>  neighbors;
+      Node **nodes;
+      Elem **neighbors;
 
       int nnodes_gl; //> number of ghost nodes for linear element
       std::vector<int>  ghost_nodes;

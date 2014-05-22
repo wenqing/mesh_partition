@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <iomanip>
+#include <fstream>
 #include <cmath>
 #include <cfloat>
 #include <limits>
@@ -21,8 +22,6 @@
 namespace Mesh_Group
 {
 using namespace std;
-using namespace Math_Group;
-
 
 Mesh::Mesh(bool quad)
 {
@@ -156,15 +155,13 @@ void Mesh::ConstructGrid()
 
    int faceIndex_loc0[10];
    int faceIndex_loc[10];
-   vec<Node*> e_nodes0(20);
    MyInt node_index_glb[20];
    MyInt node_index_glb0[20];
 
-   vec<Elem*> Neighbors(15);
-   vec<Elem*> Neighbors0(15);
+   Node **e_nodes0;
+   Elem **Neighbors;
+   Elem **Neighbors0;
 
-   vec<Node*> e_edgeNodes0(3);
-   vec<Node*> e_edgeNodes(3);
    Elem* thisElem0=NULL;
    Elem* thisElem=NULL;
 
@@ -188,9 +185,12 @@ void Mesh::ConstructGrid()
       thisElem0 = elem_vector[e];
       nnodes0 = thisElem0->getNodesNumber(); // Number of nodes for linear element
       thisElem0->getNodeIndeces(node_index_glb0);
-      thisElem0->getNeighbors(Neighbors0);
+
+      e_nodes0 = thisElem0->getNodes();
       for(i=0; i<nnodes0; i++) // Nodes
          e_nodes0[i] = node_vector[node_index_glb0[i]];
+
+      Neighbors0 = thisElem0->getNeighbors();
       m0 = thisElem0->getFacesNumber();
       // neighbors
       for(i=0; i<m0; i++) // Faces
@@ -198,6 +198,7 @@ void Mesh::ConstructGrid()
          if(Neighbors0[i])
             continue;
          n0 = thisElem0->getElementFaceNodes(i, faceIndex_loc0);
+
          done = false;
          for(k=0; k<n0; k++)
          {
@@ -207,15 +208,19 @@ void Mesh::ConstructGrid()
                const size_t ee = e_nodes0[faceIndex_loc0[k]]->ElementsRelated[ei];
                if(ee==e)
                   continue;
+
                thisElem = elem_vector[ee];
                thisElem->getNodeIndeces(node_index_glb);
-               thisElem->getNeighbors(Neighbors);
+               Neighbors = thisElem->getNeighbors();
                m = thisElem->getFacesNumber();
 
                for(ii=0; ii<m; ii++) // Faces
                {
                   n = thisElem->getElementFaceNodes(ii, faceIndex_loc);
                   if(n0!=n)
+                     continue;
+
+                  if(Neighbors0[ii])
                      continue;
 
                   counter = 0;
@@ -235,22 +240,23 @@ void Mesh::ConstructGrid()
                   {
                      Neighbors0[i] = thisElem;
                      Neighbors[ii] = thisElem0;
-                     thisElem->setNeighbor(ii, thisElem0);
                      done = true;
                      break;
                   }
                }
-               if(done) break;
+
+               if(done)
+                  break;
             }
-            if(done) break;
+
+            if(done)
+               break;
          }
       }
-      thisElem0->setNeighbors(Neighbors0);
 
       // set nodes
       thisElem0->setOrder(false);
-      // Resize is true
-      thisElem0->setNodes(e_nodes0, true);
+      //
    }// Over elements
 
    // set faces on surfaces and others
@@ -291,9 +297,11 @@ void Mesh::ConstructGrid()
       // Compute volume meanwhile
       //thisElem0->ComputeVolume();
 
-      if(thisElem0->getElementType() == line) continue; // line element
+      if(thisElem0->getElementType() == line)
+         continue; // line element
+
       thisElem0->getNodeIndeces(node_index_glb0);
-      thisElem0->getNeighbors(Neighbors0);
+      Neighbors0 = thisElem0->getNeighbors();
       m0 = thisElem0->getFacesNumber();
 
 #ifdef BUILD_MESH_FACE
@@ -356,11 +364,6 @@ void Mesh::ConstructGrid()
    // For sparse matrix
    ConnectedNodes(false);
    //
-   e_nodes0.resize(0);
-
-   Neighbors.resize(0);
-   Neighbors0.resize(0);
-
    finish = clock();
    cout<<"\nCPU time elapsed in constructing topology of grids: "
        <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl<<endl;
@@ -386,18 +389,26 @@ void Mesh::GenerateHighOrderNodes()
 
    //
    Node *aNode=NULL;
-   vec<Node*> e_nodes0(20);
+   Node **e_nodes0;
    Elem *thisElem0=NULL;
    Elem *thisElem=NULL;
 
    //----------------------------------------------------------------------
    // Loop over elements
    e_size = elem_vector.size();
+
+   for(e=0; e<e_size; e++)
+   {
+      elem_vector[e]->Marking(false);
+   }
+
    for(e=0; e<e_size; e++)
    {
       thisElem0 = elem_vector[e];
       nnodes0 = thisElem0->getNodesNumber(); // Number of nodes for linear element
 //      thisElem0->GetNodeIndeces(node_index_glb0);
+
+      e_nodes0 = thisElem0->getNodes();
       for(i=0; i<nnodes0; i++) // Nodes
          e_nodes0[i] = thisElem0->getNode(i);
       // --------------------------------
@@ -422,8 +433,8 @@ void Mesh::GenerateHighOrderNodes()
                   continue;
                thisElem = elem_vector[ee];
 
-               // If this element already proccessed
-               if(thisElem->nodes.Size() == thisElem->getNodesNumberHQ())
+               // If this element has already been proccessed
+               if( thisElem->getStatus() )
                {
                   nedges = thisElem->getEdgesNumber();
                   // Edges of neighbors
@@ -491,9 +502,10 @@ void Mesh::GenerateHighOrderNodes()
       }
       // Set edges and nodes
       thisElem0->setOrder(true);
-      // Resize is true
-      thisElem0->setNodes(e_nodes0, true);
+      //
+      thisElem0->Marking(true);
    }// Over elements
+
    //
    NodesNumber_Quadratic= (MyInt)node_vector.size();
    for(e=0; e<e_size; e++)
@@ -520,15 +532,12 @@ void Mesh::GenerateHighOrderNodes()
    ConnectedNodes(true);
    //ConnectedElements2Node(true);
    //
-   e_nodes0.resize(0);
-
 
    finish = clock();
    cout<<"\n\tCPU time elapsed in generating high oder elements: "
        <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
 
 }
-
 
 void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_parts, const bool osdom)
 {
@@ -598,7 +607,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       part_in>>dom>>ws;
       ele = elem_vector[i];
       ele->setDomainIndex(dom);
-//      elem_vector[i]->AllocateLocalIndexVector();
+
       if(dom>max_dom) max_dom = dom;
 
       if(osdom)
@@ -632,12 +641,10 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       }
    }
 
-
    bool done = false;
    MyInt n_index=0;
    vector<size_t> nodes_dom;
    vector<Elem*> eles_dom;
-
 
    //
    for(k=0; k<max_dom; k++)
@@ -659,7 +666,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       for(j=0; j<(MyInt)elem_vector.size(); j++)
       {
          ele = elem_vector[j];
-         //ele->AllocateLocalIndexVector();
+
          if(ele->getDomainIndex()==k)
          {
             for(kk=0; kk<ele->getNodesNumber(); kk++)
@@ -685,7 +692,6 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       part_out<<"$NODES_INNER "<<(MyInt)nodes_dom.size()<<endl;
       for(j=0; j<(MyInt)nodes_dom.size(); j++)
          part_out<<nodes_dom[j]<<endl;
-
 
       if(osdom)
       {
@@ -801,7 +807,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    vector<double> m_ele_val;
 
    //
-
    const MyInt num_headers = 13;
    MyInt head[13];
    MyInt ivar[23];
@@ -813,8 +818,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    head[11] = 0;
    // ghost element rank offset
    head[12] = 0;
-
-
 
    if(mpc.mat_fname.size() !=0)
    {
@@ -894,7 +897,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       exit(1);
    }
 
-
    const MyInt nn = static_cast<MyInt>(node_vector.size());
 
    vector<bool> sdom_marked(nn);
@@ -961,7 +963,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 #endif
 
    //
-
    MyInt node_id_shift = 0;
    MyInt nnodes_previous_sdom = 0;
    vector<MyInt> nnodes_sdom_start(num_parts);
@@ -1004,7 +1005,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       MyInt size_sbd_nodes_l = size_sbd_nodes; // Nodes in this domain of linear element
       MyInt size_sbd_nodes_h = size_sbd_nodes; // Nodes in this domain of quadratic element
 
-
       vector<Elem*> in_subdom_elements;
       vector<Elem*> ghost_subdom_elements;
 
@@ -1021,7 +1021,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          a_node->local_index = static_cast<MyInt> (a_node->index);
          a_node ->Marking(true);
       }
-
 
       /// Find the elements in this subdomain.
       for(j=0; j<size_sbd_nodes0; j++)
@@ -1239,7 +1238,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
       size_sbd_nodes = static_cast<MyInt>(sbd_nodes.size()) - nnodes_previous_sdom;
 
-
       // Count the total integer variables of this subdomain
       const MyInt nei = static_cast<MyInt>(in_subdom_elements.size());
       nmb_element_idxs =  3*nei;
@@ -1414,7 +1412,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          ele_info.clear();
 
       }
-
 
       //----------------------------------------------------------------------------------
       /// Material data partitioning
@@ -1607,8 +1604,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          const MyInt nsize = end - start;
          fwrite(&nodes_buffer[0], sizeof(Node_Str), nsize, of_bin_nod);
       }
-
-
    }
 
    if(binary_output)
@@ -1712,7 +1707,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    os.clear();
    os.close();
 
-
    sbd_nodes.clear();
 }
 
@@ -1732,7 +1726,6 @@ void  Mesh::WriteVTK_Nodes(std::ostream& os)
       a_node = node_vector[i];
       os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
    }
-
 }
 
 // 03.2012. WW
@@ -1751,9 +1744,7 @@ void Mesh::WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const s
       a_node = nod_vec[i];
       os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
    }
-
 }
-
 
 // 02.2012. WW
 void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec,
@@ -1822,7 +1813,6 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
       for(i=0; i<ne0; i++)
          os<<sbd_index<<endl;
    }
-
 }
 
 void Mesh::Write2METIS(ostream& os)
@@ -1860,7 +1850,7 @@ void Mesh::Write2METIS(ostream& os)
 }
 
 // Read grid for test purpose
-void Mesh::ReadGrid(istream& is)
+void Mesh::ReadGrid(istream& is, const bool high_order)
 {
    MyInt i, ne, nn, counter;
    int ibuff;
@@ -1902,7 +1892,7 @@ void Mesh::ReadGrid(istream& is)
    for(i=0; i<ne; i++)
    {
       Elem* newElem = new Elem(i);
-      newElem->Read(is, this, 1);
+      newElem->Read(is, this, 1, high_order);
       newElem->Marking(true);
       elem_vector[counter] = newElem;
       counter++;
@@ -1912,12 +1902,10 @@ void Mesh::ReadGrid(istream& is)
       cout<<"Error: number elements do not match"<<endl;
       exit(1);
    }
-
 //   position = is.tellg();
 }
 
-
-void Mesh::ReadGridGeoSys(istream& is)
+void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
 {
    string sub_line;
    string line_string;
@@ -1972,7 +1960,7 @@ void Mesh::ReadGridGeoSys(istream& is)
          for(i=0; i<no_elements; i++)
          {
             newElem = new Elem(i);
-            newElem->Read(is, this, 0);
+            newElem->Read(is, this, 0, high_order);
             newElem->Marking(true);
             elem_vector[i] = newElem;
          }

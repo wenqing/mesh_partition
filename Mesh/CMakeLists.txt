@@ -10,17 +10,10 @@ set( MESH_SOURCES
       Mesh.cpp
 )
 
-#include_directories(
-#	.
-#	../MatrixVec
-#)
-
-
 # Create the library
 add_library(Mesh STATIC ${MESH_SOURCES} )
 
 target_link_libraries(
 	Mesh
-	Math
 )
 

@@ -1,8 +1,6 @@
 // expre_new_Operator.cpp
 // compile with: /EHsc
 #include <cmath>
-
-
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -329,9 +327,9 @@ int main(int argc, char* argv[])
    infile.seekg(0L,ios::beg);
 
    if(rfiMesh)
-      a_mesh->ReadGrid(infile);
+      a_mesh->ReadGrid(infile, quad);
    else
-      a_mesh->ReadGridGeoSys(infile);
+      a_mesh->ReadGridGeoSys(infile, quad);
 
 
    switch(this_task)

@@ -15,7 +15,6 @@ IF(USE_METIS_SOURCE)
 	ADD_EXECUTABLE(${PROJECT_NAME} partition.cpp)
 
 	target_link_libraries(${PROJECT_NAME} 
-	   Math
 	   Mesh		
 	   METIS_lib
        metis
@@ -23,7 +22,6 @@ IF(USE_METIS_SOURCE)
 ELSE() 
 	ADD_EXECUTABLE(${PROJECT_NAME} partition.cpp)
 	target_link_libraries(${PROJECT_NAME} 
-		Math
 		Mesh
 	)	
 ENDIF()
