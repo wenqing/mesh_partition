@@ -38,8 +38,8 @@ class Mesh
       ~Mesh();
 
 
-      void ReadGrid(std::istream& is = std::cin);
-      void ReadGridGeoSys(std::istream& is = std::cin);
+      void ReadGrid(std::istream& is, const bool high_order);
+      void ReadGridGeoSys(std::istream& is, const bool high_order);
 
       void Write2METIS(std::ostream& os);
       void WriteVTK_Nodes(std::ostream& os);

@@ -156,15 +156,13 @@ void Mesh::ConstructGrid()
 
    int faceIndex_loc0[10];
    int faceIndex_loc[10];
-   vec<Node*> e_nodes0(20);
+   Node *e_nodes0[20];
    MyInt node_index_glb[20];
    MyInt node_index_glb0[20];
 
    vec<Elem*> Neighbors(15);
    vec<Elem*> Neighbors0(15);
 
-   vec<Node*> e_edgeNodes0(3);
-   vec<Node*> e_edgeNodes(3);
    Elem* thisElem0=NULL;
    Elem* thisElem=NULL;
 
@@ -249,8 +247,8 @@ void Mesh::ConstructGrid()
 
       // set nodes
       thisElem0->setOrder(false);
-      // Resize is true
-      thisElem0->setNodes(e_nodes0, true);
+      //
+      thisElem0->setNodes(e_nodes0);
    }// Over elements
 
    // set faces on surfaces and others
@@ -356,8 +354,6 @@ void Mesh::ConstructGrid()
    // For sparse matrix
    ConnectedNodes(false);
    //
-   e_nodes0.resize(0);
-
    Neighbors.resize(0);
    Neighbors0.resize(0);
 
@@ -386,13 +382,19 @@ void Mesh::GenerateHighOrderNodes()
 
    //
    Node *aNode=NULL;
-   vec<Node*> e_nodes0(20);
+   Node *e_nodes0[20];
    Elem *thisElem0=NULL;
    Elem *thisElem=NULL;
 
    //----------------------------------------------------------------------
    // Loop over elements
    e_size = elem_vector.size();
+
+   for(e=0; e<e_size; e++)
+   {
+      elem_vector[e]->Marking(false);
+   }
+
    for(e=0; e<e_size; e++)
    {
       thisElem0 = elem_vector[e];
@@ -422,8 +424,8 @@ void Mesh::GenerateHighOrderNodes()
                   continue;
                thisElem = elem_vector[ee];
 
-               // If this element already proccessed
-               if(thisElem->nodes.Size() == thisElem->getNodesNumberHQ())
+               // If this element has already been proccessed
+               if( thisElem->getStatus() )
                {
                   nedges = thisElem->getEdgesNumber();
                   // Edges of neighbors
@@ -491,9 +493,11 @@ void Mesh::GenerateHighOrderNodes()
       }
       // Set edges and nodes
       thisElem0->setOrder(true);
-      // Resize is true
-      thisElem0->setNodes(e_nodes0, true);
+      //
+      thisElem0->setNodes(e_nodes0);
+      thisElem0->Marking(true);
    }// Over elements
+
    //
    NodesNumber_Quadratic= (MyInt)node_vector.size();
    for(e=0; e<e_size; e++)
@@ -520,8 +524,6 @@ void Mesh::GenerateHighOrderNodes()
    ConnectedNodes(true);
    //ConnectedElements2Node(true);
    //
-   e_nodes0.resize(0);
-
 
    finish = clock();
    cout<<"\n\tCPU time elapsed in generating high oder elements: "
@@ -598,7 +600,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       part_in>>dom>>ws;
       ele = elem_vector[i];
       ele->setDomainIndex(dom);
-//      elem_vector[i]->AllocateLocalIndexVector();
+
       if(dom>max_dom) max_dom = dom;
 
       if(osdom)
@@ -632,12 +634,10 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       }
    }
 
-
    bool done = false;
    MyInt n_index=0;
    vector<size_t> nodes_dom;
    vector<Elem*> eles_dom;
-
 
    //
    for(k=0; k<max_dom; k++)
@@ -659,7 +659,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       for(j=0; j<(MyInt)elem_vector.size(); j++)
       {
          ele = elem_vector[j];
-         //ele->AllocateLocalIndexVector();
+
          if(ele->getDomainIndex()==k)
          {
             for(kk=0; kk<ele->getNodesNumber(); kk++)
@@ -685,7 +685,6 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
       part_out<<"$NODES_INNER "<<(MyInt)nodes_dom.size()<<endl;
       for(j=0; j<(MyInt)nodes_dom.size(); j++)
          part_out<<nodes_dom[j]<<endl;
-
 
       if(osdom)
       {
@@ -1860,7 +1859,7 @@ void Mesh::Write2METIS(ostream& os)
 }
 
 // Read grid for test purpose
-void Mesh::ReadGrid(istream& is)
+void Mesh::ReadGrid(istream& is, const bool high_order)
 {
    MyInt i, ne, nn, counter;
    int ibuff;
@@ -1902,7 +1901,7 @@ void Mesh::ReadGrid(istream& is)
    for(i=0; i<ne; i++)
    {
       Elem* newElem = new Elem(i);
-      newElem->Read(is, this, 1);
+      newElem->Read(is, this, 1, high_order);
       newElem->Marking(true);
       elem_vector[counter] = newElem;
       counter++;
@@ -1916,8 +1915,7 @@ void Mesh::ReadGrid(istream& is)
 //   position = is.tellg();
 }
 
-
-void Mesh::ReadGridGeoSys(istream& is)
+void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
 {
    string sub_line;
    string line_string;
@@ -1972,7 +1970,7 @@ void Mesh::ReadGridGeoSys(istream& is)
          for(i=0; i<no_elements; i++)
          {
             newElem = new Elem(i);
-            newElem->Read(is, this, 0);
+            newElem->Read(is, this, 0, high_order);
             newElem->Marking(true);
             elem_vector[i] = newElem;
          }

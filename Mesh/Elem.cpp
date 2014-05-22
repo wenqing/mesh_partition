@@ -89,7 +89,11 @@ Elem::~Elem()
       locnodes_index = NULL;
    }
 
-   nodes.resize(0);
+   if(nodes)
+   {
+      delete [] nodes;
+      nodes = NULL;
+   }
    neighbors.resize(0);
    ghost_nodes.resize(0);
 }
@@ -119,7 +123,6 @@ string Elem::getName() const
    }
 }
 
-
 void Elem::setLocalNodeIndex(const int li, const MyInt n_lindex)
 {
    nodes[li]->local_index = n_lindex;
@@ -131,7 +134,7 @@ MyInt Elem::getLocalNodeIndex(const int li) const
 }
 
 //    WW. 06.2005
-void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
+void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool high_order)
 {
    //fileType=0: msh
    //fileType=1: rfi
@@ -237,7 +240,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType)
    if(fileType != 2) // if not gmsh file
       nnodes = getNodesNumber();
 
-   nodes.resize(nnodes);
+   nodes = new Node*[getNodesNumber(high_order)];
    //----------------------------------------------------------------------
    // 3 Reading element node data
    MyInt nidx = 0;
@@ -501,21 +504,15 @@ void Elem::WriteIndex(ostream& os) const
       os<<nodes[i]->index<<deli;
    os<<endl;
 }
+
 void Elem::Write_index(ostream& os) const
 {
    string deli = " ";
-   if(nodes.Size()>0)
-   {
-      for(int i=0; i<getNodesNumber(); i++)
-         os<<nodes[i]->index+1<<deli;
-   }
-   else
-   {
-      for(int i=0; i<getNodesNumber(); i++)
-         os<<nodes[i]->index + 1<<deli;
-   }
+   for(int i=0; i<getNodesNumber(); i++)
+      os<<nodes[i]->index+1<<deli;
    os<<endl;
 }
+
 //    WW. 06.2005
 void Elem::WriteAll(ostream& os) const
 {
@@ -523,7 +520,9 @@ void Elem::WriteAll(ostream& os) const
    os<<index<<deli<<PatchIndex<<deli<<getName()<<deli;
    //if(index==0)
    os<<"Index X Y Z: "<<endl;
-   for(int i=0; i<nodes.Size(); i++)
+
+   const int size = getNodesNumber(quadratic);
+   for(int i=0; i<size; i++)
    {
       const Node *anode = nodes[i];
       os<<anode->index
@@ -554,15 +553,13 @@ void Elem::MarkingNodes(bool maker)
 
 
 //    WW. 06.2005
-void Elem::setNodes(vec<Node*>&  ele_nodes, const bool ReSize)
+void Elem::setNodes(Node **ele_nodes)
 {
-   int SizeV = getNodesNumber();
-   if(quadratic) SizeV = getNodesNumberHQ();
-   if(ReSize)
-   {
-      nodes.resize(SizeV);
-   }
-   for (int i=0; i< SizeV; i++)
+   int size = getNodesNumber();
+   if(quadratic)
+      size = getNodesNumberHQ();
+
+   for (int i=0; i< size; i++)
    {
       nodes[i] = ele_nodes[i];
    }
