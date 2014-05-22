@@ -13,8 +13,6 @@ namespace Mesh_Group
 {
 
 using namespace std;
-using namespace Math_Group;
-
 
 int EdgeLocalNodeIndex [] =
 {
@@ -94,7 +92,13 @@ Elem::~Elem()
       delete [] nodes;
       nodes = NULL;
    }
-   neighbors.resize(0);
+
+   if(neighbors)
+   {
+      delete [] neighbors;
+      neighbors = NULL;
+   }
+
    ghost_nodes.resize(0);
 }
 
@@ -292,7 +296,8 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
    //----------------------------------------------------------------------
    // Initialize topological properties
    const int nfaces = getFacesNumber();
-   neighbors.resize(nfaces);
+
+   neighbors = new Elem*[nfaces];
    for(int i=0; i<nfaces; i++)
       neighbors[i] = NULL;
 }
@@ -548,20 +553,6 @@ void Elem::MarkingNodes(bool maker)
    for (int i=0; i< SizeV; i++)
    {
       nodes[i]->Marking(maker);
-   }
-}
-
-
-//    WW. 06.2005
-void Elem::setNodes(Node **ele_nodes)
-{
-   int size = getNodesNumber();
-   if(quadratic)
-      size = getNodesNumberHQ();
-
-   for (int i=0; i< size; i++)
-   {
-      nodes[i] = ele_nodes[i];
    }
 }
 

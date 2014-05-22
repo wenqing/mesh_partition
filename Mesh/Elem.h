@@ -3,8 +3,6 @@
 
 #include<vector>
 
-#include"vec.h"
-#include"SymMatrix.h"
 #include "Grain.h"
 #include "Node.h"
 
@@ -25,7 +23,7 @@ class Elem:public Grain
    public:
       explicit Elem(const int Index) : Grain(Index),
          quadratic(false), sub_dom(0), no_faces_on_surface(0),
-         PatchIndex(0), ele_Type(line), locnodes_index(NULL), nodes(NULL)
+         PatchIndex(0), ele_Type(line), locnodes_index(NULL), nodes(NULL), neighbors(NULL)
       {}
 
       ~Elem();
@@ -180,15 +178,10 @@ class Elem:public Grain
          return nodes[loc_lndex]->index;
       }
 
-      void setNodes(Node **ele_nodes);
-
-      /*
-       void getNodes(Math_Group::vec<Node*>&  ele_nodes)
-       {
-          for (int i=0; i< (int) nodes.Size(); i++)
-             ele_nodes[i]= nodes[i];
-       }
-      */
+      Node **getNodes()
+      {
+         return nodes;
+      }
 
       Node* getNode(const int i)
       {
@@ -204,7 +197,7 @@ class Elem:public Grain
       MyInt getLocalNodeIndex(const int li) const;
 
       // Neighbors
-      void setNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
+      void setNeighbors(Elem **ele_neighbors)
       {
          for (int i=0; i<getFacesNumber(); i++)
             neighbors[i] = ele_neighbors[i];
@@ -215,10 +208,9 @@ class Elem:public Grain
          neighbors[LocalIndex] = ele_neighbor;
       }
 
-      void getNeighbors(Math_Group::vec<Elem*>&  ele_neighbors)
+      Elem** getNeighbors()
       {
-         for (int i=0; i<getFacesNumber(); i++)
-            ele_neighbors[i]= neighbors[i];
+         return neighbors;
       }
 
       //Domain partition
@@ -273,6 +265,7 @@ class Elem:public Grain
       void Write_index(std::ostream& os = std::cout) const;
       void WriteAll(std::ostream& os = std::cout) const;
       void WriteNeighbors(std::ostream& os = std::cout) const;
+
    private:
       // High order
       bool quadratic;
@@ -288,7 +281,7 @@ class Elem:public Grain
 
       MyInt *locnodes_index;
       Node **nodes;
-      Math_Group::vec<Elem*>  neighbors;
+      Elem **neighbors;
 
       int nnodes_gl; //> number of ghost nodes for linear element
       std::vector<int>  ghost_nodes;
