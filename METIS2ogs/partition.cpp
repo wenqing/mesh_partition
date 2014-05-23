@@ -120,15 +120,25 @@ int main(int argc, char* argv[])
    int nparts = 1;
    string str_nparts;
 
+   bool task_opt_given = false;
+   bool part_opt_given = false;
+   bool part_num_given = false;
+
    if(argc>1)
    {
       for(int i=1; i<argc; i++)
       {
          s_buff = argv[i];
          if(s_buff.compare("-e") == 0)
+         {
             part_type = by_element;
+            part_opt_given = true;
+         }
          else if(s_buff.compare("-n") == 0)
+         {
             part_type = by_node;
+            part_opt_given = true;
+         }
 
          if(s_buff.compare("-q") == 0)
             quad = true;
@@ -163,6 +173,7 @@ int main(int argc, char* argv[])
             //str_nparts = s_buff;
             nparts = atoi( argv[i+1]);
             str_nparts =  argv[i+1];
+            bool part_num_given = true;
          }
 
          // Number of partitions
@@ -174,10 +185,12 @@ int main(int argc, char* argv[])
          if(s_buff.find("ogs2metis")!=string::npos)
          {
             this_task = ogs2metis;
+            task_opt_given = true;
          }
          else if(s_buff.find("metis2ogs")!=string::npos)
          {
             this_task = metis2ogs;
+            task_opt_given = true;
          }
          else if(s_buff.find("--help")!=string::npos)
          {
@@ -216,18 +229,26 @@ int main(int argc, char* argv[])
          }
 
          FindFileNameInCommand(ss, fname);
+         task_opt_given = true;
       }
       else if(s_buff.find("metis2ogs")!=string::npos)
       {
+         task_opt_given = true;
          this_task = metis2ogs;
          while(!ss.eof())
          {
             ss>>s_buff;
 
             if(s_buff.compare("-e") == 0)
+            {
                part_type = by_element;
+               part_opt_given = true;
+            }
             else if(s_buff.compare("-n") == 0)
+            {
                part_type = by_node;
+               part_opt_given = true;
+            }
 
             if(s_buff.compare("-q") == 0)
             {
@@ -263,6 +284,8 @@ int main(int argc, char* argv[])
                //str_nparts = s_buff;
                ss >> str_nparts;
                nparts = atoi(str_nparts.c_str());
+
+               part_num_given = true;
             }
 
             if(s_buff.find("-mat")!=string::npos)
@@ -280,6 +303,21 @@ int main(int argc, char* argv[])
 
    }
 
+   if( !task_opt_given )
+   {
+      cout<<"Task option (--metis2ogs or --ogs2metis) is not given. Stop now.\n";
+      exit(EXIT_FAILURE);
+   }
+   if( !part_opt_given )
+   {
+      cout<<"Partitioning option (-n or -e) is not given. Stop now.\n";
+      exit(EXIT_FAILURE);
+   }
+   if( !part_num_given )
+   {
+      cout<<"Partitioning number (e.g. -np 3) is not given. Stop now.\n";
+      exit(EXIT_FAILURE);
+   }
 
    //Get the path to the folder where the input file is.
    size_t pos_end;
