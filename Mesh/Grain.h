@@ -27,8 +27,8 @@ class Grain
 
       virtual  ~Grain() {}
       // Operator
-      virtual void operator = (const Grain & g) {}
-      virtual bool operator == (const Grain & g)
+      virtual void operator = (const Grain & /* g */) {}
+      virtual bool operator == (const Grain & /* g */)
       {
          return false;
       }
@@ -48,7 +48,7 @@ class Grain
       }
 
       // Output
-      virtual void output(std::ostream& os = std::cout) const {};
+      virtual void output(std::ostream& /* os = std::cout */) const {};
    protected:
       MyInt index;
       // Towards special purpose,

@@ -1751,10 +1751,9 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
       const int sbd_index, const MyInt node_shift)
 {
    size_t i;
-   int j, k;
+   int k;
    int nne;
 
-   j = 0;
    //-----------------------------------------------------------
    //  VTK output
    // Elements in this subdomain

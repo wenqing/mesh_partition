@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
             //str_nparts = s_buff;
             nparts = atoi( argv[i+1]);
             str_nparts =  argv[i+1];
-            bool part_num_given = true;
+            part_num_given = true;
          }
 
          // Number of partitions
@@ -203,7 +203,6 @@ int main(int argc, char* argv[])
             cout<<ver;
             exit(0);
          }
-
 
          if(  s_buff[0] != '-')
          {
@@ -308,15 +307,19 @@ int main(int argc, char* argv[])
       cout<<"Task option (--metis2ogs or --ogs2metis) is not given. Stop now.\n";
       exit(EXIT_FAILURE);
    }
-   if( !part_opt_given )
+
+   if( this_task == metis2ogs)
    {
-      cout<<"Partitioning option (-n or -e) is not given. Stop now.\n";
-      exit(EXIT_FAILURE);
-   }
-   if( !part_num_given )
-   {
-      cout<<"Partitioning number (e.g. -np 3) is not given. Stop now.\n";
-      exit(EXIT_FAILURE);
+      if( !part_opt_given )
+      {
+         cout<<"Partitioning option (-n or -e) is not given. Stop now.\n";
+         exit(EXIT_FAILURE);
+      }
+      if( !part_num_given )
+      {
+         cout<<"Partitioning number (e.g. -np 3) is not given. Stop now.\n";
+         exit(EXIT_FAILURE);
+      }
    }
 
    //Get the path to the folder where the input file is.
