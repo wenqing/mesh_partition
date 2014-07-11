@@ -2,6 +2,7 @@
 #define node_INC
 
 #include<vector>
+#include <limits>       // std::numeric_limits
 
 #include "Grain.h"
 
@@ -28,7 +29,7 @@ typedef struct
 class Node:public Grain
 {
    public:
-      Node(const MyInt Index):Grain(Index), global_index(Index)
+      Node(const MyInt Index):Grain(Index), global_index(Index), global_index_l( std::numeric_limits<MyInt>::max())
       {
          Coordinate = new double[3];
          index_org = index;
@@ -84,12 +85,23 @@ class Node:public Grain
       {
          local_index = l_index;
       }
+
       MyInt getLocalIndex() const
       {
          return local_index;
       }
 
-      // Output
+	  MyInt getGlobalIndex4LinearElement() const
+      {
+         return global_index_l;
+      }
+
+      void setGlobalIndex4LinearElement(const MyInt node_id)
+      {
+          global_index_l = node_id;
+      }
+
+	  // Output
       void Write(std::ostream& os = std::cout) const;
       void WriteBIN(std::ostream& os = std::cout) const;
       void WriteCoordinates(std::ostream& os = std::cout) const;
@@ -98,6 +110,7 @@ class Node:public Grain
       double *Coordinate;
       MyInt local_index; // For domain decomposition
       MyInt global_index;
+      MyInt global_index_l; // global index for nodes that make up linear elements
       size_t index_org; // For quad elements in ddc
       std::vector<size_t>  ElementsRelated;
       std::vector<size_t>  NodesRelated;

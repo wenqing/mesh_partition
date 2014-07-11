@@ -13,7 +13,7 @@ using namespace std;
 //1.  Node declaration
 //    WW. 06.2005
 Node:: Node(const MyInt Index, const double x,
-            const double y, const double z):Grain(Index),global_index(Index)
+            const double y, const double z):Grain(Index),global_index(Index), global_index_l(std::numeric_limits<MyInt>::max())
 {
    Coordinate = new double[3];
    Coordinate[0] = x;
@@ -43,7 +43,7 @@ bool Node::operator == (const Node& n)
 // Output
 void Node::Write(ostream& os) const
 {
-   os<<setw(14)<<index<<" ";
+   os<<index<<" "<<global_index_l<<" ";
    os<<Coordinate[0]<<" "
      <<Coordinate[1]<<" "
      <<Coordinate[2]<<endl;
