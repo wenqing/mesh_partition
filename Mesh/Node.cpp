@@ -13,7 +13,7 @@ using namespace std;
 //1.  Node declaration
 //    WW. 06.2005
 Node:: Node(const MyInt Index, const double x,
-            const double y, const double z):Grain(Index),global_index(Index), global_index_l(std::numeric_limits<MyInt>::max())
+            const double y, const double z):Grain(Index),global_index(Index), global_index_l(-1)
 {
    Coordinate = new double[3];
    Coordinate[0] = x;

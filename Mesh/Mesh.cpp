@@ -919,6 +919,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 #ifdef OUTPUT_TO_SINGLE_FILE
    string name_f;
    fstream os_subd;
+   fstream os_subd_head;
    fstream os_subd_node;
    FILE *of_bin_cfg = 0; // ostream os_bin_cfg
    FILE *of_bin_nod = 0; // ostream os_bin_nod
@@ -928,10 +929,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
    if(!binary_output)
    {
-      name_f = fname+"_partitioned_"+ s_nparts + ".msh";
+      name_f = fname+"_partitioned_head_"+ s_nparts + ".msh";
+      os_subd_head.open(name_f.c_str(), ios::out|ios::trunc );
+      os_subd_head<<num_parts<<endl;
+
+      name_f = fname+"_partitioned_elems_"+ s_nparts + ".msh";
       os_subd.open(name_f.c_str(), ios::out|ios::trunc );
 
-	  name_f = fname+"_partitioned_nodes_"+ s_nparts + ".msh";
+      name_f = fname+"_partitioned_nodes_"+ s_nparts + ".msh";
       os_subd_node.open(name_f.c_str(), ios::out|ios::trunc );
 
       name_f = "Subdomain mesh "
@@ -939,7 +944,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
                "Total integer variables of elements;Total integer variables of ghost elements  ";
       os_subd<<name_f<<endl;
-      os_subd<<num_parts<<endl;
       setw(14);
       os_subd.precision(14);
       //os_subd.setf(ios::fixed, ios::scientific);
@@ -995,24 +999,24 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 //      vector<Node*> sbd_nodes;
       nnodes_sdom_start[idom] = nnodes_previous_sdom;
 
-	  MyInt num_nodes_l = 0; //  global index for nodes that make up linear elements
+      MyInt num_nodes_l = 0; //  global index for nodes that make up linear elements
       for(j=0; j<NodesNumber_Linear; j++)
       {
          if(dom_idx[j] == idom && (!sdom_marked[j]))
          {
             sbd_nodes.push_back(node_vector[j]);
-			node_vector[j]->setGlobalIndex4LinearElement(node_id_offset_line + num_nodes_l); 
+            node_vector[j]->setGlobalIndex4LinearElement(node_id_offset_line + num_nodes_l);
             sdom_marked[j] = true;  // avoid other subdomain use this node
-			num_nodes_l++;
+            num_nodes_l++;
          }
       }
-	  node_id_offset_line += num_nodes_l;
+      node_id_offset_line += num_nodes_l;
 
       nnodes_sdom_linear_elements[idom] = static_cast<MyInt>(sbd_nodes.size());
       nnodes_sdom_quadratic_elements[idom] = nnodes_sdom_linear_elements[idom];
 
       MyInt size_sbd_nodes = nnodes_sdom_linear_elements[idom] - nnodes_previous_sdom;
-      MyInt size_sbd_nodes0 = size_sbd_nodes; // Nodes in this domain
+      MyInt size_sbd_nodes0 = size_sbd_nodes;  // Nodes in this domain
       MyInt size_sbd_nodes_l = size_sbd_nodes; // Nodes in this domain of linear element
       MyInt size_sbd_nodes_h = size_sbd_nodes; // Nodes in this domain of quadratic element
 
@@ -1287,10 +1291,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
       if(!binary_output)
       {
-         os_subd<<size_sbd_nodes<<deli<<sdom_nnodes<<deli<<nei_size
-                <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
-                <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
-                <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
+         os_subd_head<<size_sbd_nodes<<deli<<sdom_nnodes<<deli<<nei_size
+                     <<deli<<ne_g<<deli<<size_sbd_nodes_l<<deli<<size_sbd_nodes_h
+                     <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
+                     <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
       }
       else
       {
@@ -1312,14 +1316,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          head[11] += offset_e*sizeof(MyInt);
          head[12] += offset_e_g*sizeof(MyInt);
 
-      }
-
-      if(!binary_output)
-      {
-         position_node_file[idom] = os_subd.tellp();
-         //os_subd<<"Nodes"<<endl;
-         for(j=0; j<size_sbd_nodes; j++)
-            sbd_nodes[j + nnodes_previous_sdom]->Write(os_subd);
       }
 
       //os_subd<<"Elements"<<endl;
@@ -1413,6 +1409,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
             os_subd<<endl;
          }
       }
+
+      os_subd << endl;
 
       // in one long string buffer
       if(binary_output)
@@ -1573,8 +1571,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       else
          end = static_cast<MyInt>(sbd_nodes.size());
 
-   //   if(!binary_output)
-   //      os_subd.seekp(position_node_file[idom]);
+      //   if(!binary_output)
+      //      os_subd.seekp(position_node_file[idom]);
 
       // For that in one long string buffer
       if(binary_output)
@@ -1593,7 +1591,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
             // a_node->WriteBIN(os_bin_nod);
 
             Node_Str nd;
-            nd.id = static_cast<MyInt> (a_node->index);
+            nd.id = a_node->index;
+            nd.id_l = a_node->global_index_l;
             nd.x = a_node->Coordinate[0];
             nd.y = a_node->Coordinate[1];
             nd.z = a_node->Coordinate[2];
@@ -1606,8 +1605,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          else
             a_node->Write(os_subd_node);
       }
-	  if(!binary_output)
-	     os_subd_node << std::endl;
+      if(!binary_output)
+         os_subd_node << std::endl;
 
       // For that in one long string buffer
       if(binary_output)
@@ -1625,22 +1624,15 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       fclose(of_bin_ele_g);
 
       nodes_buffer.clear();
-      /*
-      os_bin_cfg.clear();
-      os_bin_nod.clear();
-      os_bin_ele.clear();
-
-      os_bin_cfg.close();
-      os_bin_nod.close();
-      os_bin_ele.close();
-      */
    }
    else
    {
+      os_subd_head.clear();
+      os_subd_head.close();
       os_subd.clear();
       os_subd.close();
-	  os_subd_node.clear();
-	  os_subd_node.close();
+      os_subd_node.clear();
+      os_subd_node.close();
    }
 
 #endif

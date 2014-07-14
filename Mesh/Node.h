@@ -2,7 +2,6 @@
 #define node_INC
 
 #include<vector>
-#include <limits>       // std::numeric_limits
 
 #include "Grain.h"
 
@@ -20,6 +19,7 @@ class Mesh;
 typedef struct
 {
    MyInt id;
+   MyInt id_l;  // My node ID for linear elements
    double x;
    double y;
    double z;
@@ -29,7 +29,7 @@ typedef struct
 class Node:public Grain
 {
    public:
-      Node(const MyInt Index):Grain(Index), global_index(Index), global_index_l( std::numeric_limits<MyInt>::max())
+      Node(const MyInt Index):Grain(Index), global_index(Index), global_index_l( -1 )
       {
          Coordinate = new double[3];
          index_org = index;
@@ -91,17 +91,17 @@ class Node:public Grain
          return local_index;
       }
 
-	  MyInt getGlobalIndex4LinearElement() const
+      MyInt getGlobalIndex4LinearElement() const
       {
          return global_index_l;
       }
 
       void setGlobalIndex4LinearElement(const MyInt node_id)
       {
-          global_index_l = node_id;
+         global_index_l = node_id;
       }
 
-	  // Output
+      // Output
       void Write(std::ostream& os = std::cout) const;
       void WriteBIN(std::ostream& os = std::cout) const;
       void WriteCoordinates(std::ostream& os = std::cout) const;
