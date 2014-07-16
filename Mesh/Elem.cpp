@@ -414,7 +414,7 @@ void Elem::WriteGSmsh(ostream& os, bool quad) const
 }
 
 //  WW. 03.2012
-void Elem::WriteSubDOM(ostream& os, const MyInt node_id_shift, bool quad) const
+void Elem::WriteSubDOM(ostream& os, bool quad) const
 {
    int nn = getNodesNumber(quad);
 
@@ -422,12 +422,12 @@ void Elem::WriteSubDOM(ostream& os, const MyInt node_id_shift, bool quad) const
    for(int i=0; i<nn; i++)
    {
 //      nodes_index[i] = nodes[i]->getIndex();
-      os<<nodes[i]->getIndex()-node_id_shift<<" ";
+      os << nodes[i]->index <<" ";
    }
-   os<<endl;
+   os<<"\n";
 }
 //  WW. 07.2013
-int Elem::getDataArray4BinaryOut(MyInt *ivar, const MyInt node_id_shift, bool quad) const
+int Elem::getDataArray4BinaryOut(MyInt *ivar, bool quad) const
 {
    const int nn = getNodesNumber(quad) ;
 
@@ -437,7 +437,7 @@ int Elem::getDataArray4BinaryOut(MyInt *ivar, const MyInt node_id_shift, bool qu
 
    for(int i=0; i<nn; i++)
    {
-      ivar[i+3] = static_cast<MyInt> (nodes[i]->getIndex()-node_id_shift);
+      ivar[i+3] = static_cast<MyInt> (nodes[i]->index);
    }
 
    return nn+3;

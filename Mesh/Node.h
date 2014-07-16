@@ -16,20 +16,19 @@ class Edge;
 class Elem;
 class Mesh;
 
-typedef struct
+struct Node_Str
 {
    MyInt id;
-   MyInt id_l;  // My node ID for linear elements
    double x;
    double y;
    double z;
-} Node_Str;
+};
 
 //2.  Node declaration
 class Node:public Grain
 {
    public:
-      Node(const MyInt Index):Grain(Index), global_index(Index), global_index_l( -1 )
+      Node(const MyInt Index):Grain(Index), global_index(Index)
       {
          Coordinate = new double[3];
          index_org = index;
@@ -91,26 +90,14 @@ class Node:public Grain
          return local_index;
       }
 
-      MyInt getGlobalIndex4LinearElement() const
-      {
-         return global_index_l;
-      }
-
-      void setGlobalIndex4LinearElement(const MyInt node_id)
-      {
-         global_index_l = node_id;
-      }
-
       // Output
       void Write(std::ostream& os = std::cout) const;
-      void WriteBIN(std::ostream& os = std::cout) const;
       void WriteCoordinates(std::ostream& os = std::cout) const;
 
    private:
       double *Coordinate;
       MyInt local_index; // For domain decomposition
       MyInt global_index;
-      MyInt global_index_l; // global index for nodes that make up linear elements
       size_t index_org; // For quad elements in ddc
       std::vector<size_t>  ElementsRelated;
       std::vector<size_t>  NodesRelated;
