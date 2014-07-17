@@ -1237,22 +1237,22 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       for(size_t in = start_id; in < end_id; in++)
       {
          Node *node = sbd_nodes[in];
-         node->index = node_id_offset + in - start_id;
+         node->index = node_id_offset;
          node->local_index = local_id;
          local_id++;
+         node_id_offset++;
       }
-      node_id_offset += num_nodes_active_l;
 
       start_id = sdom_start_node_hq[idom];
       end_id = sdom_end_act_node_hq[idom];
       for(size_t in = start_id; in < end_id; in++)
       {
          Node *node = sbd_nodes_hq[in];
-         node->index = node_id_offset_h + in - start_id;
+         node->index = node_id_offset_h;
          node->local_index = local_id;
          local_id++;
+         node_id_offset_h++;
       }
-      node_id_offset_h += num_nodes_active_h;
 
       //Inactive nodes, local node IDs
       start_id = sdom_end_act_node[idom];
@@ -1494,10 +1494,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          WriteVTK_Nodes(os, sbd_nodes, sdom_end_act_node[idom], sdom_end_node[idom]);
          WriteVTK_Nodes(os, sbd_nodes_hq, sdom_end_act_node_hq[idom], sdom_end_node_hq[idom]);
 
-         // writeSubdomainElementsVTK(os, in_subdom_elements, ghost_subdom_elements,  idom+1);
-
-
-         WriteVTK_Elements_of_Subdomain(os, in_subdom_elements, idom+1);
+         writeSubdomainElementsVTK(os, in_subdom_elements, ghost_subdom_elements,  idom+1);
 
          /// Material data partitioning
          if( num_data > 0)
@@ -1512,30 +1509,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                   const size_t entry_index = in_subdom_elements[i]->getIndex() + e_shift;
                   os<<m_ele_val[entry_index]<<endl;
                }
-            }
-         }
-         os.clear();
-         os.close();
-
-         //// Ghost elements in this subdomain
-         f_iparts = fname+"_"+dom_str+"_ghost_of_"+s_nparts+"_subdomains.vtk";
-         ////f_iparts = fname+"_"+str_buf+"ghost.vtk";
-         os.open(f_iparts.c_str(), ios::out|ios::trunc);
-         WriteVTK_Head(os, sdom_nodes_l + sdom_nodes_h );
-
-         WriteVTK_Nodes(os, sbd_nodes, sdom_start_node[idom], sdom_end_act_node[idom]);
-         WriteVTK_Nodes(os, sbd_nodes_hq, sdom_start_node_hq[idom], sdom_end_act_node_hq[idom]);
-         WriteVTK_Nodes(os, sbd_nodes, sdom_end_act_node[idom], sdom_end_node[idom]);
-         WriteVTK_Nodes(os, sbd_nodes_hq, sdom_end_act_node_hq[idom], sdom_end_node_hq[idom]);
-
-         WriteVTK_Elements_of_Subdomain(os, ghost_subdom_elements, 0);
-         if( num_data > 0)
-         {
-            for(int mm = 0; mm<num_data; mm++)
-            {
-               // Partition
-               os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
-               const MyInt e_shift = ne_total*mm;
                for(MyInt i=0; i<ne_g; i++)
                {
                   const size_t entry_index = ghost_subdom_elements[i]->getIndex() + e_shift;
@@ -1603,21 +1576,21 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       const size_t start_h =  sdom_start_node_hq[idom];
       const size_t end_h_act =  sdom_end_act_node_hq[idom];
       const size_t end_h = sdom_end_node_hq[idom];
-      const size_t nnodes = end_l - start_l + end_h - start_h;
 
       // For that in one long string buffer
       if(binary_output)
       {
+         const size_t nnodes = end_l - start_l + end_h - start_h;
          vector<Node_Str> nodes_buffer(nnodes);
 
-         fillNodeVector4BinaryOuput(sbd_nodes, nodes_buffer, start_l, end_l_act, 0);
-         fillNodeVector4BinaryOuput(sbd_nodes_hq, nodes_buffer, start_h, end_h_act, end_l_act-start_l);
+         size_t counter = 0;
+         fillNodeVector4BinaryOuput(sbd_nodes, nodes_buffer, start_l, end_l_act, counter);
+         fillNodeVector4BinaryOuput(sbd_nodes_hq, nodes_buffer, start_h, end_h_act, counter);
          //
-         fillNodeVector4BinaryOuput(sbd_nodes, nodes_buffer, end_l_act, end_l, end_l_act-start_l + end_h_act - start_h);
-         fillNodeVector4BinaryOuput(sbd_nodes_hq, nodes_buffer, end_h_act, end_h,
-                                    end_l - start_l + end_h_act - start_h );
+         fillNodeVector4BinaryOuput(sbd_nodes, nodes_buffer, end_l_act, end_l, counter);
+         fillNodeVector4BinaryOuput(sbd_nodes_hq, nodes_buffer, end_h_act, end_h, counter);
 
-         fwrite(&nodes_buffer[0], sizeof(Node_Str), nnodes, of_bin_nod);
+         fwrite(&nodes_buffer[0], sizeof(Node_Str), counter, of_bin_nod);
       }
       else
       {
@@ -2087,7 +2060,7 @@ void Mesh::writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>&
 
 void Mesh::fillNodeVector4BinaryOuput(const std::vector<Node*> &sdom_nodes,
                                       std::vector<Node_Str> &sdom_nodes4bin,
-                                      const size_t start, const size_t end, const size_t id_offset)
+                                      const size_t start, const size_t end, size_t &counter)
 {
    for(size_t i=start; i<end; i++)
    {
@@ -2098,7 +2071,8 @@ void Mesh::fillNodeVector4BinaryOuput(const std::vector<Node*> &sdom_nodes,
       nd.x = a_node->Coordinate[0];
       nd.y = a_node->Coordinate[1];
       nd.z = a_node->Coordinate[2];
-      sdom_nodes4bin[i+id_offset] = nd;
+      sdom_nodes4bin[counter] = nd;
+      counter++;
    }
 }
 

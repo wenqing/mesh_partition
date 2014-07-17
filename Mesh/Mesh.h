@@ -106,7 +106,7 @@ class Mesh
 
       void fillNodeVector4BinaryOuput(const std::vector<Node*> &sdom_nodes,
                                       std::vector<Node_Str> &sdom_nodes4bin,
-                                      const size_t start, const size_t end, const size_t id_offset);
+                                      const size_t start, const size_t end,  size_t &counter);
 
       void writeSubDomainNodes(std::ostream& os, const std::vector<Node*>& sdom_nodes, const size_t start, const size_t end);
 
