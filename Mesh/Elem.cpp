@@ -422,7 +422,7 @@ void Elem::WriteSubDOM(ostream& os, bool quad) const
    for(int i=0; i<nn; i++)
    {
 //      nodes_index[i] = nodes[i]->getIndex();
-      os << nodes[i]->index <<" ";
+      os << nodes[i]->local_index <<" ";
    }
    os<<"\n";
 }
@@ -437,7 +437,7 @@ int Elem::getDataArray4BinaryOut(MyInt *ivar, bool quad) const
 
    for(int i=0; i<nn; i++)
    {
-      ivar[i+3] = static_cast<MyInt> (nodes[i]->index);
+      ivar[i+3] = nodes[i]->local_index;
    }
 
    return nn+3;

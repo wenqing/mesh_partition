@@ -1594,6 +1594,11 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       }
       else
       {
+         std::setw(14);
+         os_subd_node.precision(14);
+         //os_subd_node.setf(ios::fixed, ios::scientific);
+         os_subd_node.setf(ios::scientific);
+
          writeSubDomainNodes(os_subd_node, sbd_nodes, start_l, end_l_act);
          writeSubDomainNodes(os_subd_node, sbd_nodes_hq, start_h, end_h_act);
          //
