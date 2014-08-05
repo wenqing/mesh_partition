@@ -923,6 +923,11 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    {
       name_f = fname+"_partitioned_msh_cfg"+ s_nparts + ".msh";
       os_subd_head.open(name_f.c_str(), ios::out|ios::trunc );
+      name_f = "Subdomain mesh "
+               "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
+               "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
+               "Total integer variables of elements;Total integer variables of ghost elements  ";
+      os_subd_head << name_f << endl;
       os_subd_head<<num_parts<<endl;
 
       name_f = fname+"_partitioned_elems_"+ s_nparts + ".msh";
@@ -931,11 +936,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       name_f = fname+"_partitioned_nodes_"+ s_nparts + ".msh";
       os_subd_node.open(name_f.c_str(), ios::out|ios::trunc );
 
-      name_f = "Subdomain mesh "
-               "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
-               "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
-               "Total integer variables of elements;Total integer variables of ghost elements  ";
-      os_subd<<name_f<<endl;
       setw(14);
       os_subd.precision(14);
       //os_subd.setf(ios::fixed, ios::scientific);
@@ -1673,7 +1673,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       setw(14);
       os.precision(14);
 
-      MyInt quad_nn = 0;
       for(int idom=0; idom<num_parts; idom++)
       {
          const size_t start_l =  sdom_start_node[idom];
@@ -1727,8 +1726,6 @@ void Mesh::WriteVTK_Head(std::ostream& os, const size_t number_of_nodes)
 // 03.2012. WW
 void Mesh::WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start, const size_t end)
 {
-   Node *a_node = NULL;
-
    setw(14);
    os.precision(14);
    for(size_t i=start;  i<end; i++)
