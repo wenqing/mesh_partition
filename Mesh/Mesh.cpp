@@ -921,7 +921,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
    if(!binary_output)
    {
-      name_f = fname+"_partitioned_msh_cfg"+ s_nparts + ".msh";
+      name_f = fname+"_partitioned_cfg"+ s_nparts + ".msh";
       os_subd_head.open(name_f.c_str(), ios::out|ios::trunc );
       name_f = "Subdomain mesh "
                "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
