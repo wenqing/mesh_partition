@@ -45,7 +45,7 @@ long HeapUsed()
 
 
 
-#define ver "V3.1. 05.2014"
+#define ver "V3.2. 08.2014"
 
 void Version()
 {
