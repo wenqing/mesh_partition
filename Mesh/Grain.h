@@ -4,7 +4,7 @@
 #include<string>
 #include<iostream>
 
-typedef int MyInt; //In case for PetscInt
+typedef long MyInt; //In case for PetscInt
 
 //------------------------------------------------------
 //   Topology declartion of geometrical element.

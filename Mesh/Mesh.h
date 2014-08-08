@@ -42,10 +42,10 @@ class Mesh
       void ReadGridGeoSys(std::istream& is, const bool high_order);
 
       void Write2METIS(std::ostream& os);
+
       void WriteVTK_Nodes(std::ostream& os);
-      void WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start = 0);
-      void WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec,
-                                          const int sbd_index, const MyInt node_shift = 0);
+
+      void WriteVTK_Head(std::ostream& os, const size_t number_of_nodes);
 
       void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts, const bool osdom);
       void ConstructSubDomain_by_Nodes(const MeshPartConfig mpc);
@@ -96,6 +96,19 @@ class Mesh
       MyInt msh_no_pris;
       MyInt msh_no_pyra;
       int msh_max_dim;
+
+      void WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start, const size_t end);
+
+      void WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>& ele_vec,
+                                          const int sbd_index);
+      void writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>& sdom_elems,
+                                     const std::vector<Elem*>& sdom_elems_ghost, const int sbd_index);
+
+      void fillNodeVector4BinaryOuput(const std::vector<Node*> &sdom_nodes,
+                                      std::vector<Node_Str> &sdom_nodes4bin,
+                                      const size_t start, const size_t end,  size_t &counter);
+
+      void writeSubDomainNodes(std::ostream& os, const std::vector<Node*>& sdom_nodes, const size_t start, const size_t end);
 
       friend class Elem;
 };

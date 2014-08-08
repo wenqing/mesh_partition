@@ -16,13 +16,13 @@ class Edge;
 class Elem;
 class Mesh;
 
-typedef struct
+struct Node_Str
 {
    MyInt id;
    double x;
    double y;
    double z;
-} Node_Str;
+};
 
 //2.  Node declaration
 class Node:public Grain
@@ -84,6 +84,7 @@ class Node:public Grain
       {
          local_index = l_index;
       }
+
       MyInt getLocalIndex() const
       {
          return local_index;
@@ -91,7 +92,6 @@ class Node:public Grain
 
       // Output
       void Write(std::ostream& os = std::cout) const;
-      void WriteBIN(std::ostream& os = std::cout) const;
       void WriteCoordinates(std::ostream& os = std::cout) const;
 
    private:

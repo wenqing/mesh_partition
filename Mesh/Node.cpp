@@ -43,23 +43,10 @@ bool Node::operator == (const Node& n)
 // Output
 void Node::Write(ostream& os) const
 {
-   os<<setw(14)<<index<<" ";
+   os<<index<<" ";
    os<<Coordinate[0]<<" "
      <<Coordinate[1]<<" "
-     <<Coordinate[2]<<endl;
-}
-
-// WW 07.2013
-void Node::WriteBIN(ostream& os) const
-{
-
-   Node_Str nd;
-   nd.id = static_cast<MyInt> (index);
-   nd.x = Coordinate[0];
-   nd.y = Coordinate[1];
-   nd.z = Coordinate[2];
-
-   os.write( reinterpret_cast <const char*> (&nd), sizeof(Node_Str));
+     <<Coordinate[2]<<"\n";
 }
 
 void Node::WriteCoordinates(std::ostream& os) const
