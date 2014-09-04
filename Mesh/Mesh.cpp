@@ -862,8 +862,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    string deli = " ";
 
    //
-   const MyInt num_headers = 13;
-   MyInt head[13];
+   const MyInt num_headers = 14;
+   MyInt head[14];
    MyInt ivar[23];
    // For binary output: all data in on string
    vector<MyInt> ele_info;
@@ -873,6 +873,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    head[11] = 0;
    // ghost element rank offset
    head[12] = 0;
+   // Axi-symmetry flag
+   head[13] = static_cast<MyInt>(axisymmetry);
 
    const int num_parts = mpc.num_parts;
    // Read a METIS node partitioned file
@@ -1318,7 +1320,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          os_subd_head<<sdom_nodes_l + sdom_nodes_h <<deli<<sdom_nodes_l<<deli<<nei_size
                      <<deli<<ne_g<<deli<<num_nodes_active_l<<deli<<num_nodes_active_l + num_nodes_active_h
                      <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
-                     <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
+                     <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g
+                     << deli << axisymmetry << endl;
       }
       else
       {
@@ -1914,6 +1917,9 @@ void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
       //  break;
       //line_string = line;
       getline(is, line_string);
+      if (line_string.find("$AXISYMMETRY") != std::string::npos)
+                axisymmetry = true;
+
       if(is.fail())
          break;
       /*
