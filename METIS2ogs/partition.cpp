@@ -74,6 +74,7 @@ void OptionList()
    cout << "  -ogsmsh           : output the renumbered ogs mesh."<<endl;
    cout << "  -odom             : output subdomain mesh."<<endl;
    cout << "  -cct              : output a CCT file for FCT (overlapped subdomain)"<<endl;
+   cout << "  -nonghost          : do not output ghost element"<<endl;
 }
 
 void FindFileNameInCommand(stringstream &ss, string &fname)
@@ -97,11 +98,10 @@ int main(int argc, char* argv[])
    fstream ofile;
    stringstream ss;
 
-   Task this_task;
+   Task this_task = metis2ogs;
    PartType part_type = by_node;
 
    bool quad = false;
-
 
    Mesh_Group::MeshPartConfig mpc;
    mpc.is_vtk_out = true;
@@ -109,6 +109,7 @@ int main(int argc, char* argv[])
    mpc.out_renum_gsmsh = false;
    mpc.binary_output = true;
    mpc.out_cct = false;
+   mpc.ghost_elem = true;
 
    //ios::pos_type position;
 
@@ -162,6 +163,10 @@ int main(int argc, char* argv[])
          if(s_buff.compare("-nvtk") == 0)
          {
             mpc.is_vtk_out = false;
+         }
+         if(s_buff.compare("-nonghost") == 0)
+         {
+            mpc.ghost_elem = false;
          }
 
          // Number of partitions
@@ -274,6 +279,11 @@ int main(int argc, char* argv[])
             {
                mpc.is_vtk_out = false;
             }
+            if(s_buff.compare("-nonghost") == 0)
+            {
+               mpc.ghost_elem = false;
+            }
+
             if(s_buff.find("-np")!=string::npos)
             {
                //size_t pos;
@@ -337,7 +347,6 @@ int main(int argc, char* argv[])
          fpath = fname.substr(0,pos_end) + "/";
    }
 
-
    s_buff = fname+".msh";
    infile.open(s_buff.c_str());
    if(!infile.is_open())
@@ -372,7 +381,6 @@ int main(int argc, char* argv[])
    else
       a_mesh->ReadGridGeoSys(infile, quad);
 
-
    switch(this_task)
    {
       case ogs2metis:
@@ -392,21 +400,14 @@ int main(int argc, char* argv[])
             int argc_m;
             argc_m = 3;
             char *argv_m[3];
-            argv_m[0] = "-";
+            string undsc = "_";
+            argv_m[0] = &undsc[0];
             s_buff = fname + ".mesh";
 
             argv_m[1] = &s_buff[0];
             argv_m[2] = &str_nparts[0];
 
             metis_main(argc_m, argv_m);
-//#else
-//         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
-
-//         if(!system(s_buff.c_str()))
-//         {
-//            cout<<"METIS executable file may not be found "<<endl;
-//            exit(1);
-//         }
 #endif
          }
 
@@ -433,7 +434,6 @@ int main(int argc, char* argv[])
          break;
    }
 
-
 #ifdef WIN32
    cout<<"\n\tMemory usage: "<< HeapUsed()/1024./1024.<<"MB"<<endl;
 #endif
@@ -447,3 +447,4 @@ int main(int argc, char* argv[])
    return 0;
 
 }
+
