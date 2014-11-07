@@ -22,7 +22,6 @@ extern "C" {
 using namespace std;
 using namespace Mesh_Group;
 
-
 /// returns used heap size in bytes or negative if heap is corrupted.
 #ifdef WIN32
 long HeapUsed()
@@ -42,8 +41,6 @@ long HeapUsed()
    return used;
 }
 #endif
-
-
 
 #define ver "V3.2. 08.2014"
 
@@ -97,7 +94,7 @@ int main(int argc, char* argv[])
    fstream ofile;
    stringstream ss;
 
-   Task this_task;
+   Task this_task = metis2ogs ;
    PartType part_type = by_node;
 
    bool quad = false;
@@ -392,7 +389,8 @@ int main(int argc, char* argv[])
             int argc_m;
             argc_m = 3;
             char *argv_m[3];
-            argv_m[0] = "-";
+            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";     
+            argv_m[0] = &unsc[0];
             s_buff = fname + ".mesh";
 
             argv_m[1] = &s_buff[0];
