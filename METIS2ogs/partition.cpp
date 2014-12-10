@@ -70,6 +70,7 @@ void OptionList()
    cout << "  -nvtk             : do not output the vtk file for the node index renumbered whole mesh."<<endl;
    cout << "  -ogsmsh           : output the renumbered ogs mesh."<<endl;
    cout << "  -odom             : output subdomain mesh."<<endl;
+   cout << "  -non-ghost        : Do not output local IDs of active nodes of ghost elements."<<endl;
    cout << "  -cct              : output a CCT file for FCT (overlapped subdomain)"<<endl;
 }
 
@@ -105,6 +106,8 @@ int main(int argc, char* argv[])
    mpc.osdom = false;
    mpc.out_renum_gsmsh = false;
    mpc.binary_output = true;
+   mpc.binary_output = true;
+   mpc.no_ghost = false;
    mpc.out_cct = false;
 
    //ios::pos_type position;
@@ -159,6 +162,11 @@ int main(int argc, char* argv[])
          if(s_buff.compare("-nvtk") == 0)
          {
             mpc.is_vtk_out = false;
+         }
+
+         if(s_buff.compare("-non-ghost") == 0)
+         {
+            mpc.no_ghost = true;
          }
 
          // Number of partitions
@@ -271,6 +279,12 @@ int main(int argc, char* argv[])
             {
                mpc.is_vtk_out = false;
             }
+
+            if(s_buff.compare("-non-ghost") == 0)
+            {
+               mpc.no_ghost = true;
+            }
+
             if(s_buff.find("-np")!=string::npos)
             {
                //size_t pos;
@@ -389,7 +403,7 @@ int main(int argc, char* argv[])
             int argc_m;
             argc_m = 3;
             char *argv_m[3];
-            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";     
+            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";
             argv_m[0] = &unsc[0];
             s_buff = fname + ".mesh";
 

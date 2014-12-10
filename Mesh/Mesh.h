@@ -26,6 +26,7 @@ struct MeshPartConfig
    bool out_renum_gsmsh;  /// flag to output the node index renumbered ogs mesh
    bool is_vtk_out; ;  /// flag to output the node index renumbered vtk mesh
    bool binary_output;  /// output binary file of the partitioned mesh
+   bool no_ghost;  /// Do not output local IDs of active nodes of ghost element if it true
    bool out_cct;  /// output of exended partitions for the flux corrected transport
 };
 /*!

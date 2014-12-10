@@ -1284,11 +1284,23 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       }
       const MyInt neg = static_cast<MyInt>( ghost_subdom_elements.size());
       //  mat index, element type, number of element, number of ghost nodes, number of ghost nodes of high order elements
-      nmb_element_idxs_g = 5*neg;
-      for(MyInt j=0; j<neg; j++)
+
+      if(mpc.no_ghost)
       {
-         nmb_element_idxs_g += ghost_subdom_elements[j]->getNodesNumber(useQuadratic);
-         nmb_element_idxs_g += static_cast<MyInt>(ghost_subdom_elements[j]->ghost_nodes.size());
+         nmb_element_idxs_g = 3*neg;
+         for(MyInt j=0; j<neg; j++)
+         {
+            nmb_element_idxs_g += ghost_subdom_elements[j]->getNodesNumber(useQuadratic);
+         }
+      }
+      else
+      {
+         nmb_element_idxs_g = 5*neg;
+         for(MyInt j=0; j<neg; j++)
+         {
+            nmb_element_idxs_g += ghost_subdom_elements[j]->getNodesNumber(useQuadratic);
+            nmb_element_idxs_g += static_cast<MyInt>(ghost_subdom_elements[j]->ghost_nodes.size());
+         }
       }
 
       string dom_str = number2str(idom);
@@ -1410,30 +1422,37 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                counter++;
             }
 
-            ivar[0] = a_elem->nnodes_gl;
-            ivar[1] = ngh_nodes;
-            for(int kk=0; kk<ngh_nodes; kk++)
+            if(!mpc.no_ghost)
             {
-               ivar[kk+2] = a_elem->ghost_nodes[kk];
+               ivar[0] = a_elem->nnodes_gl;
+               ivar[1] = ngh_nodes;
+               for(int kk=0; kk<ngh_nodes; kk++)
+               {
+                  ivar[kk+2] = a_elem->ghost_nodes[kk];
+               }
+               // os_bin_ele_g.write( reinterpret_cast <const char*> (ivar), (ngh_nodes+2)*sizeof(MyInt));
+               // fwrite(ivar, 1, (ngh_nodes+2)*sizeof(MyInt), of_bin_ele);
+               for(int m=0; m<ngh_nodes+2; m++)
+               {
+                  ele_info[counter] = ivar[m];
+                  counter++;
+               }
             }
-            // os_bin_ele_g.write( reinterpret_cast <const char*> (ivar), (ngh_nodes+2)*sizeof(MyInt));
-            // fwrite(ivar, 1, (ngh_nodes+2)*sizeof(MyInt), of_bin_ele);
-            for(int m=0; m<ngh_nodes+2; m++)
-            {
-               ele_info[counter] = ivar[m];
-               counter++;
-            }
-
          }
          else
          {
             a_elem->WriteSubDOM(os_subd, useQuadratic);
-            os_subd<<a_elem->nnodes_gl<<deli<<ngh_nodes<<deli;
-            for(int kk=0; kk<ngh_nodes; kk++)
+
+            if(!mpc.no_ghost)
             {
-               os_subd<<a_elem->ghost_nodes[kk]<<deli;
+
+               os_subd<<a_elem->nnodes_gl<<deli<<ngh_nodes<<deli;
+               for(int kk=0; kk<ngh_nodes; kk++)
+               {
+                  os_subd<<a_elem->ghost_nodes[kk]<<deli;
+               }
+               os_subd<<endl;
             }
-            os_subd<<endl;
          }
       }
 
@@ -1918,7 +1937,7 @@ void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
       //line_string = line;
       getline(is, line_string);
       if (line_string.find("$AXISYMMETRY") != std::string::npos)
-                axisymmetry = true;
+         axisymmetry = true;
 
       if(is.fail())
          break;
