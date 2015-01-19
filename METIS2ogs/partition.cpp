@@ -91,15 +91,33 @@ enum PartType {by_element, by_node};
 
 int main(int argc, char* argv[])
 {
-   ifstream infile;
-   fstream ofile;
-   stringstream ss;
+   std::vector<std::string> cmd_args;
+   if(argc>1)
+   {
+      cmd_args.insert(cmd_args.begin(), argv+1, argv+argc);
+   }
+   else //terminal
+   {
+      OptionList();
+      Version();
+      cout<<"\nInput task, options and file name (non extension):\n ";
+
+      std::string s_buff;
+      getline(cin, s_buff);
+      stringstream ss;
+      ss.str(s_buff);
+      while(!ss.eof())
+      {
+         ss>>s_buff;
+         cmd_args.push_back(s_buff);
+      }
+      ss.clear();
+   }
 
    Task this_task = metis2ogs ;
    PartType part_type = by_node;
 
    bool quad = false;
-
 
    Mesh_Group::MeshPartConfig mpc;
    mpc.is_vtk_out = true;
@@ -111,8 +129,6 @@ int main(int argc, char* argv[])
    mpc.out_cct = false;
 
    //ios::pos_type position;
-
-   string s_buff;
    string fname;
    string fpath;
    string mat_file_name = "";
@@ -123,193 +139,93 @@ int main(int argc, char* argv[])
    bool task_opt_given = false;
    bool part_opt_given = false;
    bool part_num_given = false;
-
-   if(argc>1)
+   for(size_t i=0; i<cmd_args.size(); i++)
    {
-      for(int i=1; i<argc; i++)
+      const string s_buff = cmd_args[i];
+      if(s_buff.compare("-e") == 0)
       {
-         s_buff = argv[i];
-         if(s_buff.compare("-e") == 0)
-         {
-            part_type = by_element;
-            part_opt_given = true;
-         }
-         else if(s_buff.compare("-n") == 0)
-         {
-            part_type = by_node;
-            part_opt_given = true;
-         }
-
-         if(s_buff.compare("-q") == 0)
-            quad = true;
-
-         if(s_buff.compare("-odom") == 0)
-         {
-            mpc.osdom = true;
-         }
-
-         if(s_buff.compare("-cct") == 0)
-            mpc.out_cct = true;
-
-         if(s_buff.find("-asci")!=string::npos)
-         {
-            mpc.binary_output = false;
-         }
-         if(s_buff.compare("-ogsmsh") == 0)
-         {
-            mpc.out_renum_gsmsh = true;
-         }
-         if(s_buff.compare("-nvtk") == 0)
-         {
-            mpc.is_vtk_out = false;
-         }
-
-         if(s_buff.compare("-non-ghost") == 0)
-         {
-            mpc.no_ghost = true;
-         }
-
-         // Number of partitions
-         if(s_buff.find("-np")!=string::npos)
-         {
-            //size_t pos;
-            //pos = s_buff.find_first_of("p");
-            //s_buff = s_buff.substr(pos+1);
-            //str_nparts = s_buff;
-            nparts = atoi( argv[i+1]);
-            str_nparts =  argv[i+1];
-            part_num_given = true;
-         }
-
-         // Number of partitions
-         if(s_buff.find("-mat")!=string::npos)
-         {
-            mat_file_name = argv[i+1];
-         }
-
-         if(s_buff.find("ogs2metis")!=string::npos)
-         {
-            this_task = ogs2metis;
-            task_opt_given = true;
-         }
-         else if(s_buff.find("metis2ogs")!=string::npos)
-         {
-            this_task = metis2ogs;
-            task_opt_given = true;
-         }
-         else if(s_buff.find("--help")!=string::npos)
-         {
-            Version();
-            OptionList();
-            exit(0);
-         }
-         else if(s_buff.find("--version")!=string::npos)
-         {
-            cout<<ver;
-            exit(0);
-         }
-
-         if(  s_buff[0] != '-')
-         {
-            fname = s_buff;
-         }
-
+         part_type = by_element;
+         part_opt_given = true;
       }
-   }
-   else //terminal
-   {
-      OptionList();
-      Version();
-      cout<<"\nInput task, options and file name (non extension):\n ";
+      else if(s_buff.compare("-n") == 0)
+      {
+         part_type = by_node;
+         part_opt_given = true;
+      }
 
-      getline(cin, s_buff);
-      ss.str(s_buff);
+      if(s_buff.compare("-q") == 0)
+         quad = true;
+
+      if(s_buff.compare("-odom") == 0)
+      {
+         mpc.osdom = true;
+      }
+
+      if(s_buff.compare("-cct") == 0)
+         mpc.out_cct = true;
+
+      if(s_buff.find("-asci")!=string::npos)
+      {
+         mpc.binary_output = false;
+      }
+      if(s_buff.compare("-ogsmsh") == 0)
+      {
+         mpc.out_renum_gsmsh = true;
+      }
+      if(s_buff.compare("-nvtk") == 0)
+      {
+         mpc.is_vtk_out = false;
+      }
+
+      if(s_buff.compare("-non-ghost") == 0)
+      {
+         mpc.no_ghost = true;
+      }
+
+      // Number of partitions
+      if(s_buff.find("-np")!=string::npos)
+      {
+         //size_t pos;
+         //pos = s_buff.find_first_of("p");
+         //s_buff = s_buff.substr(pos+1);
+         //str_nparts = s_buff;
+         nparts = std::stoi( cmd_args[i+1]);
+         str_nparts =  cmd_args[i+1];
+         part_num_given = true;
+      }
+
+      // Number of partitions
+      if(s_buff.find("-mat")!=string::npos)
+      {
+         mat_file_name = cmd_args[i+1];
+      }
+
       if(s_buff.find("ogs2metis")!=string::npos)
       {
          this_task = ogs2metis;
-         if(s_buff.find("-e")!=string::npos || s_buff.find("-n")!=string::npos||s_buff.find("-q")!=string::npos)
-         {
-            cout<<"Warning: option is not needed for this task"<<endl;
-         }
-
-         FindFileNameInCommand(ss, fname);
          task_opt_given = true;
       }
       else if(s_buff.find("metis2ogs")!=string::npos)
       {
-         task_opt_given = true;
          this_task = metis2ogs;
-         while(!ss.eof())
-         {
-            ss>>s_buff;
-
-            if(s_buff.compare("-e") == 0)
-            {
-               part_type = by_element;
-               part_opt_given = true;
-            }
-            else if(s_buff.compare("-n") == 0)
-            {
-               part_type = by_node;
-               part_opt_given = true;
-            }
-
-            if(s_buff.compare("-q") == 0)
-            {
-               quad = true;
-            }
-            if(s_buff.compare("-odom") == 0)
-            {
-               mpc.osdom = true;
-            }
-            if(s_buff.compare("-cct") == 0)
-            {
-               mpc.out_cct = true;
-            }
-            if(s_buff.compare("-asci") == 0)
-            {
-               mpc.binary_output = false;
-            }
-            if(s_buff.compare("-ogsmsh") == 0)
-            {
-               mpc.out_renum_gsmsh = true;
-            }
-
-            if(s_buff.compare("-nvtk") == 0)
-            {
-               mpc.is_vtk_out = false;
-            }
-
-            if(s_buff.compare("-non-ghost") == 0)
-            {
-               mpc.no_ghost = true;
-            }
-
-            if(s_buff.find("-np")!=string::npos)
-            {
-               //size_t pos;
-               //pos = s_buff.find_first_of("p");
-               //s_buff = s_buff.substr(pos+1);
-               //nparts = atoi(s_buff.c_str());
-               //str_nparts = s_buff;
-               ss >> str_nparts;
-               nparts = atoi(str_nparts.c_str());
-
-               part_num_given = true;
-            }
-
-            if(s_buff.find("-mat")!=string::npos)
-            {
-               ss >> mat_file_name;
-            }
-
-            if(  s_buff[0] != '-' )
-            {
-               fname = s_buff;
-            }
-         }
+         task_opt_given = true;
       }
-      ss.clear();
+      else if(s_buff.find("--help")!=string::npos)
+      {
+         Version();
+         OptionList();
+         exit(0);
+      }
+      else if(s_buff.find("--version")!=string::npos)
+      {
+         cout<<ver;
+         exit(0);
+      }
+
+      if(  s_buff[0] != '-')
+      {
+         fname = s_buff;
+      }
 
    }
 
@@ -348,13 +264,12 @@ int main(int argc, char* argv[])
          fpath = fname.substr(0,pos_end) + "/";
    }
 
-
-   s_buff = fname+".msh";
-   infile.open(s_buff.c_str());
+   const string mesh_file = fname+".msh";
+   ifstream infile(mesh_file.c_str());
    if(!infile.is_open())
    {
       cerr<<("Error: cannot open msh file . It may not exist !");
-      exit(1);
+      exit(EXIT_FAILURE);
    }
 
    cout<<"File name is: "<<fname<<endl;
@@ -362,7 +277,6 @@ int main(int argc, char* argv[])
       cout<<"File path is: "<<fpath<<endl;
    else
       cout<<"File path is: ./ "<<endl;
-
 
    clock_t elp_time;
    elp_time = -clock();
@@ -383,14 +297,14 @@ int main(int argc, char* argv[])
    else
       a_mesh->ReadGridGeoSys(infile, quad);
 
-
    switch(this_task)
    {
       case ogs2metis:
-         s_buff = fname+".mesh";
-         ofile.open(s_buff.c_str(), ios::out | ios::trunc );
-         a_mesh->Write2METIS(ofile);
-
+         {
+            const string part_mesh_file = fname+".mesh";
+            fstream ofile(part_mesh_file.c_str(), ios::out | ios::trunc );
+            a_mesh->Write2METIS(ofile);
+         }
          break;
       case metis2ogs:
          cout<<"\n***Compute mesh topology"<<endl;
@@ -405,20 +319,12 @@ int main(int argc, char* argv[])
             char *argv_m[3];
             string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";
             argv_m[0] = &unsc[0];
-            s_buff = fname + ".mesh";
+            string part_mesh_file = fname + ".mesh";
 
-            argv_m[1] = &s_buff[0];
+            argv_m[1] = &part_mesh_file[0];
             argv_m[2] = &str_nparts[0];
 
             metis_main(argc_m, argv_m);
-//#else
-//         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
-
-//         if(!system(s_buff.c_str()))
-//         {
-//            cout<<"METIS executable file may not be found "<<endl;
-//            exit(1);
-//         }
 #endif
          }
 
@@ -445,7 +351,6 @@ int main(int argc, char* argv[])
          break;
    }
 
-
 #ifdef WIN32
    cout<<"\n\tMemory usage: "<< HeapUsed()/1024./1024.<<"MB"<<endl;
 #endif
@@ -456,6 +361,6 @@ int main(int argc, char* argv[])
    cout<<"\n***Total CPU time elapsed: "
        <<(double)elp_time / CLOCKS_PER_SEC<<"s"<<endl;
 
-   return 0;
+   return EXIT_SUCCESS;
 
 }

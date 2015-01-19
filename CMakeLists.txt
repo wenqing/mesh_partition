@@ -59,9 +59,11 @@ ENDIF (MSVC)
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi -Wall -Wextra")
         ADD_DEFINITIONS(
+        -std=c++11
 #		-pedantic
 		-fno-nonansi-builtins
-	)
+        
+        )
 ENDIF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 
 IF(USE_METIS_SOURCE) 
