@@ -26,5 +26,9 @@ ELSE()
 	)	
 ENDIF()
 
-
+IF(READ_VTU_FILE)
+    IF(VTK_LIBRARIES)
+      target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES})
+    ENDIF()  
+ENDIF()
 

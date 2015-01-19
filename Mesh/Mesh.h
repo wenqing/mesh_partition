@@ -39,8 +39,8 @@ class Mesh
       ~Mesh();
 
 
-      void ReadGrid(std::istream& is, const bool high_order);
-      void ReadGridGeoSys(std::istream& is, const bool high_order);
+      void readGrid(std::istream& is, const bool high_order);
+      void readGridGeoSys(std::istream& is, const bool high_order);
 
       void Write2METIS(std::ostream& os);
 

@@ -293,9 +293,9 @@ int main(int argc, char* argv[])
    infile.seekg(0L,ios::beg);
 
    if(rfiMesh)
-      a_mesh->ReadGrid(infile, quad);
+      a_mesh->readGrid(infile, quad);
    else
-      a_mesh->ReadGridGeoSys(infile, quad);
+      a_mesh->readGridGeoSys(infile, quad);
 
    switch(this_task)
    {

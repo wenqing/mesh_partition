@@ -38,7 +38,9 @@ PROJECT( ${PROJECT_NAME} )
 INCLUDE( Cmake/base.cmake )
 
 # Option
-OPTION(USE_METIS_SOURCE "Use METIS source code" OFF)
+OPTION(USE_METIS_SOURCE "Use METIS source code." OFF)
+# Option
+OPTION(READ_VTU_FILE "Enable reading VTU unstructured mesh file." OFF)
 
 # Set build directories
 # Binaries are created in /bin and libraries in /lib
@@ -53,7 +55,6 @@ IF (MSVC)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 	ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_WARNINGS)
 ENDIF (MSVC)
-
 
 ### For GNU C/CXX.
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
@@ -100,6 +101,11 @@ Minnesota." )
 	add_subdirectory("${METIS_PATH}/libmetis")
 ENDIF(USE_METIS_SOURCE)
 
+IF(READ_VTU_FILE)
+	ADD_DEFINITIONS(-DUSE_VTK)
+    FIND_PACKAGE(VTK REQUIRED)
+    include(${VTK_USE_FILE}) ###INCLUDE_DIRECTORIES(SYSTEM ${VTK_USE_FILE})
+ENDIF()
 
 ##Sow all compilation messages
 SET( CMAKE_VERBOSE_MAKEFILE on )

@@ -11,6 +11,12 @@
 
 #include <stdio.h> // for binary output
 
+#ifdef USE_VTK
+#include <vtkSmartPointer.h>
+#include <vtkXMLUnstructuredGridReader.h>
+#include <vtkUnstructuredGrid.h>
+#endif
+
 #include "Node.h"
 
 //#define BUILD_MESH_EDGE
@@ -1860,7 +1866,7 @@ void Mesh::Write2METIS(ostream& os)
 }
 
 // Read grid for test purpose
-void Mesh::ReadGrid(istream& is, const bool high_order)
+void Mesh::readGrid(istream& is, const bool high_order)
 {
    MyInt i, ne, nn, counter;
    int ibuff;
@@ -1915,7 +1921,7 @@ void Mesh::ReadGrid(istream& is, const bool high_order)
 //   position = is.tellg();
 }
 
-void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
+void Mesh::readGridGeoSys(istream& is, const bool high_order)
 {
    string sub_line;
    string line_string;
