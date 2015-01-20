@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
    else
       read_status = a_mesh->readGridGeoSys(infile, quad);
 #endif
-   if(!read_status)
+   if(read_status != EXIT_SUCCESS)
    {
       delete a_mesh;
       return EXIT_FAILURE;

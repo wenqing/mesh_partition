@@ -2137,11 +2137,15 @@ bool Mesh::readVTU(const std::string &file_name)
    reader->Update();
    vtkUnstructuredGrid *vtk_grid = reader->GetOutput();
 
+   if(!vtk_grid)
+      return EXIT_FAILURE;
+
    // Set nodes
-   node_vector.resize(vtk_grid->GetPoints()->GetNumberOfPoints());
+   vtkPoints *vtk_points = vtk_grid->GetPoints();
+   node_vector.resize(vtk_points->GetNumberOfPoints());
    for(size_t i=0; i<node_vector.size(); i++)
    {
-      const double *x = vtk_grid->GetPoints()->GetPoint(i);
+      const double *x = vtk_points->GetPoint(i);
       node_vector[i] = new Node(i, x[0], x[1], x[2]);
       node_vector[i]->Marking(true);
    }
@@ -2213,6 +2217,7 @@ bool Mesh::readVTU(const std::string &file_name)
       for(int j=0; j<nfaces; j++)
          new_elem->neighbors[j] = nullptr;
 
+      new_elem->Marking(true);
       elem_vector[i] = new_elem;
    }
 
