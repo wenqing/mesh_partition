@@ -7,14 +7,19 @@
 #include <cmath>
 #include <cfloat>
 #include <limits>
+#include <algorithm>
 #include <set>
 
 #include <stdio.h> // for binary output
 
 #ifdef USE_VTK
-#include <vtkSmartPointer.h>
+#include <vtkCell.h>
 #include <vtkXMLUnstructuredGridReader.h>
+#include <vtkSmartPointer.h>
 #include <vtkUnstructuredGrid.h>
+//#include <vtkFloatArray.h>
+//#include <vtkCellType.h>
+#include <vtkCellData.h>
 #endif
 
 #include "Node.h"
@@ -1866,7 +1871,7 @@ void Mesh::Write2METIS(ostream& os)
 }
 
 // Read grid for test purpose
-void Mesh::readGrid(istream& is, const bool high_order)
+bool Mesh::readGrid(istream& is, const bool high_order)
 {
    MyInt i, ne, nn, counter;
    int ibuff;
@@ -1880,7 +1885,7 @@ void Mesh::readGrid(istream& is, const bool high_order)
    if(nn==0||ne==0)
    {
       cout<<"Error: number of elements or nodes is zero"<<endl;
-      exit(1);
+      return EXIT_FAILURE;
    }
 
    // Read Nodes
@@ -1918,10 +1923,11 @@ void Mesh::readGrid(istream& is, const bool high_order)
       cout<<"Error: number elements do not match"<<endl;
       exit(1);
    }
-//   position = is.tellg();
+
+   return EXIT_SUCCESS;
 }
 
-void Mesh::readGridGeoSys(istream& is, const bool high_order)
+bool Mesh::readGridGeoSys(istream& is, const bool high_order)
 {
    string sub_line;
    string line_string;
@@ -1986,7 +1992,8 @@ void Mesh::readGridGeoSys(istream& is, const bool high_order)
          continue;
       }
    }
-   //========================================================================
+
+   return EXIT_SUCCESS;
 }
 
 void Mesh::writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>& sdom_elems,
@@ -2120,6 +2127,99 @@ void Mesh::writeSubDomainNodes(std::ostream& os, const std::vector<Node*>& sdom_
       a_node->Write(os);
    }
 }
+
+#ifdef USE_VTK
+bool Mesh::readVTU(const std::string &file_name)
+{
+   vtkSmartPointer<vtkXMLUnstructuredGridReader> reader =
+      vtkSmartPointer<vtkXMLUnstructuredGridReader>::New();
+   reader->SetFileName(file_name.c_str());
+   reader->Update();
+   vtkUnstructuredGrid *vtk_grid = reader->GetOutput();
+
+   // Set nodes
+   node_vector.resize(vtk_grid->GetPoints()->GetNumberOfPoints());
+   for(size_t i=0; i<node_vector.size(); i++)
+   {
+      const double *x = vtk_grid->GetPoints()->GetPoint(i);
+      node_vector[i] = new Node(i, x[0], x[1], x[2]);
+      node_vector[i]->Marking(true);
+   }
+   NodesNumber_Linear = static_cast<MyInt>(node_vector.size());
+   NodesNumber_Quadratic = NodesNumber_Linear;
+
+   //  Set elements
+   elem_vector.resize(vtk_grid->GetNumberOfCells());
+   vtkDataArray* mat_ids = vtk_grid->GetCellData()->GetScalars("MaterialIDs");
+   for (size_t i = 0; i < elem_vector.size(); i++)
+   {
+
+      Elem* new_elem = new Elem(i);
+      new_elem->PatchIndex = (mat_ids) ? static_cast<int>(mat_ids->GetComponent(i,0)) : 0;
+      vtkCell *vtk_cell = vtk_grid->GetCell(i);
+
+      int cell_type = vtk_grid->GetCellType(i);
+      switch(cell_type)
+      {
+         case VTK_LINE:
+            new_elem->ele_Type = line;
+            break;
+         case VTK_TRIANGLE:
+            new_elem->ele_Type = tri;
+            break;
+         case VTK_PIXEL:
+            new_elem->ele_Type = quadri;
+            break;
+         case VTK_QUAD:
+            new_elem->ele_Type = quadri;
+            break;
+         case VTK_TETRA:
+            new_elem->ele_Type = tet;
+            break;
+         case VTK_HEXAHEDRON:
+            new_elem->ele_Type = hex;
+            break;
+         case VTK_VOXEL:
+            new_elem->ele_Type = hex;
+            break;
+         case VTK_WEDGE:
+            new_elem->ele_Type = prism;
+            break;
+         case VTK_PYRAMID:
+            new_elem->ele_Type = pyramid;
+            break;
+         default:
+            cout << "Unsupported cell type: " << cell_type << endl;
+            return EXIT_FAILURE;
+      }
+
+      new_elem->nodes = new Node*[new_elem->getNodesNumber()];
+      for(int j=0; j<new_elem->getNodesNumber(); j++)
+      {
+         new_elem->nodes[j] = node_vector[vtk_cell->GetPointId(j)];
+      }
+      if(cell_type == VTK_PIXEL)
+      {
+         std::swap( new_elem->nodes[2],  new_elem->nodes[3]);
+      }
+      else if(cell_type == VTK_VOXEL)
+      {
+         std::swap( new_elem->nodes[2],  new_elem->nodes[3]);
+         std::swap( new_elem->nodes[6],  new_elem->nodes[7]);
+      }
+
+      const int nfaces = new_elem->getFacesNumber();
+      new_elem->neighbors = new Elem*[nfaces];
+      for(int j=0; j<nfaces; j++)
+         new_elem->neighbors[j] = nullptr;
+
+      elem_vector[i] = new_elem;
+   }
+
+   return EXIT_SUCCESS;
+}
+#endif
+
 }//end namespace
 
 

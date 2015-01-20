@@ -226,7 +226,6 @@ int main(int argc, char* argv[])
       {
          fname = s_buff;
       }
-
    }
 
    if( !task_opt_given )
@@ -264,6 +263,17 @@ int main(int argc, char* argv[])
          fpath = fname.substr(0,pos_end) + "/";
    }
 
+   clock_t elp_time;
+   elp_time = -clock();
+
+   Mesh_Group::Mesh *a_mesh = new Mesh(quad);
+
+   // Read mesh data
+   bool read_status = false;
+#ifdef USE_VTK
+   const string mesh_file = fname+".vtu";
+   read_status = a_mesh->readVTU(mesh_file);
+#else
    const string mesh_file = fname+".msh";
    ifstream infile(mesh_file.c_str());
    if(!infile.is_open())
@@ -271,18 +281,6 @@ int main(int argc, char* argv[])
       cerr<<("Error: cannot open msh file . It may not exist !");
       exit(EXIT_FAILURE);
    }
-
-   cout<<"File name is: "<<fname<<endl;
-   if(fpath.size()>0)
-      cout<<"File path is: "<<fpath<<endl;
-   else
-      cout<<"File path is: ./ "<<endl;
-
-   clock_t elp_time;
-   elp_time = -clock();
-
-   Mesh_Group::Mesh *a_mesh = new Mesh(quad);
-
    bool rfiMesh = true;
    string line_string;
    getline(infile,line_string); // The first line
@@ -293,9 +291,21 @@ int main(int argc, char* argv[])
    infile.seekg(0L,ios::beg);
 
    if(rfiMesh)
-      a_mesh->readGrid(infile, quad);
+      read_status = a_mesh->readGrid(infile, quad);
    else
-      a_mesh->readGridGeoSys(infile, quad);
+      read_status = a_mesh->readGridGeoSys(infile, quad);
+#endif
+   if(!read_status)
+   {
+      delete a_mesh;
+      return EXIT_FAILURE;
+   }
+
+   cout<<"File name is: "<<mesh_file<<endl;
+   if(fpath.size()>0)
+      cout<<"File path is: "<<fpath<<endl;
+   else
+      cout<<"File path is: ./ "<<endl;
 
    switch(this_task)
    {
