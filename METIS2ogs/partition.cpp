@@ -369,7 +369,6 @@ int main(int argc, char* argv[])
    else
       a_mesh->ReadGridGeoSys(infile, quad);
 
-
    switch(this_task)
    {
       case ogs2metis:
@@ -392,7 +391,6 @@ int main(int argc, char* argv[])
             string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";     
             argv_m[0] = &unsc[0];
             s_buff = fname + ".mesh";
-
             argv_m[1] = &s_buff[0];
             argv_m[2] = &str_nparts[0];
 
