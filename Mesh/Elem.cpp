@@ -44,9 +44,9 @@ int EdgeLocalNodeIndex [] =
    0, 1, 4,
    1, 2, 5,
    2, 0, 6,
-   0, 3, 7,
-   1, 3, 8,
-   2, 3, 9,
+   0, 3, 9,
+   1, 3, 7,
+   2, 3, 8,
    //prism, 9 edges, 27 entries. sh: 78
    0, 1, 6,
    1, 2, 7,
@@ -56,7 +56,7 @@ int EdgeLocalNodeIndex [] =
    5, 3, 11,
    0, 3, 12,
    1, 4, 13,
-   2, 5, 15,
+   2, 5, 14,
    //pyramid, 8 edges, 24 entries. sh: 105
    0, 1, 5,
    1, 2, 6,
@@ -752,8 +752,8 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
          if(quadratic)
          {
             FaceNode[3] = 5 ;
-            FaceNode[4] = 9;
-            FaceNode[5] = 8;
+            FaceNode[4] = 8;
+            FaceNode[5] = 7;
          }
          break;
       case 1:
@@ -762,9 +762,9 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
          FaceNode[2] = 0;
          if(quadratic)
          {
-            FaceNode[3] = 9 ;
+            FaceNode[3] = 8 ;
             FaceNode[4] = 6;
-            FaceNode[5] = 7;
+            FaceNode[5] = 9;
          }
          break;
       case 2:
@@ -773,8 +773,8 @@ int Elem::getElementFacesTet(const int Face, int *FaceNode)
          FaceNode[2] = 0;
          if(quadratic)
          {
-            FaceNode[3] = 8 ;
-            FaceNode[4] = 7;
+            FaceNode[3] = 7 ;
+            FaceNode[4] = 9;
             FaceNode[5] = 4;
          }
          break;
@@ -859,7 +859,7 @@ int Elem::getElementFacesPri(const int Face, int *FaceNode)
             FaceNode[4] = 14 ;
             FaceNode[5] =  8;
             FaceNode[6] = 12;
-            FaceNode[7] = 10;
+            FaceNode[7] = 11;
             nn = 8;
          }
          break;
