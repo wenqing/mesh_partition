@@ -938,7 +938,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       os_subd_head.open(name_f.c_str(), ios::out|ios::trunc );
       name_f = "Subdomain mesh "
                "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
-               "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
+               "Nodes of whole linear elements; Nodes of whole quadratic elements; "
                "Total integer variables of elements;Total integer variables of ghost elements  ";
       os_subd_head << name_f << endl;
       os_subd_head<<num_parts<<endl;
@@ -1049,7 +1049,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
             // If checked
             if(a_elem->getStatus())
                continue;
-
 
             vector<int> ng_nodes; // non ghost nodes in ghost elements
             vector<int> g_nodes; // ghost nodes in ghost elements
