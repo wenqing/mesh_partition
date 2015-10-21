@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
    fstream ofile;
    stringstream ss;
 
-   Task this_task;
+   Task this_task = ogs2metis;
    PartType part_type = by_node;
 
    bool quad = false;
@@ -372,7 +372,6 @@ int main(int argc, char* argv[])
    else
       a_mesh->ReadGridGeoSys(infile, quad);
 
-
    switch(this_task)
    {
       case ogs2metis:
@@ -392,9 +391,9 @@ int main(int argc, char* argv[])
             int argc_m;
             argc_m = 3;
             char *argv_m[3];
-            argv_m[0] = "-";
+            std::string deli = "_"; 
+            argv_m[0] = &deli[0];
             s_buff = fname + ".mesh";
-
             argv_m[1] = &s_buff[0];
             argv_m[2] = &str_nparts[0];
 
