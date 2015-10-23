@@ -386,13 +386,19 @@ int main(int argc, char* argv[])
          {
 #ifdef USE_METIS_SOURCE
             int argc_m;
-            argc_m = 3;
-            char *argv_m[3];
-            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";     
+            argc_m = 4;
+            char *argv_m[4];
+            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";
             argv_m[0] = &unsc[0];
-            s_buff = fname + ".mesh";
-            argv_m[1] = &s_buff[0];
-            argv_m[2] = &str_nparts[0];
+
+            std::string option = "-gtype=dual";
+            if ( part_type == by_node ) 
+               option = "-gtype=nodal";
+            argv_m[1] = &option[0];
+
+            std::string part_mesh_file = fname + ".mesh";
+            argv_m[2] = &part_mesh_file[0];
+            argv_m[3] = &str_nparts[0];
 
             metis_main(argc_m, argv_m);
 //#else
