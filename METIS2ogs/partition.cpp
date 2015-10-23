@@ -389,13 +389,18 @@ int main(int argc, char* argv[])
          {
 #ifdef USE_METIS_SOURCE
             int argc_m;
-            argc_m = 3;
-            char *argv_m[3];
+            argc_m = 4;
+            char *argv_m[4];
             std::string deli = "_"; 
             argv_m[0] = &deli[0];
-            s_buff = fname + ".mesh";
+            if ( part_type == by_node ) 
+               s_buff = "-gtype=nodal";
+            else
+               s_buff = "-gtype=dual";
             argv_m[1] = &s_buff[0];
-            argv_m[2] = &str_nparts[0];
+            s_buff = fname + ".mesh";
+            argv_m[2] = &s_buff[0];
+            argv_m[3] = &str_nparts[0];
 
             metis_main(argc_m, argv_m);
 //#else

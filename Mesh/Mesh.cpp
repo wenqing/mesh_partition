@@ -618,7 +618,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    }
    max_dom++;
    part_in.close();
-   remove(str.c_str());
+   remove(str.c_str()); // Remove the metis file.
 
    if(osdom)
    {
