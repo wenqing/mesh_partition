@@ -17,8 +17,6 @@
 #include <vtkXMLUnstructuredGridReader.h>
 #include <vtkSmartPointer.h>
 #include <vtkUnstructuredGrid.h>
-//#include <vtkFloatArray.h>
-//#include <vtkCellType.h>
 #include <vtkCellData.h>
 #endif
 
