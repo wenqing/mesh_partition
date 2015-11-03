@@ -270,11 +270,20 @@ int main(int argc, char* argv[])
 
    // Read mesh data
    bool read_status = false;
+   string mesh_file;
+   std::size_t pos = fname.find_last_of(".");
+   std::string file_name_ext = "";
+   if (pos != std::string::npos)
+   {
+      file_name_ext = fname.substr(pos, fname.size()-1);
+      fname = fname.substr(0, pos);
+   }
 #ifdef USE_VTK
-   const string mesh_file = fname+".vtu";
-   read_status = a_mesh->readVTU(mesh_file);
-#else
-   const string mesh_file = fname+".msh";
+   if (file_name_ext.find("msh") != std::string::npos)
+   {
+#endif
+   
+   mesh_file = fname + ".msh";
    ifstream infile(mesh_file.c_str());
    if(!infile.is_open())
    {
@@ -294,7 +303,16 @@ int main(int argc, char* argv[])
       read_status = a_mesh->readGrid(infile, quad);
    else
       read_status = a_mesh->readGridGeoSys(infile, quad);
+//
+#ifdef USE_VTK
+  }
+  else
+  {
+     mesh_file = fname + ".vtu";
+     read_status = a_mesh->readVTU(mesh_file);
+  }
 #endif
+
    if(read_status != EXIT_SUCCESS)
    {
       delete a_mesh;
