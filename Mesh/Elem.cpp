@@ -155,7 +155,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
    // 1 Reading element type data
    switch(fileType)
    {
-         //....................................................................
+      //....................................................................
       case 0: // msh
          is>>index>>PatchIndex;
          is>>buffer;
@@ -178,7 +178,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
          else if(name.find("pyra")!=string::npos)
             ele_Type = pyramid;
          break;
-         //....................................................................
+      //....................................................................
       case 1: // rfi
          is>>index>>PatchIndex>>name;
          if(name.find("line")!=string::npos)
@@ -196,7 +196,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
          else if(name.find("pyra")!=string::npos)
             ele_Type = pyramid;
          break;
-         //....................................................................
+      //....................................................................
       case 2: // gmsh
          int gmsh_patch_index;
          is>>index>>et>>gmsh_patch_index>>idummy>>nnodes;
@@ -229,11 +229,11 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
          }
          index--;
          break;
-         //....................................................................
+      //....................................................................
       case 3: // GMS
          ele_Type = tri;
          break;
-         //....................................................................
+      //....................................................................
       case 4: // SOL
          ele_Type = tri;
          break;
@@ -250,7 +250,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
    MyInt nidx = 0;
    switch(fileType)
    {
-         //....................................................................
+      //....................................................................
       case 0: // msh
          for(int i=0; i<nnodes; i++)
          {
@@ -258,7 +258,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
             nodes[i] = mesh->node_vector[nidx];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 1: // rfi
          for(int i=0; i<nnodes; i++)
          {
@@ -266,7 +266,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
             nodes[i] = mesh->node_vector[nidx];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 2: // gmsh
          for(int i=0; i<nnodes; i++)
          {
@@ -274,7 +274,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
             nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 3: // GMS
          for(int i=0; i<nnodes; i++)
          {
@@ -282,7 +282,7 @@ void Elem::Read(istream& is,  Mesh_Group::Mesh *mesh, int fileType, const bool h
             nodes[i] = mesh->node_vector[nidx-1];
          }
          break;
-         //....................................................................
+      //....................................................................
       case 4: // SOL
          for(int i=0; i<nnodes; i++)
          {
@@ -513,7 +513,7 @@ void Elem::WriteIndex(ostream& os) const
 void Elem::Write_index(ostream& os) const
 {
    string deli = " ";
-   for(int i=0; i<getNodesNumber(); i++)
+   for(int i=0; i<getNodesNumber(quadratic); i++)
       os<<nodes[i]->index+1<<deli;
    os<<endl;
 }
@@ -997,7 +997,6 @@ int Elem::getElementFaceNodes(const int Face, int *FacesNode)
    }
    return 0;
 }
-
 
 
 }//end namespace

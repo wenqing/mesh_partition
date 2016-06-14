@@ -22,7 +22,6 @@ extern "C" {
 using namespace std;
 using namespace Mesh_Group;
 
-
 /// returns used heap size in bytes or negative if heap is corrupted.
 #ifdef WIN32
 long HeapUsed()
@@ -42,8 +41,6 @@ long HeapUsed()
    return used;
 }
 #endif
-
-
 
 #define ver "V3.2. 08.2014"
 
@@ -93,15 +90,33 @@ enum PartType {by_element, by_node};
 
 int main(int argc, char* argv[])
 {
-   ifstream infile;
-   fstream ofile;
-   stringstream ss;
+   std::vector<std::string> cmd_args;
+   if(argc>1)
+   {
+      cmd_args.insert(cmd_args.begin(), argv+1, argv+argc);
+   }
+   else //terminal
+   {
+      OptionList();
+      Version();
+      cout<<"\nInput task, options and file name (non extension):\n ";
 
-   Task this_task = ogs2metis;
+      std::string s_buff;
+      getline(cin, s_buff);
+      stringstream ss;
+      ss.str(s_buff);
+      while(!ss.eof())
+      {
+         ss>>s_buff;
+         cmd_args.push_back(s_buff);
+      }
+      ss.clear();
+   }
+
+   Task this_task = metis2ogs ;
    PartType part_type = by_node;
 
    bool quad = false;
-
 
    Mesh_Group::MeshPartConfig mpc;
    mpc.is_vtk_out = true;
@@ -111,8 +126,6 @@ int main(int argc, char* argv[])
    mpc.out_cct = false;
 
    //ios::pos_type position;
-
-   string s_buff;
    string fname;
    string fpath;
    string mat_file_name = "";
@@ -123,183 +136,86 @@ int main(int argc, char* argv[])
    bool task_opt_given = false;
    bool part_opt_given = false;
    bool part_num_given = false;
-
-   if(argc>1)
+   for(size_t i=0; i<cmd_args.size(); i++)
    {
-      for(int i=1; i<argc; i++)
+      const string s_buff = cmd_args[i];
+      if(s_buff.compare("-e") == 0)
       {
-         s_buff = argv[i];
-         if(s_buff.compare("-e") == 0)
-         {
-            part_type = by_element;
-            part_opt_given = true;
-         }
-         else if(s_buff.compare("-n") == 0)
-         {
-            part_type = by_node;
-            part_opt_given = true;
-         }
-
-         if(s_buff.compare("-q") == 0)
-            quad = true;
-
-         if(s_buff.compare("-odom") == 0)
-         {
-            mpc.osdom = true;
-         }
-
-         if(s_buff.compare("-cct") == 0)
-            mpc.out_cct = true;
-
-         if(s_buff.find("-asci")!=string::npos)
-         {
-            mpc.binary_output = false;
-         }
-         if(s_buff.compare("-ogsmsh") == 0)
-         {
-            mpc.out_renum_gsmsh = true;
-         }
-         if(s_buff.compare("-nvtk") == 0)
-         {
-            mpc.is_vtk_out = false;
-         }
-
-         // Number of partitions
-         if(s_buff.find("-np")!=string::npos)
-         {
-            //size_t pos;
-            //pos = s_buff.find_first_of("p");
-            //s_buff = s_buff.substr(pos+1);
-            //str_nparts = s_buff;
-            nparts = atoi( argv[i+1]);
-            str_nparts =  argv[i+1];
-            part_num_given = true;
-         }
-
-         // Number of partitions
-         if(s_buff.find("-mat")!=string::npos)
-         {
-            mat_file_name = argv[i+1];
-         }
-
-         if(s_buff.find("ogs2metis")!=string::npos)
-         {
-            this_task = ogs2metis;
-            task_opt_given = true;
-         }
-         else if(s_buff.find("metis2ogs")!=string::npos)
-         {
-            this_task = metis2ogs;
-            task_opt_given = true;
-         }
-         else if(s_buff.find("--help")!=string::npos)
-         {
-            Version();
-            OptionList();
-            exit(0);
-         }
-         else if(s_buff.find("--version")!=string::npos)
-         {
-            cout<<ver;
-            exit(0);
-         }
-
-         if(  s_buff[0] != '-')
-         {
-            fname = s_buff;
-         }
-
+         part_type = by_element;
+         part_opt_given = true;
       }
-   }
-   else //terminal
-   {
-      OptionList();
-      Version();
-      cout<<"\nInput task, options and file name (non extension):\n ";
+      else if(s_buff.compare("-n") == 0)
+      {
+         part_type = by_node;
+         part_opt_given = true;
+      }
 
-      getline(cin, s_buff);
-      ss.str(s_buff);
+      if(s_buff.compare("-q") == 0)
+         quad = true;
+
+      if(s_buff.compare("-odom") == 0)
+      {
+         mpc.osdom = true;
+      }
+
+      if(s_buff.compare("-cct") == 0)
+         mpc.out_cct = true;
+
+      if(s_buff.find("-asci")!=string::npos)
+      {
+         mpc.binary_output = false;
+      }
+      if(s_buff.compare("-ogsmsh") == 0)
+      {
+         mpc.out_renum_gsmsh = true;
+      }
+      if(s_buff.compare("-nvtk") == 0)
+      {
+         mpc.is_vtk_out = false;
+      }
+
+      // Number of partitions
+      if(s_buff.find("-np")!=string::npos)
+      {
+         stringstream ss;
+         ss.str(cmd_args[i+1]);
+         ss >> nparts;
+         str_nparts =  cmd_args[i+1];
+         part_num_given = true;
+      }
+
+      // Number of partitions
+      if(s_buff.find("-mat")!=string::npos)
+      {
+         mat_file_name = cmd_args[i+1];
+      }
+
       if(s_buff.find("ogs2metis")!=string::npos)
       {
          this_task = ogs2metis;
-         if(s_buff.find("-e")!=string::npos || s_buff.find("-n")!=string::npos||s_buff.find("-q")!=string::npos)
-         {
-            cout<<"Warning: option is not needed for this task"<<endl;
-         }
-
-         FindFileNameInCommand(ss, fname);
          task_opt_given = true;
       }
       else if(s_buff.find("metis2ogs")!=string::npos)
       {
-         task_opt_given = true;
          this_task = metis2ogs;
-         while(!ss.eof())
-         {
-            ss>>s_buff;
-
-            if(s_buff.compare("-e") == 0)
-            {
-               part_type = by_element;
-               part_opt_given = true;
-            }
-            else if(s_buff.compare("-n") == 0)
-            {
-               part_type = by_node;
-               part_opt_given = true;
-            }
-
-            if(s_buff.compare("-q") == 0)
-            {
-               quad = true;
-            }
-            if(s_buff.compare("-odom") == 0)
-            {
-               mpc.osdom = true;
-            }
-            if(s_buff.compare("-cct") == 0)
-            {
-               mpc.out_cct = true;
-            }
-            if(s_buff.compare("-asci") == 0)
-            {
-               mpc.binary_output = false;
-            }
-            if(s_buff.compare("-ogsmsh") == 0)
-            {
-               mpc.out_renum_gsmsh = true;
-            }
-
-            if(s_buff.compare("-nvtk") == 0)
-            {
-               mpc.is_vtk_out = false;
-            }
-            if(s_buff.find("-np")!=string::npos)
-            {
-               //size_t pos;
-               //pos = s_buff.find_first_of("p");
-               //s_buff = s_buff.substr(pos+1);
-               //nparts = atoi(s_buff.c_str());
-               //str_nparts = s_buff;
-               ss >> str_nparts;
-               nparts = atoi(str_nparts.c_str());
-
-               part_num_given = true;
-            }
-
-            if(s_buff.find("-mat")!=string::npos)
-            {
-               ss >> mat_file_name;
-            }
-
-            if(  s_buff[0] != '-' )
-            {
-               fname = s_buff;
-            }
-         }
+         task_opt_given = true;
       }
-      ss.clear();
+      else if(s_buff.find("--help")!=string::npos)
+      {
+         Version();
+         OptionList();
+         exit(EXIT_SUCCESS);
+      }
+      else if(s_buff.find("--version")!=string::npos)
+      {
+         cout<<ver;
+         exit(EXIT_SUCCESS);
+      }
 
+      if(  s_buff[0] != '-')
+      {
+         fname = s_buff;
+      }
    }
 
    if( !task_opt_given )
@@ -328,22 +244,13 @@ int main(int argc, char* argv[])
    //
    if(pos_end != std::string::npos)
    {
-      fpath = fname.substr(0,pos_end) + "\\";
+      fpath = fname.substr(0, pos_end) + "\\";
    }
    else
    {
       pos_end = fname.find_last_of('/');
       if(pos_end != std::string::npos)
-         fpath = fname.substr(0,pos_end) + "/";
-   }
-
-
-   s_buff = fname+".msh";
-   infile.open(s_buff.c_str());
-   if(!infile.is_open())
-   {
-      cerr<<("Error: cannot open msh file . It may not exist !");
-      exit(1);
+         fpath = fname.substr(0, pos_end) + "/";
    }
 
    cout<<"File name is: "<<fname<<endl;
@@ -352,54 +259,49 @@ int main(int argc, char* argv[])
    else
       cout<<"File path is: ./ "<<endl;
 
-
    clock_t elp_time;
    elp_time = -clock();
 
+
    Mesh_Group::Mesh *a_mesh = new Mesh(quad);
-
-   bool rfiMesh = true;
-   string line_string;
-   getline(infile,line_string); // The first line
-   if(line_string.find("#FEM_MSH")!=string::npos)
-      rfiMesh = false;
-   if(line_string.find("GeoSys-MSH")!=string::npos)
-      rfiMesh = false;
-   infile.seekg(0L,ios::beg);
-
-   if(rfiMesh)
-      a_mesh->ReadGrid(infile, quad);
-   else
-      a_mesh->ReadGridGeoSys(infile, quad);
 
    switch(this_task)
    {
       case ogs2metis:
-         s_buff = fname+".mesh";
-         ofile.open(s_buff.c_str(), ios::out | ios::trunc );
-         a_mesh->Write2METIS(ofile);
-
+         {
+            a_mesh->readGrid(fname + ".msh", quad);
+            if (quad)
+            {
+               a_mesh->ConstructGrid();
+               a_mesh->GenerateHighOrderNodes();
+               a_mesh->setOrder(quad);
+            }
+            const string part_mesh_file = fname+".mesh";
+            fstream ofile(part_mesh_file.c_str(), ios::out | ios::trunc );
+            a_mesh->Write2METIS(ofile);
+            a_mesh->writeBinary(fname + ".msh_quadratic_temp.bin");
+         }
          break;
       case metis2ogs:
-         cout<<"\n***Compute mesh topology"<<endl;
          a_mesh->ConstructGrid();
 
          /// Partition mesh if metis source is include
-         if(nparts>1)
+         if (nparts>1)
          {
 #ifdef USE_METIS_SOURCE
             int argc_m;
             argc_m = 4;
             char *argv_m[4];
-            std::string deli = "_"; 
-            argv_m[0] = &deli[0];
-            if ( part_type == by_node ) 
-               s_buff = "-gtype=nodal";
-            else
-               s_buff = "-gtype=dual";
-            argv_m[1] = &s_buff[0];
-            s_buff = fname + ".mesh";
-            argv_m[2] = &s_buff[0];
+            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";
+            argv_m[0] = &unsc[0];
+
+            std::string option = "-gtype=dual";
+            if ( part_type == by_node )
+               option = "-gtype=nodal";
+            argv_m[1] = &option[0];
+
+            std::string part_mesh_file = fname + ".mesh";
+            argv_m[2] = &part_mesh_file[0];
             argv_m[3] = &str_nparts[0];
 
             metis_main(argc_m, argv_m);
@@ -415,14 +317,25 @@ int main(int argc, char* argv[])
          }
 
          cout<<"\n***Prepare subdomain mesh"<<endl;
-         if(part_type == by_element)
-            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, mpc.osdom);
-         else if(part_type == by_node)
+         if (part_type == by_element)
          {
-            if(quad)
+            a_mesh->readGrid(fname + ".msh", quad);
+            cout<<"\n***Compute mesh topology"<<endl;
+            a_mesh->ConstructGrid();
+            a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, mpc.osdom);
+         }
+         else if (part_type == by_node)
+         {
+            if (quad)
             {
-               a_mesh->GenerateHighOrderNodes();
-               a_mesh->setOrder(quad);
+               a_mesh->readBinary(fname + ".msh_quadratic_temp.bin");
+               // Test a_mesh->writeVTK(fname + ".msh_quadratic.vtk");
+            }
+            else
+            {
+               a_mesh->readGrid(fname + ".msh", quad);
+               cout<<"\n***Compute mesh topology"<<endl;
+               a_mesh->ConstructGrid();
             }
 
             mpc.fname = fname;
@@ -437,7 +350,6 @@ int main(int argc, char* argv[])
          break;
    }
 
-
 #ifdef WIN32
    cout<<"\n\tMemory usage: "<< HeapUsed()/1024./1024.<<"MB"<<endl;
 #endif
@@ -448,6 +360,6 @@ int main(int argc, char* argv[])
    cout<<"\n***Total CPU time elapsed: "
        <<(double)elp_time / CLOCKS_PER_SEC<<"s"<<endl;
 
-   return 0;
+   return EXIT_SUCCESS;
 
 }

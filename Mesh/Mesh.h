@@ -37,15 +37,7 @@ class Mesh
       Mesh(bool quad = false);
       ~Mesh();
 
-
-      void ReadGrid(std::istream& is, const bool high_order);
-      void ReadGridGeoSys(std::istream& is, const bool high_order);
-
-      void Write2METIS(std::ostream& os);
-
-      void WriteVTK_Nodes(std::ostream& os);
-
-      void WriteVTK_Head(std::ostream& os, const size_t number_of_nodes);
+      void readGrid(const std::string& fname, const bool order);
 
       void ConstructSubDomain_by_Elements(const std::string fname,  const int num_parts, const bool osdom);
       void ConstructSubDomain_by_Nodes(const MeshPartConfig mpc);
@@ -60,6 +52,18 @@ class Mesh
       {
          useQuadratic = is_quad;
       }
+
+      void Write2METIS(std::ostream& os);
+
+      void WriteVTK_Nodes(std::ostream& os);
+
+      void WriteVTK_Head(std::ostream& os, const size_t number_of_nodes);
+
+      void writeVTK(const std::string& fname);
+
+      void writeBinary(const std::string& fname);
+      void readBinary(const std::string& fname);
+
    private:
       // The following can be members of grid class
       MyInt NodesNumber_Linear;
@@ -109,6 +113,10 @@ class Mesh
                                       const size_t start, const size_t end,  size_t &counter);
 
       void writeSubDomainNodes(std::ostream& os, const std::vector<Node*>& sdom_nodes, const size_t start, const size_t end);
+
+      void ReadGrid(std::istream& is, const bool high_order);
+      void ReadGridGeoSys(std::istream& is, const bool high_order);
+
 
       friend class Elem;
 };
