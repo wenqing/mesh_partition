@@ -513,7 +513,7 @@ void Elem::WriteIndex(ostream& os) const
 void Elem::Write_index(ostream& os) const
 {
    string deli = " ";
-   for(int i=0; i<getNodesNumber(); i++)
+   for(int i=0; i<getNodesNumber(quadratic); i++)
       os<<nodes[i]->index+1<<deli;
    os<<endl;
 }

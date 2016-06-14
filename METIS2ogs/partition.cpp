@@ -272,20 +272,21 @@ int main(int argc, char* argv[])
             a_mesh->readGrid(fname + ".msh", quad);
             if (quad)
             {
+               a_mesh->ConstructGrid();
                a_mesh->GenerateHighOrderNodes();
                a_mesh->setOrder(quad);
             }
             const string part_mesh_file = fname+".mesh";
             fstream ofile(part_mesh_file.c_str(), ios::out | ios::trunc );
             a_mesh->Write2METIS(ofile);
-            a_mesh->writeBinary(fname + "_quadratic.bin");
+            a_mesh->writeBinary(fname + ".msh_quadratic_temp.bin");
          }
          break;
       case metis2ogs:
          a_mesh->ConstructGrid();
 
          /// Partition mesh if metis source is include
-         if(nparts>1)
+         if (nparts>1)
          {
 #ifdef USE_METIS_SOURCE
             int argc_m;
@@ -316,19 +317,19 @@ int main(int argc, char* argv[])
          }
 
          cout<<"\n***Prepare subdomain mesh"<<endl;
-         if(part_type == by_element)
+         if (part_type == by_element)
          {
             a_mesh->readGrid(fname + ".msh", quad);
             cout<<"\n***Compute mesh topology"<<endl;
             a_mesh->ConstructGrid();
             a_mesh->ConstructSubDomain_by_Elements(fname.c_str(), nparts, mpc.osdom);
          }
-         else if(part_type == by_node)
+         else if (part_type == by_node)
          {
-            if(quad)
+            if (quad)
             {
-               a_mesh->readBinary(fname + "_quadratic.bin");
-               a_mesh->setOrder(quad);
+               a_mesh->readBinary(fname + ".msh_quadratic_temp.bin");
+               // Test a_mesh->writeVTK(fname + ".msh_quadratic.vtk");
             }
             else
             {

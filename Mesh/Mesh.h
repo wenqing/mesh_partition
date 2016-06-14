@@ -59,6 +59,8 @@ class Mesh
 
       void WriteVTK_Head(std::ostream& os, const size_t number_of_nodes);
 
+      void writeVTK(const std::string& fname);
+
       void writeBinary(const std::string& fname);
       void readBinary(const std::string& fname);
 
@@ -98,10 +100,6 @@ class Mesh
       MyInt msh_no_pris;
       MyInt msh_no_pyra;
       int msh_max_dim;
-
-      void checkGhostsOfConnectedElements(const Node& node,
-                                          const Elem& exist_elem,
-                                          std::vector<Elem*>& ghost_elems);
 
       void WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start, const size_t end);
 
