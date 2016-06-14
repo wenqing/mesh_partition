@@ -8,6 +8,7 @@
 #include <cfloat>
 #include <limits>
 #include <set>
+#include <algorithm>
 
 #include <stdio.h> // for binary output
 
@@ -1117,6 +1118,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          }
 
          // Add nodes for quadrtic elements in this subdomain zone
+         std::vector<Elem*> new_ghost_elems;
          for(MyInt j=0; j<nei; j++)
          {
             a_elem = in_subdom_elements[j];
@@ -1138,6 +1140,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                sbd_nodes_hq.push_back(a_node);
                a_node->Marking(true);
                num_nodes_active_h++;
+
+               // Check connected elements of the new active node
+               checkGhostsOfConnectedElements(*a_node, *a_elem,
+                                              new_ghost_elems);
             }
          }
 
@@ -1166,8 +1172,16 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                sbd_nodes_hq.push_back(a_node);
                a_node->Marking(true);
                num_nodes_active_h++;
+
+               // Check connected elements of the new active node
+               checkGhostsOfConnectedElements(*a_node, *a_elem,
+                                              new_ghost_elems);
             }
          }
+         ghost_subdom_elements.insert(ghost_subdom_elements.end(),
+                                      new_ghost_elems.begin(),
+                                      new_ghost_elems.end() );
+         std::unique(ghost_subdom_elements.begin(), ghost_subdom_elements.end());
 
          // Make non-ghost nodes in ghost elements
          for(MyInt j=0; j<neg; j++)
@@ -1696,6 +1710,37 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    sbd_nodes.clear();
 }
 
+void Mesh::checkGhostsOfConnectedElements(const Node& node,
+      const Elem& exist_elem,
+      std::vector<Elem*>& ghost_elems)
+{
+   for (std::size_t m=0; m<node.ElementsRelated.size(); m++)
+   {
+      Elem* cnt_elem = elem_vector[node.ElementsRelated[m]];
+      if (exist_elem.getIndex() == cnt_elem->getIndex())
+         continue;
+      if (cnt_elem->ghost_nodes.size() == 0) // non-ghost
+         continue;
+
+      for(int l=cnt_elem->getNodesNumber();
+            l<cnt_elem->getNodesNumberHQ(); l++)
+      {
+         if (cnt_elem->getNodeIndex(l) == node.getIndex() )
+         {
+            if ( std::find( cnt_elem->ghost_nodes.begin(),
+                            cnt_elem->ghost_nodes.end(), l)
+                  ==  cnt_elem->ghost_nodes.end() )
+            {
+               cnt_elem->ghost_nodes.push_back(l);
+               break;
+            }
+         }
+      }
+      ghost_elems.push_back(cnt_elem);
+
+   }
+}
+
 // 02.2012. WW
 void  Mesh::WriteVTK_Nodes(std::ostream& os)
 {
@@ -1833,7 +1878,35 @@ void Mesh::Write2METIS(ostream& os)
 #endif
    os<<endl;
    for(MyInt i=0; i<(MyInt)elem_vector.size(); i++)
+   {
+      elem_vector[i]->setOrder(useQuadratic);
       elem_vector[i]->Write_index(os);
+   }
+}
+
+void Mesh::readGrid(const std::string& fname, const bool order)
+{
+   ifstream infile(fname.c_str());
+   if(!infile.is_open())
+   {
+      cerr<<("Error: cannot open msh file . It may not exist !");
+      abort();
+   }
+
+   bool rfiMesh = true;
+   string line_string;
+   getline(infile,line_string); // The first line
+   if(line_string.find("#FEM_MSH")!=string::npos)
+      rfiMesh = false;
+   if(line_string.find("GeoSys-MSH")!=string::npos)
+      rfiMesh = false;
+   infile.seekg(0L,ios::beg);
+
+   if(rfiMesh)
+      ReadGrid(infile, order);
+   else
+      ReadGridGeoSys(infile, order);
+
 }
 
 // Read grid for test purpose
@@ -2088,6 +2161,176 @@ void Mesh::writeSubDomainNodes(std::ostream& os, const std::vector<Node*>& sdom_
       a_node->Write(os);
    }
 }
+
+void Mesh::writeBinary(const std::string& fname)
+{
+   std::ofstream os(fname.data(), ios::binary | ios::trunc);
+   if (os.good())
+   {
+      std::cout << "Could not open " << fname << std::endl;
+      abort();
+   }
+
+   MyInt mesh_header[15];
+   mesh_header[0] = NodesNumber_Linear;
+   mesh_header[1] = NodesNumber_Quadratic;
+   mesh_header[2] = static_cast<MyInt>(elem_vector.size());
+   mesh_header[3] = axisymmetry;
+
+   mesh_header[4] = coordinate_system;
+   mesh_header[5] = max_ele_dim;
+
+   mesh_header[6] = msh_no_line;
+   mesh_header[7] = msh_no_quad;
+   mesh_header[8] = msh_no_hexs;
+   mesh_header[9] = msh_no_tris;
+   mesh_header[10] = msh_no_tets;
+   mesh_header[11] = msh_no_pris;
+   mesh_header[12] = msh_no_pyra;
+   mesh_header[13] = msh_max_dim;
+   mesh_header[14] = useQuadratic;
+
+   os.write( (char*)(mesh_header), 15 * sizeof(MyInt));
+
+   for (std::size_t i=0; i<node_vector.size(); i++)
+   {
+      MyInt node_info[3];
+      const Node* node = node_vector[i];
+      node_info[0] = node->getIndex();
+      node_info[1] = node->NodesRelated.size();
+      node_info[2] = node->ElementsRelated.size();
+      os.write( (char*)(node_info), 3 * sizeof(MyInt));
+      os.write( (char*)(node->getCoordinates()), 3 * sizeof(double) );
+
+      os.write( (char*)(&node->NodesRelated[0]),
+                node_info[1] * sizeof(std::size_t) );
+      os.write( (char*)(&node->ElementsRelated[0]),
+                node_info[2] * sizeof(std::size_t) );
+   }
+
+   MyInt ids[100];
+   // Write element nodes
+   for (std::size_t i=0; i<elem_vector.size(); i++)
+   {
+      const Elem* elem = elem_vector[i];
+      MyInt elem_info[3];
+      elem_info[0] = elem->getIndex();
+      elem_info[1] = elem->getPatchIndex();
+      elem_info[2] = elem->getElementType();
+      os.write( (char*)(elem_info), 3 * sizeof(MyInt));
+
+      for (int j=0; j<elem->getNodesNumber(useQuadratic); j++)
+      {
+         ids[j] = elem->getNodeIndex(j);
+      }
+      // Write node index
+      os.write( (char*)(ids), elem->getNodesNumber(useQuadratic)
+                *sizeof(MyInt) );
+   }
+   // Write element neighbours
+   for (std::size_t i=0; i<elem_vector.size(); i++)
+   {
+      const Elem* elem = elem_vector[i];
+      for (int j=0; j<elem->getFacesNumber(); j++)
+      {
+         if (elem->getNeighbor(j))
+            ids[j] = -1;
+         else
+            ids[j] = elem->getNeighbor(j)->getIndex();
+      }
+
+      // Write neighbour element indexes
+      os.write( (char*)(ids), elem->getFacesNumber() * sizeof(MyInt) );
+   }
+}
+
+void Mesh::readBinary(const std::string& fname)
+{
+   std::ifstream ins(fname.data(), ios::binary);
+   if (ins.good())
+   {
+      std::cout << "Could not open " << fname << std::endl;
+      abort();
+   }
+
+   MyInt mesh_header[15];
+   ins.read( (char*)(mesh_header), 15 * sizeof(MyInt));
+
+   NodesNumber_Linear = mesh_header[0];
+   NodesNumber_Quadratic = mesh_header[1];
+   MyInt num_elems = mesh_header[2];
+   axisymmetry = static_cast<bool>(mesh_header[3]);
+
+   coordinate_system = mesh_header[4];
+   max_ele_dim = mesh_header[5];
+
+   msh_no_line = mesh_header[6];
+   msh_no_quad = mesh_header[7];
+   msh_no_hexs = mesh_header[8];
+   msh_no_tris = mesh_header[9];
+   msh_no_tets = mesh_header[10];
+   msh_no_pris = mesh_header[11];
+   msh_no_pyra = mesh_header[12];
+   msh_max_dim = mesh_header[13];
+   useQuadratic = static_cast<bool>(mesh_header[14]);
+
+   node_vector.resize(NodesNumber_Quadratic);
+   double x[3];
+   for (MyInt i=0; i<NodesNumber_Quadratic; i++)
+   {
+      MyInt node_info[3];
+      ins.read( (char*)(node_info), 3 * sizeof(MyInt));
+      ins.read( (char*)(x), 3 * sizeof(double) );
+      Node* node = new Node(node_info[0], x[0], x[1], x[2]);
+
+      node->NodesRelated.resize(node_info[1]);
+      node->ElementsRelated.resize(node_info[2]);
+
+      ins.read( (char*)(&node->NodesRelated[0]),
+                node_info[1] * sizeof(std::size_t) );
+      ins.read( (char*)(&node->ElementsRelated[0]),
+                node_info[2] * sizeof(std::size_t) );
+      node_vector[i] = node;
+   }
+
+   MyInt ids[100];
+   // read element nodes
+   elem_vector.resize(num_elems);
+   for (MyInt i=0; i<num_elems; i++)
+   {
+      MyInt elem_info[3];
+      ins.read( (char*)(elem_info), 3 * sizeof(MyInt));
+      Elem* elem = new Elem(elem_info[0]);
+      elem->PatchIndex = elem_info[1];
+      elem->ele_Type = static_cast<ElemType>(elem_info[2]);
+
+      // read node index
+      ins.read( (char*)(ids), elem->getNodesNumber(useQuadratic)
+                *sizeof(MyInt) );
+      elem->nodes = new Node*[elem->getNodesNumber(useQuadratic)];
+      for (int j=0; j<elem->getNodesNumber(useQuadratic); j++)
+      {
+         elem->nodes[j] = node_vector[ids[j]];
+      }
+      elem_vector[i] = elem;
+   }
+   // read element neighbours
+   for(std::size_t i=0; i<elem_vector.size(); i++)
+   {
+      Elem* elem = elem_vector[i];
+      // Write neighbour element indexes
+      ins.read( (char*)(ids), elem->getFacesNumber() * sizeof(MyInt) );
+      elem->neighbors = new Elem*[elem->getFacesNumber()];
+      for (int j=0; j<elem->getFacesNumber(); j++)
+      {
+         if (ids[j] == -1)
+            elem->neighbors[j] = NULL;
+         else
+            elem->neighbors[j] = elem_vector[ids[j]];
+      }
+   }
+}
+
 }//end namespace
 
 

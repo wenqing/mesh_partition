@@ -213,6 +213,11 @@ class Elem:public Grain
          return neighbors;
       }
 
+      Elem* getNeighbor(const int local_id) const
+      {
+         return neighbors[local_id];
+      }
+
       //Domain partition
       MyInt getDomNodeIndex(const int loc_index)
       {
