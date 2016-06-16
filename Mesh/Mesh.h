@@ -5,6 +5,8 @@
 #include<vector>
 #include<iostream>
 
+#include <set>
+
 //------------------------------------------------------
 //   Topology declartion of geometrical element.
 //   WW. 06.2005
@@ -28,6 +30,15 @@ struct MeshPartConfig
    bool binary_output;  /// output binary file of the partitioned mesh
    bool out_cct;  /// output of exended partitions for the flux corrected transport
 };
+
+// NW
+struct ConnEdge
+{
+   Node* first;
+   Node* second;
+   ConnEdge(Node* i, Node* j) : first(i), second(j) {};
+};
+
 /*!
    \class Mesh
 */
@@ -100,6 +111,15 @@ class Mesh
       MyInt msh_no_pris;
       MyInt msh_no_pyra;
       int msh_max_dim;
+
+      void findElementsOfPartition(const MyInt active_node_id_offset,
+                                   const MyInt num_active_nodes,
+                                   const std::vector<Node*>& partition_nodes,
+                                   const bool mpc_out_cct,
+                                   const MyInt idom, const std::vector<MyInt>& dom_idx,
+                                   std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors,
+                                   std::vector<Elem*>& in_subdom_elements,
+                                   std::vector<Elem*>& ghost_subdom_elements);
 
       void WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start, const size_t end);
 

@@ -99,7 +99,7 @@ Elem::~Elem()
       neighbors = NULL;
    }
 
-   ghost_nodes.resize(0);
+   non_ghost_nodes.resize(0);
 }
 
 //    WW. 06.2005
