@@ -283,9 +283,7 @@ int main(int argc, char* argv[])
          }
          break;
       case metis2ogs:
-         a_mesh->ConstructGrid();
-
-         /// Partition mesh if metis source is include
+         // Partition mesh if metis source is include
          if (nparts>1)
          {
 #ifdef USE_METIS_SOURCE

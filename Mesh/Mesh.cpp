@@ -744,6 +744,14 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    //delete nod_dom;
 }
 
+// NW
+struct ConnEdge
+{
+   Node* first;
+   Node* second;
+   ConnEdge(Node* i, Node* j) : first(i), second(j) {};
+};
+
 inline bool operator<(const ConnEdge& lhs, const ConnEdge& rhs)
 {
    if (lhs.first->getIndex() != rhs.first->getIndex()) return lhs.first->getIndex() < rhs.first->getIndex();
@@ -885,11 +893,9 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    vector<bool> sdom_marked(nn);
    vector<MyInt> dom_idx(nn);
 
-   MyInt dom;
    for(MyInt i=0; i<nn; i++)
    {
-      npart_in>>dom>>ws;
-      dom_idx[i] = dom;
+      npart_in >> dom_idx[i] >>ws;
       sdom_marked[i] = false;
    }
    npart_in.close();
@@ -993,10 +999,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       for(MyInt j=0; j<nn; j++)
          node_vector[j]->Marking(false);
 
-      // Release all elements of the whole mesh
-      for(MyInt j=0; j<ne_total; j++)
-         elem_vector[j]->Marking(false);
-
       MyInt num_nodes_active_l = 0; // acitve nodes for linear elements
       for(MyInt j=0; j<NodesNumber_Linear; j++)
       {
@@ -1012,9 +1014,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       // Find the elements in this subdomain.
       vector<Elem*> in_subdom_elements;
       vector<Elem*> ghost_subdom_elements;
-      findElementsOfPartition(sdom_start_node[idom], num_nodes_active_l,
-                              sbd_nodes, mpc.out_cct, idom, dom_idx, vec_neighbors,
-                              in_subdom_elements, ghost_subdom_elements);
 
       MyInt num_nodes_active_h = 0; // acitve nodes for quadratic elements
       if (useQuadratic)
@@ -1029,12 +1028,60 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                num_nodes_active_h++;
             }
          }
-         // Find the elements in this subdomain.
-         findElementsOfPartition(sdom_start_node_hq[idom], num_nodes_active_h,
-                                 sbd_nodes_hq, mpc.out_cct, idom, dom_idx, vec_neighbors,
-                                 in_subdom_elements, ghost_subdom_elements);
       }
       sdom_end_act_node_hq[idom] = sbd_nodes_hq.size();
+
+
+      for (std::size_t i=0; i<elem_vector.size(); i++)
+      {
+         Elem* elem = elem_vector[i];
+         elem->non_ghost_nodes.clear();
+         int nn_ngl = 0;
+         std::vector<int> g_nodes; // ghost nodes in ghost elements
+         for(int kk=0; kk<elem->getNodesNumber(useQuadratic); kk++)
+         {
+            if (elem->getNode(kk)->getStatus())
+            {
+               elem->non_ghost_nodes.push_back(kk);
+               if (kk < elem->getNodesNumber())
+                  nn_ngl++;
+            }
+            else
+               g_nodes.push_back(kk);
+         }
+
+         if (elem->non_ghost_nodes.size() == 0)
+            continue;
+
+         if (elem->non_ghost_nodes.size()
+               == static_cast<std::size_t>(elem->getNodesNumber(useQuadratic)) )
+         {
+            in_subdom_elements.push_back(elem);
+            elem->non_ghost_nodes.clear();
+         }
+         else
+         {
+            elem->nnodes_ngl = nn_ngl;
+            ghost_subdom_elements.push_back(elem);
+         }
+
+         // overlapping edges
+         if (mpc.out_cct)
+         {
+            for (std::size_t ig=0; ig<g_nodes.size(); ig++)
+            {
+               MyInt ig_id = elem->getNode(g_nodes[ig])->global_index; //index; //;
+               MyInt ig_dom = dom_idx[ig_id];
+               for (size_t ing=0; ing<elem->non_ghost_nodes.size(); ing++)
+               {
+                  //MyInt ing_id = a_elem->getNode(ng_nodes[ing])->index; //global_index;
+                  vec_neighbors[idom][ig_dom].insert(ConnEdge(a_elem->getNode(elem->non_ghost_nodes[ing]),
+                                                     a_elem->getNode(g_nodes[ig]))); // inner node - ghost node
+                  //vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
+               }
+            }
+         }
+      }
 
       //-----------------------------------------------
       // Add inactive nodes in ghost elements
@@ -1542,89 +1589,6 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    os.close();
 
    sbd_nodes.clear();
-}
-
-void Mesh::findElementsOfPartition(
-   const MyInt active_node_id_offset,
-   const MyInt num_active_nodes,
-   const std::vector<Node*>& partition_nodes,
-   const bool mpc_out_cct,
-   const MyInt idom, const std::vector<MyInt>& dom_idx,
-   std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors,
-   std::vector<Elem*>& in_subdom_elements,
-   std::vector<Elem*>& ghost_subdom_elements)
-{
-   for(MyInt j=0; j<num_active_nodes; j++)
-   {
-      Node* a_node = partition_nodes[ j +  active_node_id_offset];
-
-      // Search the elements connected to this nodes
-      const MyInt ne_rel = static_cast<MyInt>(a_node->ElementsRelated.size());
-      for(int k=0; k<ne_rel; k++)
-      {
-         Elem* a_elem = elem_vector[a_node->ElementsRelated[k]];
-
-         // If checked
-         if(a_elem->getStatus())
-            continue;
-
-         vector<int> ng_nodes; // non ghost nodes in ghost elements
-         vector<int> g_nodes; // ghost nodes in ghost elements
-         int nn_ngl = 0;
-         for(int kk=0; kk<a_elem->getNodesNumber(useQuadratic); kk++)
-         {
-            if(a_elem->getNode(kk)->getStatus())
-            {
-               ng_nodes.push_back(kk);
-               if ( kk < a_elem->getNodesNumber())
-                  nn_ngl++;
-            }
-            else
-            {
-               g_nodes.push_back(kk);
-            }
-         }
-
-         // All nodes of this element are inside this subdomain
-         if(g_nodes.size() == 0)
-         {
-            in_subdom_elements.push_back(a_elem);
-         }
-         else if(g_nodes.size() !=
-                 static_cast<size_t>(a_elem->getNodesNumber(useQuadratic)))
-         {
-            ghost_subdom_elements.push_back(a_elem);
-
-            a_elem->nnodes_ngl = nn_ngl;
-            const int nn_ngh = static_cast<int>(ng_nodes.size());
-            a_elem->non_ghost_nodes.resize(nn_ngh);
-            for(int kk=0; kk<nn_ngh; kk++)
-               a_elem->non_ghost_nodes[kk] = ng_nodes[kk];
-
-         }
-
-         // overlapping edges
-         if (mpc_out_cct)
-         {
-            for (size_t ig=0; ig<g_nodes.size(); ig++)
-            {
-               MyInt ig_id = a_elem->getNode(g_nodes[ig])->global_index; //index; //;
-               MyInt ig_dom = dom_idx[ig_id];
-               for (size_t ing=0; ing<ng_nodes.size(); ing++)
-               {
-                  //MyInt ing_id = a_elem->getNode(ng_nodes[ing])->index; //global_index;
-                  vec_neighbors[idom][ig_dom].insert(ConnEdge(a_elem->getNode(ng_nodes[ing]), a_elem->getNode(g_nodes[ig]))); // inner node - ghost node
-                  //vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
-               }
-            }
-         }
-         a_elem->Marking(true);
-
-         ng_nodes.clear();
-         g_nodes.clear();
-
-      }
-   }
 }
 
 void Mesh::readGrid(const std::string& fname, const bool order)
