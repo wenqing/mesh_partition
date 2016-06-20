@@ -976,10 +976,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    vector<Node*> sbd_nodes_hq;     // nodes of a partition for quadratic element
    std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors(num_parts); //NW
 
+   // Should be removed for openmp 
+   for (std::size_t i=0; i<elem_vector.size(); i++)
+   {
+      elem_vector[i]->Marking(false);
+   }
+
    MyInt node_id_offset = 0;
    MyInt node_id_offset_h = NodesNumber_Linear;
-   Node *a_node = NULL;
-   Elem *a_elem = NULL;
    for(int idom=0; idom<num_parts; idom++)
    {
 
@@ -1031,10 +1035,14 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       }
       sdom_end_act_node_hq[idom] = sbd_nodes_hq.size();
 
-
       for (std::size_t i=0; i<elem_vector.size(); i++)
       {
          Elem* elem = elem_vector[i];
+
+         // Should be removed for openmp 
+         if ( elem->getStatus() )
+            continue;
+
          elem->non_ghost_nodes.clear();
          int nn_ngl = 0;
          std::vector<int> g_nodes; // ghost nodes in ghost elements
@@ -1057,6 +1065,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                == static_cast<std::size_t>(elem->getNodesNumber(useQuadratic)) )
          {
             in_subdom_elements.push_back(elem);
+            elem->Marking(true);    // Should be removed for openmp 
             elem->non_ghost_nodes.clear();
          }
          else
@@ -1075,8 +1084,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                for (size_t ing=0; ing<elem->non_ghost_nodes.size(); ing++)
                {
                   //MyInt ing_id = a_elem->getNode(ng_nodes[ing])->index; //global_index;
-                  vec_neighbors[idom][ig_dom].insert(ConnEdge(a_elem->getNode(elem->non_ghost_nodes[ing]),
-                                                     a_elem->getNode(g_nodes[ig]))); // inner node - ghost node
+                  vec_neighbors[idom][ig_dom].insert(ConnEdge(elem->getNode(elem->non_ghost_nodes[ing]),
+                                                     elem->getNode(g_nodes[ig]))); // inner node - ghost node
                   //vec_neighbors[ig_dom].insert(ConnEdge(ing_id, ig_id)); // inner node - ghost node
                }
             }
@@ -1088,7 +1097,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       const MyInt ne_g = static_cast<MyInt>(ghost_subdom_elements.size());
       for(MyInt j=0; j<ne_g; j++)
       {
-         a_elem = ghost_subdom_elements[j];
+         Elem* a_elem = ghost_subdom_elements[j];
          for(int k=0; k<a_elem->getNodesNumber(useQuadratic); k++)
             a_elem->nodes[k]->Marking(false);
 
@@ -1100,10 +1109,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       //
       for(MyInt j=0; j<ne_g; j++)
       {
-         a_elem = ghost_subdom_elements[j];
+         Elem*  a_elem = ghost_subdom_elements[j];
          for(int k=0; k<a_elem->getNodesNumber(); k++)
          {
-            a_node = a_elem->nodes[k];
+            Node* a_node = a_elem->nodes[k];
             if(a_node->getStatus())
                continue;
             a_node->Marking(true);
@@ -1112,7 +1121,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          //
          for(int k=a_elem->getNodesNumber(); k<a_elem->getNodesNumber(useQuadratic); k++)
          {
-            a_node = a_elem->nodes[k];
+            Node* a_node = a_elem->nodes[k];
             if(a_node->getStatus())
                continue;
             a_node->Marking(true);
@@ -1283,7 +1292,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
       for(MyInt j=0; j<ne_g; j++)
       {
-         a_elem = ghost_subdom_elements[j];
+         Elem* a_elem = ghost_subdom_elements[j];
          const int ngh_nodes = static_cast<int>(a_elem->non_ghost_nodes.size());
 
          if(binary_output)
@@ -1539,7 +1548,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          const size_t end_l_act =  sdom_end_act_node[idom];
          for(size_t i=start_l; i<end_l_act; i++)
          {
-            a_node = sbd_nodes[i];
+            const Node* a_node = sbd_nodes[i];
             a_node->Write(os);
          }
       }
@@ -1574,7 +1583,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
          for(size_t i=start_l; i<end_l_act; i++)
          {
-            a_node = sbd_nodes[i];
+            Node* a_node = sbd_nodes[i];
             a_node->local_index = a_node->index; // Because WriteVTK_Elements_of_Subdomain uses local node IDs.
             os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
          }
