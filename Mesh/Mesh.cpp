@@ -9,7 +9,7 @@
 #include <limits>
 #include <algorithm>
 
-#include <stdio.h> // for binary output
+#include <cstdio> // for binary output
 
 #include "Node.h"
 
@@ -21,7 +21,7 @@
 //------------------------------------------------------
 namespace Mesh_Group
 {
-using namespace std;
+//using namespace std;
 
 Mesh::Mesh(bool quad)
 {
@@ -365,8 +365,8 @@ void Mesh::ConstructGrid()
    ConnectedNodes(false);
    //
    finish = clock();
-   cout<<"\nCPU time elapsed in constructing topology of grids: "
-       <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl<<endl;
+   std::cout<<"\nCPU time elapsed in constructing topology of grids: "
+       <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<std::endl<<std::endl;
 
 }
 
@@ -534,28 +534,28 @@ void Mesh::GenerateHighOrderNodes()
    //
 
    finish = clock();
-   cout<<"\n\tCPU time elapsed in generating high oder elements: "
-       <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<endl;
+   std::cout<<"\n\tCPU time elapsed in generating high oder elements: "
+       <<(double)(finish - start) / CLOCKS_PER_SEC<<"s"<<std::endl;
 
 }
 
-void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_parts, const bool osdom)
+void Mesh::ConstructSubDomain_by_Elements(const std::string fname, const int num_parts, const bool osdom)
 {
-   string str;
-   string stro;
+   std::string str;
+   std::string stro;
    int dom;
    int max_dom;
    int k,kk;
    MyInt i,j;
    //  int ntags = 3;
 
-   fstream gmsh_out;
+   std::fstream gmsh_out;
 
-   string deli = " ";
+   std::string deli = " ";
    //
 
-   string s_nparts;
-   stringstream ss;
+   std::string s_nparts;
+   std::stringstream ss;
    ss << num_parts;
    ss >> s_nparts;
    ss.clear();
@@ -564,18 +564,18 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    stro = fname + "." + s_nparts +"ddc";
 
    //namef = ".mesh.epart."; //+str_buf;
-   ifstream part_in;
-   fstream part_out;
-   part_out.open(stro.c_str(), ios::out | ios::trunc );
+   std::ifstream part_in;
+   std::fstream part_out;
+   part_out.open(stro.c_str(), std::ios::out | std::ios::trunc );
    // Output for gmsh
 
    if(osdom)
    {
       stro = fname + "_gmsh.msh";
-      gmsh_out.open(stro.c_str(), ios::out );
-      //gmsh_out<<"$NOD"<<endl;
-      gmsh_out<<"$MeshFormat\n2 0 8\n$EndMeshFormat\n$Nodes"<<endl;
-      gmsh_out<<node_vector.size()<<endl;
+      gmsh_out.open(stro.c_str(), std::ios::out );
+      //gmsh_out<<"$NOD" << std::endl;
+      gmsh_out<<"$MeshFormat\n2 0 8\n$EndMeshFormat\n$Nodes"<<std::endl;
+      gmsh_out<<node_vector.size() << std::endl;
       Node *node;
       for(i=0; i<(MyInt)node_vector.size(); i++)
       {
@@ -583,19 +583,19 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
          node = node_vector[i];
          gmsh_out<<node->X()<<" ";
          gmsh_out<<node->Y()<<" ";
-         gmsh_out<<node->Z()<<endl;
+         gmsh_out<<node->Z() << std::endl;
       }
-      //gmsh_out<<"$ENDNOD"<<endl;
-      //gmsh_out<<"$ELM"<<endl;
-      gmsh_out<<"$EndNodes\n$Elements"<<endl;
-      gmsh_out<<(MyInt)elem_vector.size()<<endl;
+      //gmsh_out<<"$ENDNOD" << std::endl;
+      //gmsh_out<<"$ELM" << std::endl;
+      gmsh_out<<"$EndNodes\n$Elements" << std::endl;
+      gmsh_out<<(MyInt)elem_vector.size() << std::endl;
    }
 
    //
    part_in.open(str.c_str());
    if(!part_in.is_open())
    {
-      cerr<<("Error: cannot open .epart file . It may not exist !");
+      std::cerr<<("Error: cannot open .epart file . It may not exist !");
       abort();
    }
 
@@ -604,7 +604,7 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 
    for(i=0; i<(MyInt)elem_vector.size(); i++)
    {
-      part_in>>dom>>ws;
+      part_in>>dom>>std::ws;
       ele = elem_vector[i];
       ele->setDomainIndex(dom);
 
@@ -618,11 +618,11 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
    }
    max_dom++;
    part_in.close();
-   remove(str.c_str()); // Remove the metis file.
+   std::remove(str.c_str()); // Remove the metis file.
 
    if(osdom)
    {
-      gmsh_out<<"$EndElements"<<endl;
+      gmsh_out<<"$EndElements"<<std::endl;
       gmsh_out.close();
    }
    //
@@ -643,14 +643,14 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
 
    bool done = false;
    MyInt n_index=0;
-   vector<size_t> nodes_dom;
-   vector<Elem*> eles_dom;
+   std::vector<std::size_t> nodes_dom;
+   std::vector<Elem*> eles_dom;
 
    //
    for(k=0; k<max_dom; k++)
    {
-      part_out<<"#DOMAIN "<<k<<endl;
-      part_out<<"$ELEMENTS "<<ele_dom[k]<<endl;
+      part_out<<"#DOMAIN "<<k<<std::endl;
+      part_out<<"$ELEMENTS "<<ele_dom[k]<<std::endl;
       nodes_dom.clear();
       eles_dom.clear();
       for(j=0; j<(MyInt)elem_vector.size(); j++)
@@ -685,40 +685,40 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
                   nodes_dom.push_back(ele->getNodeIndex(kk));
                }
             }
-            part_out<<ele->getIndex()<<endl;
+            part_out<<ele->getIndex() << std::endl;
             eles_dom.push_back(ele); //TEST OUT
          }
       }
-      part_out<<"$NODES_INNER "<<(MyInt)nodes_dom.size()<<endl;
+      part_out<<"$NODES_INNER "<<(MyInt)nodes_dom.size() << std::endl;
       for(j=0; j<(MyInt)nodes_dom.size(); j++)
-         part_out<<nodes_dom[j]<<endl;
+         part_out<<nodes_dom[j] << std::endl;
 
       if(osdom)
       {
-         string i_nparts;
+         std::string i_nparts;
          ss << k;
          ss >> i_nparts;
          ss.clear();
 
-         string name_f = fname+"_"+i_nparts+"_of_"+s_nparts+"subdomains.msh";
-         fstream test_out;
-         test_out.open(name_f.c_str(), ios::out|ios::trunc );
+         std::string name_f = fname+"_"+i_nparts+"_of_"+s_nparts+"subdomains.msh";
+         std::fstream test_out;
+         test_out.open(name_f.c_str(), std::ios::out|std::ios::trunc );
 
          Node *nod = 0;
-         //GMSH test_out<<"$NOD"<<endl;
-         //GMSH test_out<<(MyInt)nodes_dom.size()<<endl;
-         test_out<<"#0#0#0#1#0.0#0#################################################################"<<endl;
-         test_out<<"0 "<<(MyInt)nodes_dom.size()<<" "<<(MyInt)eles_dom.size()<<endl;
+         //GMSH test_out<<"$NOD" << std::endl;
+         //GMSH test_out<<(MyInt)nodes_dom.size() << std::endl;
+         test_out<<"#0#0#0#1#0.0#0#################################################################" << std::endl;
+         test_out<<"0 "<<(MyInt)nodes_dom.size()<<" "<<(MyInt)eles_dom.size() << std::endl;
          for(j=0; j<(MyInt)nodes_dom.size(); j++)
          {
             nod = node_vector[nodes_dom[j]];
             //GMSH  test_out<<j+1<<"  "
             test_out<<j<<deli
-                    << nod->X()<<deli<< nod->Y()<<deli<< nod->Z() <<endl;
+                    << nod->X()<<deli<< nod->Y()<<deli<< nod->Z()  << std::endl;
          }
-         //GMSH test_out<<"$ENDNOD"<<endl;
-         //GMSH test_out<<"$ELE"<<endl;
-         //GMSG test_out<<(MyInt)eles_dom.size()<<endl;
+         //GMSH test_out<<"$ENDNOD" << std::endl;
+         //GMSH test_out<<"$ELE" << std::endl;
+         //GMSG test_out<<(MyInt)eles_dom.size() << std::endl;
          for(j=0; j<(MyInt)eles_dom.size(); j++)
          {
             ele = eles_dom[j];
@@ -728,14 +728,14 @@ void Mesh::ConstructSubDomain_by_Elements(const string fname, const int num_part
             test_out<<j<<deli<<ele->getPatchIndex()<<deli<<ele->getName()<<deli;
             for(kk=0; kk<ele->getNodesNumber(); kk++)
                test_out<< ele->getDomNodeIndex(kk)<<deli;
-            test_out<<endl;
+            test_out << std::endl;
          }
          test_out.clear();
          test_out.close();
       }
 
    }
-   part_out<<"#STOP "<<endl;
+   part_out<<"#STOP " << std::endl;
    part_out.clear();
    part_out.close();
 
@@ -782,21 +782,21 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 {
    // Material data partitioning
    int num_data = 0;
-   vector<string> m_headers;
-   vector<size_t> m_header_marker_per_data;
-   vector<string> m_datanames;
-   //vector<MyInt> m_ele_idx;
-   vector<double> m_ele_val;
+   std::vector<std::string> m_headers;
+   std::vector<std::size_t> m_header_marker_per_data;
+   std::vector<std::string> m_datanames;
+   //std::vector<MyInt> m_ele_idx;
+   std::vector<double> m_ele_val;
 
    if(mpc.mat_fname.size() !=0)
    {
-      string line_buffer;
-      string mat_fname_abs = mpc.fpath + mpc.mat_fname;
+      std::string line_buffer;
+      std::string mat_fname_abs = mpc.fpath + mpc.mat_fname;
 
-      ifstream is_mat(mat_fname_abs.c_str());
+      std::ifstream is_mat(mat_fname_abs.c_str());
       if(!is_mat.good())
       {
-         cout<<"Material data file "<<mat_fname_abs<<" does not exist"<<endl;
+         std::cout<<"Material data file "<<mat_fname_abs<<" does not exist"<<std::endl;
          exit(1);
       }
       is_mat >> num_data;
@@ -805,7 +805,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       m_header_marker_per_data[0] = 0;
       for(int k=0; k<num_data; k++)
       {
-         string data_name;
+         std::string data_name;
          is_mat >> m_datanames[k];
          m_datanames[k] = mpc.fpath + m_datanames[k];
       }
@@ -817,13 +817,13 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          is_mat.open(m_datanames[k].c_str());
          if(!is_mat.good())
          {
-            cout<<"Material data file "<<m_datanames[k]<<" does not exist"<<endl;
+            std::cout<<"Material data file "<<m_datanames[k]<<" does not exist"<<std::endl;
             exit(1);
          }
          while(!is_mat.eof())
          {
             getline(is_mat, line_buffer);
-            if(line_buffer.find("$DATA")!=string::npos)
+            if(line_buffer.find("$DATA")!=std::string::npos)
             {
                m_headers.push_back(line_buffer);
                const size_t ne = elem_vector.size();
@@ -836,7 +836,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
                   m_ele_val.push_back(m_val);
                }
             }
-            else if(line_buffer.find("#STOP")!=string::npos)
+            else if(line_buffer.find("#STOP")!=std::string::npos)
             {
                break;
             }
@@ -851,22 +851,22 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       }
    }
 
-   string f_iparts;
-   string o_part_msh;
-   string fname = mpc.fname;
+   std::string f_iparts;
+   std::string o_part_msh;
+   std::string fname = mpc.fname;
 
    // Number of integer variables of subdomain elements
    MyInt nmb_element_idxs;
    MyInt nmb_element_idxs_g;
 
-   string deli = " ";
+   std::string deli = " ";
 
    //
    const MyInt num_headers = 13;
    MyInt head[13];
    MyInt ivar[23];
    // For binary output: all data in on string
-   vector<MyInt> ele_info;
+   std::vector<MyInt> ele_info;
    // node rank offset
    head[10] = 0;
    // element rank offset
@@ -877,25 +877,25 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    const int num_parts = mpc.num_parts;
    // Read a METIS node partitioned file
    //--------------------------------------------------------------------------
-   const string s_nparts = number2str(num_parts);
+   const std::string s_nparts = number2str(num_parts);
    f_iparts = fname + ".mesh.npart." + s_nparts;
    //o_part_msh = fname + "." + s_nparts +"mesh";
 
-   ifstream npart_in(f_iparts.c_str());
+   std::ifstream npart_in(f_iparts.c_str());
    if(!npart_in.is_open())
    {
-      cerr<<("Error: cannot open .npart file . It may not exist !");
+      std::cerr<<("Error: cannot open .npart file . It may not exist !");
       exit(1);
    }
 
    const MyInt nn = static_cast<MyInt>(node_vector.size());
 
-   vector<bool> sdom_marked(nn);
-   vector<MyInt> dom_idx(nn);
+   std::vector<bool> sdom_marked(nn);
+   std::vector<MyInt> dom_idx(nn);
 
    for(MyInt i=0; i<nn; i++)
    {
-      npart_in >> dom_idx[i] >>ws;
+      npart_in >> dom_idx[i] >>std::ws;
       sdom_marked[i] = false;
    }
    npart_in.close();
@@ -906,10 +906,10 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    //--------------------------------------------------------------------------
 #define OUTPUT_TO_SINGLE_FILE
 #ifdef OUTPUT_TO_SINGLE_FILE
-   string name_f;
-   fstream os_subd;
-   fstream os_subd_head;
-   fstream os_subd_node;
+   std::string name_f;
+   std::fstream os_subd;
+   std::fstream os_subd_head;
+   std::fstream os_subd_node;
    FILE *of_bin_cfg = 0; // ostream os_bin_cfg
    FILE *of_bin_nod = 0; // ostream os_bin_nod
    FILE *of_bin_ele = 0; // ostream os_bin_ele
@@ -919,41 +919,37 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    if(!binary_output)
    {
       name_f = fname+"_partitioned_cfg"+ s_nparts + ".msh";
-      os_subd_head.open(name_f.c_str(), ios::out|ios::trunc );
+      os_subd_head.open(name_f.c_str(), std::ios::out|std::ios::trunc );
       name_f = "Subdomain mesh "
                "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
                "Nodes of whole linear elements; Nodes of whole quadratic elements; "
                "Total integer variables of elements;Total integer variables of ghost elements  ";
-      os_subd_head << name_f << endl;
-      os_subd_head<<num_parts<<endl;
+      os_subd_head << name_f << std::endl;
+      os_subd_head<<num_parts << std::endl;
 
       name_f = fname+"_partitioned_elems_"+ s_nparts + ".msh";
-      os_subd.open(name_f.c_str(), ios::out|ios::trunc );
+      os_subd.open(name_f.c_str(), std::ios::out|std::ios::trunc );
 
       name_f = fname+"_partitioned_nodes_"+ s_nparts + ".msh";
-      os_subd_node.open(name_f.c_str(), ios::out|ios::trunc );
+      os_subd_node.open(name_f.c_str(), std::ios::out|std::ios::trunc );
 
-      setw(14);
+      std::setw(14);
       os_subd.precision(14);
       //os_subd.setf(ios::fixed, ios::scientific);
-      os_subd.setf(ios::scientific);
+      os_subd.setf(std::ios::scientific);
    }
    else
    {
       name_f = fname+"_partitioned_msh_cfg"+ s_nparts + ".bin";
-      //os_bin_cfg.open(name_f.c_str(), ios::binary|ios::out|ios::trunc );
       of_bin_cfg = fopen(name_f.c_str(), "wb");
 
       name_f = fname+"_partitioned_msh_ele"+ s_nparts + ".bin";
-      //os_bin_ele.open(name_f.c_str(), ios::binary|ios::out|ios::trunc );
       of_bin_ele = fopen(name_f.c_str(), "wb");
 
       name_f = fname+"_partitioned_msh_ele_g"+ s_nparts + ".bin";
-      //os_bin_ele.open(name_f.c_str(), ios::binary|ios::out|ios::trunc );
       of_bin_ele_g = fopen(name_f.c_str(), "wb");
 
       name_f = fname+"_partitioned_msh_nod"+ s_nparts + ".bin";
-      //os_bin_nod.open(name_f.c_str(), ios::binary|ios::out|ios::trunc );
       of_bin_nod = fopen(name_f.c_str(), "wb");
 
    }
@@ -961,19 +957,19 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 #endif
 
    // for linear
-   vector<size_t> sdom_start_node(num_parts);
-   vector<size_t> sdom_end_act_node(num_parts);
-   vector<size_t> sdom_end_node(num_parts);
+   std::vector<std::size_t> sdom_start_node(num_parts);
+   std::vector<std::size_t> sdom_end_act_node(num_parts);
+   std::vector<std::size_t> sdom_end_node(num_parts);
 
    // quadratic
-   vector<size_t> sdom_start_node_hq(num_parts);
-   vector<size_t> sdom_end_act_node_hq(num_parts);
-   vector<size_t> sdom_end_node_hq(num_parts);
+   std::vector<std::size_t> sdom_start_node_hq(num_parts);
+   std::vector<std::size_t> sdom_end_act_node_hq(num_parts);
+   std::vector<std::size_t> sdom_end_node_hq(num_parts);
 
    const MyInt ne_total = static_cast<MyInt>(elem_vector.size());
 
-   vector<Node*> sbd_nodes;        // nodes of a partition for linear element
-   vector<Node*> sbd_nodes_hq;     // nodes of a partition for quadratic element
+   std::vector<Node*> sbd_nodes;        // nodes of a partition for linear element
+   std::vector<Node*> sbd_nodes_hq;     // nodes of a partition for quadratic element
    std::vector<std::vector<std::set<ConnEdge> > > vec_neighbors(num_parts); //NW
 
    // Should be removed for openmp 
@@ -994,7 +990,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       {
          vec_neighbors[idom].resize(num_parts);
       }
-      cout << "Process partition: " << idom << endl;
+      std::cout << "Process partition: " << idom << std::endl;
 
       nmb_element_idxs = 0;
       nmb_element_idxs_g = 0;
@@ -1016,8 +1012,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       }
       sdom_end_act_node[idom] = sbd_nodes.size();
       // Find the elements in this subdomain.
-      vector<Elem*> in_subdom_elements;
-      vector<Elem*> ghost_subdom_elements;
+      std::vector<Elem*> in_subdom_elements;
+      std::vector<Elem*> ghost_subdom_elements;
 
       MyInt num_nodes_active_h = 0; // acitve nodes for quadratic elements
       if (useQuadratic)
@@ -1192,21 +1188,21 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          nmb_element_idxs_g += static_cast<MyInt>(ghost_subdom_elements[j]->non_ghost_nodes.size());
       }
 
-      string dom_str = number2str(idom);
+      std::string dom_str = number2str(idom);
 #ifdef OUTPUT_TO_DIFF_FILES
       // Make output of this subdomain for simulation
       //string name_f = fname+"_"+dom_str+"_of_"+s_nparts+"_subdomains.msh";
-      string name_f = fname+"_"+dom_str+".msh";
+      std::string name_f = fname+"_"+dom_str+".msh";
       fstream os_subd(name_f.c_str(), ios::out|ios::trunc );
-      //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
-      //os_subd<<" $NODES\n"<<size_sbd_nodes<<endl;
+      //os_subd<<"#FEM_MSH\n   $PCS_TYPE\n    NULL" << std::endl;
+      //os_subd<<" $NODES\n"<<size_sbd_nodes << std::endl;
 
 
       name_f = "Subdomain mesh "
                "(Nodes;  Nodes_linear; Elements; Ghost elements; Nodes of Linear elements; Nodes of quadratic elements) "
                "Nodes of Linear whole elements; Nodes of whole quadratic elements; "
                "Total integer variables of elements;Total integer variables of ghost elements  ";
-      os_subd<<name_f<<endl;
+      os_subd<<name_f << std::endl;
 #endif
       // Number of active elements
       const MyInt nei_size = static_cast<MyInt>(in_subdom_elements.size());
@@ -1221,7 +1217,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          os_subd_head<<sdom_nodes_l + sdom_nodes_h <<deli<<sdom_nodes_l<<deli<<nei_size
                      <<deli<<ne_g<<deli<<num_nodes_active_l<<deli<<num_nodes_active_l + num_nodes_active_h
                      <<deli<<NodesNumber_Linear<<deli<<NodesNumber_Quadratic
-                     <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g<<endl;
+                     <<deli<<nmb_element_idxs<<deli<<nmb_element_idxs_g << std::endl;
       }
       else
       {
@@ -1245,7 +1241,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
       }
 
-      //os_subd<<"Elements"<<endl;
+      //os_subd<<"Elements" << std::endl;
       MyInt counter = 0;
       if(binary_output)
       {
@@ -1281,7 +1277,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
       }
 
-      //os_subd<<"Ghost elements"<<endl;
+      //os_subd<<"Ghost elements" << std::endl;
       counter = 0;
       if(binary_output)
       {
@@ -1333,11 +1329,11 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
             {
                os_subd<<a_elem->non_ghost_nodes[kk]<<deli;
             }
-            os_subd<<endl;
+            os_subd << std::endl;
          }
       }
 
-      os_subd << endl;
+      os_subd << std::endl;
 
       // in one long string buffer
       if(binary_output)
@@ -1351,28 +1347,28 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       /// Material data partitioning
       if( num_data > 0)
       {
-         ofstream os_mat;
+         std::ofstream os_mat;
          for(int mm = 0; mm<num_data; mm++)
          {
-            string mat_ofile_name = m_datanames[mm] + dom_str;
-            os_mat.open(mat_ofile_name.c_str(), ios::trunc);
+            std::string mat_ofile_name = m_datanames[mm] + dom_str;
+            os_mat.open(mat_ofile_name.c_str(), std::ios::trunc);
             for(size_t mh = m_header_marker_per_data[mm]; mh<m_header_marker_per_data[mm+1]; mh++ )
             {
-               os_mat<<m_headers[mh]<<endl;
+               os_mat<<m_headers[mh] << std::endl;
             }
 
             const MyInt e_shift = ne_total*mm;
             for(MyInt j=0; j<nei_size; j++)
             {
                const size_t entry_index = in_subdom_elements[j]->getIndex() + e_shift;
-               os_mat<<j<<deli<<m_ele_val[entry_index]<<endl;
+               os_mat<<j<<deli<<m_ele_val[entry_index] << std::endl;
             }
             for(MyInt j=0; j<ne_g; j++)
             {
                const size_t entry_index  = ghost_subdom_elements[j]->getIndex() + e_shift;
-               os_mat<<j+nei_size<<deli<<m_ele_val[entry_index]<<endl;
+               os_mat<<j+nei_size<<deli<<m_ele_val[entry_index] << std::endl;
             }
-            os_mat<<"#STOP"<<endl;
+            os_mat<<"#STOP" << std::endl;
             os_mat.clear();
             os_mat.close();
          }
@@ -1391,7 +1387,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          // Elements in this subdomain
          f_iparts = fname+"_"+dom_str+"_of_"+s_nparts+"_subdomains.vtk";
          //f_iparts = fname+"_"+str_buf+".vtk";
-         ofstream os(f_iparts.c_str(), ios::out|ios::trunc);
+         std::ofstream os(f_iparts.c_str(), std::ios::out|std::ios::trunc);
          WriteVTK_Head(os, sdom_nodes_l + sdom_nodes_h );
 
          WriteVTK_Nodes(os, sbd_nodes, sdom_start_node[idom], sdom_end_act_node[idom]);
@@ -1407,17 +1403,17 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
             for(int mm = 0; mm<num_data; mm++)
             {
                // Partition
-               os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default"<<endl;
+               os<<"SCALARS "<< m_headers[m_header_marker_per_data[mm]+4] <<" double 1\nLOOKUP_TABLE default" << std::endl;
                const MyInt e_shift = ne_total*mm;
                for(MyInt i=0; i<nei_size; i++)
                {
                   const size_t entry_index = in_subdom_elements[i]->getIndex() + e_shift;
-                  os<<m_ele_val[entry_index]<<endl;
+                  os<<m_ele_val[entry_index] << std::endl;
                }
                for(MyInt i=0; i<ne_g; i++)
                {
                   const size_t entry_index = ghost_subdom_elements[i]->getIndex() + e_shift;
-                  os<<m_ele_val[entry_index]<<endl;
+                  os<<m_ele_val[entry_index] << std::endl;
                }
             }
          }
@@ -1436,8 +1432,8 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    //----------------------------------------------------------------------------------
    if (mpc.out_cct)
    {
-      string cct_file_name = fname + "_" + s_nparts + ".cct";
-      fstream cct_file(cct_file_name.c_str(), ios::out|ios::trunc );
+      std::string cct_file_name = fname + "_" + s_nparts + ".cct";
+      std::fstream cct_file(cct_file_name.c_str(), std::ios::out|std::ios::trunc );
       for (size_t idom=0; idom<vec_neighbors.size(); idom++)
       {
          size_t n_nei = 0;
@@ -1464,7 +1460,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
             }
          }
       }
-      cct_file<<"#STOP"<<endl;
+      cct_file<<"#STOP" << std::endl;
       cct_file.close();
    }
 
@@ -1486,7 +1482,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
       if(binary_output)
       {
          const size_t nnodes = end_l - start_l + end_h - start_h;
-         vector<Node_Str> nodes_buffer(nnodes);
+         std::vector<Node_Str> nodes_buffer(nnodes);
 
          size_t counter = 0;
          fillNodeVector4BinaryOuput(sbd_nodes, nodes_buffer, start_l, end_l_act, counter);
@@ -1502,7 +1498,7 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          std::setw(14);
          os_subd_node.precision(14);
          //os_subd_node.setf(ios::fixed, ios::scientific);
-         os_subd_node.setf(ios::scientific);
+         os_subd_node.setf(std::ios::scientific);
 
          writeSubDomainNodes(os_subd_node, sbd_nodes, start_l, end_l_act);
          writeSubDomainNodes(os_subd_node, sbd_nodes,  end_l_act, end_l);
@@ -1533,15 +1529,15 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
 #endif
 
-   ofstream os;
+   std::ofstream os;
    if(mpc.out_renum_gsmsh)
    {
       f_iparts = fname + "_renum_"+ s_nparts +".msh";
-      os.open(f_iparts.c_str(), ios::out|ios::trunc);
+      os.open(f_iparts.c_str(), std::ios::out|std::ios::trunc);
 
       // Output renumbered mesh
-      os<<"#FEM_MSH\n   $PCS_TYPE\n    NULL"<<endl;
-      os<<" $NODES\n"<<NodesNumber_Linear<<endl;
+      os<<"#FEM_MSH\n   $PCS_TYPE\n    NULL" << std::endl;
+      os<<" $NODES\n"<<NodesNumber_Linear << std::endl;
       for(int idom=0; idom<num_parts; idom++)
       {
          const size_t start_l =  sdom_start_node[idom];
@@ -1553,12 +1549,12 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          }
       }
 
-      os<<" $ELEMENTS\n"<<elem_vector.size()<<endl;
+      os<<" $ELEMENTS\n"<<elem_vector.size() << std::endl;
       for(size_t e=0; e<elem_vector.size(); e++)
       {
          elem_vector[e]->WriteGSmsh(os);
       }
-      os<<"#STOP"<<endl;
+      os<<"#STOP" << std::endl;
       os.clear();
       os.close();
    }
@@ -1567,13 +1563,13 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
    if(mpc.is_vtk_out)
    {
       f_iparts = fname + "_renum_"+ s_nparts +".vtk";
-      os.open(f_iparts.c_str(), ios::out|ios::trunc);
+      os.open(f_iparts.c_str(), std::ios::out|std::ios::trunc);
       ouput_vtk_part_info = false;
 
-      os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n"<<endl;
-      os<<"DATASET UNSTRUCTURED_GRID"<<endl;
-      os<<"POINTS "<< NodesNumber_Linear<<" double"<<endl;
-      setw(14);
+      os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n" << std::endl;
+      os<<"DATASET UNSTRUCTURED_GRID" << std::endl;
+      os<<"POINTS "<< NodesNumber_Linear<<" double" << std::endl;
+      std::setw(14);
       os.precision(14);
 
       for(int idom=0; idom<num_parts; idom++)
@@ -1585,13 +1581,13 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
          {
             Node* a_node = sbd_nodes[i];
             a_node->local_index = a_node->index; // Because WriteVTK_Elements_of_Subdomain uses local node IDs.
-            os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
+            os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z() << std::endl;
          }
       }
       useQuadratic = false;
       WriteVTK_Elements_of_Subdomain(os, elem_vector, 0);
 
-      os<<"POINT_DATA " << NodesNumber_Linear << endl;
+      os<<"POINT_DATA " << NodesNumber_Linear << std::endl;
    }
 
    os.clear();
@@ -1602,21 +1598,21 @@ void Mesh::ConstructSubDomain_by_Nodes(const MeshPartConfig mpc)
 
 void Mesh::readGrid(const std::string& fname, const bool order)
 {
-   ifstream infile(fname.data());
+   std::ifstream infile(fname.data());
    if(!infile.is_open())
    {
-      cerr<<("Error: cannot open msh file . It may not exist !");
+      std::cerr<<("Error: cannot open msh file . It may not exist !");
       abort();
    }
 
    bool rfiMesh = true;
-   string line_string;
+   std::string line_string;
    getline(infile,line_string); // The first line
-   if(line_string.find("#FEM_MSH")!=string::npos)
+   if(line_string.find("#FEM_MSH")!=std::string::npos)
       rfiMesh = false;
-   if(line_string.find("GeoSys-MSH")!=string::npos)
+   if(line_string.find("GeoSys-MSH")!=std::string::npos)
       rfiMesh = false;
-   infile.seekg(0L,ios::beg);
+   infile.seekg(0L, std::ios::beg);
 
    if(rfiMesh)
       ReadGrid(infile, order);
@@ -1626,20 +1622,20 @@ void Mesh::readGrid(const std::string& fname, const bool order)
 }
 
 // Read grid for test purpose
-void Mesh::ReadGrid(istream& is, const bool high_order)
+void Mesh::ReadGrid(std::istream& is, const bool high_order)
 {
    MyInt i, ne, nn, counter;
    int ibuff;
    double x,y,z;
-   string buffer;
+   std::string buffer;
 //   is.seekg(position);
    // Read description
-   is>>buffer>>ws;
+   is>>buffer>>std::ws;
    // Read numbers of nodes and elements
-   is>>ibuff>>nn>>ne>>ws;
+   is>>ibuff>>nn>>ne>>std::ws;
    if(nn==0||ne==0)
    {
-      cout<<"Error: number of elements or nodes is zero"<<endl;
+      std::cout<<"Error: number of elements or nodes is zero" << std::endl;
       exit(1);
    }
 
@@ -1648,7 +1644,7 @@ void Mesh::ReadGrid(istream& is, const bool high_order)
    node_vector.resize(nn);
    for(i=0; i<nn; i++)
    {
-      is>>ibuff>>x>>y>>z>>ws;
+      is>>ibuff>>x>>y>>z>>std::ws;
       Node* newNode = new Node(ibuff,x,y,z);
       newNode->Marking(true);
       node_vector[counter] = newNode;
@@ -1656,7 +1652,7 @@ void Mesh::ReadGrid(istream& is, const bool high_order)
    }
    if(counter!=nn)
    {
-      cout<<"Error: number nodes do not match"<<endl;
+      std::cout<<"Error: number nodes do not match" << std::endl;
       exit(1);
    }
    NodesNumber_Linear = nn;
@@ -1675,19 +1671,19 @@ void Mesh::ReadGrid(istream& is, const bool high_order)
    }
    if(counter!=ne)
    {
-      cout<<"Error: number elements do not match"<<endl;
+      std::cout<<"Error: number elements do not match" << std::endl;
       exit(1);
    }
 //   position = is.tellg();
 }
 
-void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
+void Mesh::ReadGridGeoSys(std::istream& is, const bool high_order)
 {
-   string sub_line;
-   string line_string;
+   std::string sub_line;
+   std::string line_string;
    bool new_keyword = false;
-   string hash("#");
-   string sub_string,sub_string1;
+   std::string hash("#");
+   std::string sub_string,sub_string1;
    MyInt i, ibuff;
    MyInt no_elements;
    MyInt no_nodes;
@@ -1713,23 +1709,23 @@ void Mesh::ReadGridGeoSys(istream& is, const bool high_order)
       */
       //....................................................................
       //....................................................................
-      if(line_string.find("$NODES")!=string::npos)   // subkeyword found
+      if(line_string.find("$NODES") != std::string::npos)   // subkeyword found
       {
-         is  >> no_nodes>>ws;
+         is  >> no_nodes>>std::ws;
 
          node_vector.resize(no_nodes);
          for(i=0; i<no_nodes; i++)
          {
-            is>>ibuff>>x>>y>>z>>ws;
+            is>>ibuff>>x>>y>>z>>std::ws;
             newNode = new Node(ibuff,x,y,z);
             node_vector[i] = newNode;
          }
          continue;
       }
       //....................................................................
-      if(line_string.find("$ELEMENTS")!=string::npos)   // subkeyword found
+      if(line_string.find("$ELEMENTS") != std::string::npos)   // subkeyword found
       {
-         is >> no_elements>>ws;
+         is >> no_elements>>std::ws;
 
          elem_vector.resize(no_elements);
 
@@ -1752,35 +1748,35 @@ void  Mesh::WriteVTK_Nodes(std::ostream& os)
    size_t i;
    Node *a_node = NULL;
 
-   os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n"<<endl;
-   os<<"DATASET UNSTRUCTURED_GRID"<<endl;
-   os<<"POINTS "<<node_vector.size()<<" double"<<endl;
-   setw(14);
+   os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n" << std::endl;
+   os<<"DATASET UNSTRUCTURED_GRID" << std::endl;
+   os<<"POINTS "<<node_vector.size()<<" double" << std::endl;
+   std::setw(14);
    os.precision(14);
    for(i=0; i<node_vector.size(); i++)
    {
       a_node = node_vector[i];
-      os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z()<<endl;
+      os<<a_node->X()<<" "<<a_node->Y()<<" "<<a_node->Z() << std::endl;
    }
 }
 
 void Mesh::WriteVTK_Head(std::ostream& os, const size_t number_of_nodes)
 {
-   os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n"<<endl;
-   os<<"DATASET UNSTRUCTURED_GRID"<<endl;
-   os<<"POINTS "<< number_of_nodes <<" double"<<endl;
+   os<<"# vtk DataFile Version 4.0\nGrid Partition by WW \nASCII\n" << std::endl;
+   os<<"DATASET UNSTRUCTURED_GRID" << std::endl;
+   os<<"POINTS "<< number_of_nodes <<" double" << std::endl;
 
 }
 
 // 03.2012. WW
 void Mesh::WriteVTK_Nodes(std::ostream& os, std::vector<Node*>& nod_vec, const size_t start, const size_t end)
 {
-   setw(14);
+   std::setw(14);
    os.precision(14);
    for(size_t i=start;  i<end; i++)
    {
       const double *x = nod_vec[i]->getCoordinates();
-      os << x[0] << " " << x[1] << " " << x[2] <<endl;
+      os << x[0] << " " << x[1] << " " << x[2]  << std::endl;
    }
 }
 
@@ -1798,7 +1794,7 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
    size_t ne0 = ele_vec.size();
    size_t size = ne0;
 
-   string deli = " ";
+   std::string deli = " ";
 
    Elem *a_elem = NULL;
 
@@ -1811,7 +1807,7 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
 
       size += nne;
    }
-   os<<"\nCELLS "<<ne0<<deli<<size<<endl;
+   os<<"\nCELLS "<<ne0<<deli<<size << std::endl;
 
    // CELLs
    for(i=0; i<ne0; i++)
@@ -1831,28 +1827,28 @@ void  Mesh::WriteVTK_Elements_of_Subdomain(std::ostream& os, std::vector<Elem*>&
 
       os << "\n";
    }
-   os << endl;
+   os << std::endl;
 
    // CELL types
-   os << "CELL_TYPES " << ne0 << endl;
+   os << "CELL_TYPES " << ne0 << std::endl;
    for(i=0; i<ne0; i++)
    {
       a_elem = ele_vec[i];
       a_elem->WriteVTK_Type(os, useQuadratic);
    }
-   os << endl;
+   os << std::endl;
 
    if(ouput_vtk_part_info)
    {
       // Partition
-      os<<"CELL_DATA "<<ne0<<endl;
-      os<<"SCALARS Partition int 1\nLOOKUP_TABLE default"<<endl;
+      os<<"CELL_DATA "<<ne0 << std::endl;
+      os<<"SCALARS Partition int 1\nLOOKUP_TABLE default" << std::endl;
       for(i=0; i<ne0; i++)
-         os<<sbd_index<<endl;
+         os<<sbd_index << std::endl;
    }
 }
 
-void Mesh::Write2METIS(ostream& os)
+void Mesh::Write2METIS(std::ostream& os)
 {
    os<<(MyInt)elem_vector.size()<<" ";
 
@@ -1861,7 +1857,7 @@ void Mesh::Write2METIS(ostream& os)
    switch(elem_vector[0]->getElementType())
    {
       case line:
-         cout<<"Not for 1D element"<<endl;
+         std::cout<<"Not for 1D element" << std::endl;
          exit(1);
       case quadri:
          e_type =4;
@@ -1876,12 +1872,12 @@ void Mesh::Write2METIS(ostream& os)
          e_type =2;
          break;
       case 6:
-         cout<<"Not for prismal element"<<endl;
+         std::cout<<"Not for prismal element" << std::endl;
          abort();
    }
    os<<e_type;
 #endif
-   os<<endl;
+   os << std::endl;
    for(MyInt i=0; i<(MyInt)elem_vector.size(); i++)
    {
       elem_vector[i]->setOrder(useQuadratic);
@@ -1903,7 +1899,7 @@ void Mesh::writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>&
    const size_t ne1 = sdom_elems_ghost.size();
    size_t size = ne0 + ne1;
 
-   string deli = " ";
+   std::string deli = " ";
 
    Elem *a_elem = NULL;
 
@@ -1926,7 +1922,7 @@ void Mesh::writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>&
 
       size += nne;
    }
-   os<<"\nCELLS "<<ne0 + ne1 << deli << size << endl;
+   os<<"\nCELLS "<<ne0 + ne1 << deli << size << std::endl;
 
    // CELLs
    for(i=0; i<ne0; i++)
@@ -1963,10 +1959,10 @@ void Mesh::writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>&
 
       os << "\n";
    }
-   os << endl;
+   os << std::endl;
 
    // CELL types
-   os << "CELL_TYPES " << ne0  + ne1<< endl;
+   os << "CELL_TYPES " << ne0  + ne1 << std::endl;
    for(i=0; i<ne0; i++)
    {
       a_elem = sdom_elems[i];
@@ -1977,25 +1973,25 @@ void Mesh::writeSubdomainElementsVTK(std::ostream& os, const std::vector<Elem*>&
       a_elem = sdom_elems_ghost[i];
       a_elem->WriteVTK_Type(os, useQuadratic);
    }
-   os << endl;
+   os << std::endl;
 
    if(ouput_vtk_part_info)
    {
       // Partition
-      os<<"CELL_DATA "<<ne0 + ne1 <<endl;
-      os<<"SCALARS Partition int 1\nLOOKUP_TABLE default"<<endl;
+      os<<"CELL_DATA "<<ne0 + ne1  << std::endl;
+      os<<"SCALARS Partition int 1\nLOOKUP_TABLE default" << std::endl;
       for(i=0; i<ne0; i++)
-         os<<sbd_index<<endl;
+         os<<sbd_index << std::endl;
       const int id_gst = 0;
       for(i=0; i<ne1; i++)
-         os<<id_gst<<endl;
+         os<<id_gst << std::endl;
    }
 
 }
 
 void Mesh::writeVTK(const std::string& fname)
 {
-   std::ofstream os(fname.data(), ios::trunc);
+   std::ofstream os(fname.data(), std::ios::trunc);
    if (!os.is_open())
    {
       std::cout << "Could not open " << fname << std::endl;
@@ -2036,15 +2032,15 @@ void Mesh::writeVTK(const std::string& fname)
 
       os << "\n";
    }
-   os << endl;
+   os << std::endl;
 
    // CELL types
-   os << "CELL_TYPES " << ne << endl;
+   os << "CELL_TYPES " << ne << std::endl;
    for(std::size_t i=0; i<ne; i++)
    {
       elem_vector[i]->WriteVTK_Type(os, useQuadratic);
    }
-   os << endl;
+   os << std::endl;
 
 }
 
@@ -2078,7 +2074,7 @@ void Mesh::writeSubDomainNodes(std::ostream& os, const std::vector<Node*>& sdom_
 
 void Mesh::writeBinary(const std::string& fname)
 {
-   std::ofstream os(fname.data(), ios::binary | ios::trunc);
+   std::ofstream os(fname.data(), std::ios::binary | std::ios::trunc);
    if (!os.is_open())
    {
       std::cout << "Could not open " << fname << std::endl;
@@ -2160,7 +2156,7 @@ void Mesh::writeBinary(const std::string& fname)
 
 void Mesh::readBinary(const std::string& fname)
 {
-   std::ifstream ins(fname.data(), ios::binary);
+   std::ifstream ins(fname.data(), std::ios::binary);
    if (!ins.is_open())
    {
       std::cout << "Could not open " << fname << std::endl;
