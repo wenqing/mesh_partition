@@ -275,11 +275,11 @@ int main(int argc, char* argv[])
                a_mesh->ConstructGrid();
                a_mesh->GenerateHighOrderNodes();
                a_mesh->setOrder(quad);
+               a_mesh->writeBinary(fname + ".msh_quadratic_temp.bin");
             }
             const string part_mesh_file = fname+".mesh";
             fstream ofile(part_mesh_file.c_str(), ios::out | ios::trunc );
             a_mesh->Write2METIS(ofile);
-            a_mesh->writeBinary(fname + ".msh_quadratic_temp.bin");
          }
          break;
       case metis2ogs:
