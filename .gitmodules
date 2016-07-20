@@ -1,3 +1,3 @@
-[submodule "metis-5.0.2"]
-	path = metis-5.0.2
-	url = https://github.com/envinf/metis.git
+[submodule "metis"]
+	path = metis
+	url = https://github.com/scibuilder/metis.git
