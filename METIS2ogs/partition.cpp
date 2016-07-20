@@ -10,11 +10,11 @@
 #include <time.h>
 #include <vector>
 
-#ifdef USE_METIS_SOURCE
-extern "C" {
-//#include "../metis-5.0.2/programs/metis_main.h"
-#include "metis_main.h"
-}
+// For system call
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <climits>
 #endif
 
 #include "Mesh.h"
@@ -42,7 +42,9 @@ long HeapUsed()
 }
 #endif
 
-#define ver "V3.2. 08.2014"
+#define ver "V4.0. 07.2016"
+
+std::string getFilePath(const std::string& fname);
 
 void Version()
 {
@@ -61,6 +63,7 @@ void OptionList()
    cout << s_intro<<endl<<endl;
    cout << "Tasks:\n  --version\n  --help\n  --ogs2metis\n  --metis2ogs\n"<<endl;
    cout << "Option for --metis2ogs task:"<<endl;
+   cout << "  -s                : call mpmetis via system()."<<endl;
    cout << "  -q                : generate quadratic elements. It can be ommitted if quadratic element is not used."<<endl;
    cout << "  -np [number]      : define the number of partitions."<<endl;
    cout << "  -e                : partition by element (non overlapped subdomain)"<<endl;
@@ -117,6 +120,7 @@ int main(int argc, char* argv[])
    PartType part_type = by_node;
 
    bool quad = false;
+   bool system_call = false;
 
    Mesh_Group::MeshPartConfig mpc;
    mpc.is_vtk_out = true;
@@ -127,7 +131,6 @@ int main(int argc, char* argv[])
 
    //ios::pos_type position;
    string fname;
-   string fpath;
    string mat_file_name = "";
 
    int nparts = 1;
@@ -152,6 +155,9 @@ int main(int argc, char* argv[])
 
       if(s_buff.compare("-q") == 0)
          quad = true;
+
+      if(s_buff.compare("-s") == 0)
+         system_call = true;
 
       if(s_buff.compare("-odom") == 0)
       {
@@ -239,19 +245,7 @@ int main(int argc, char* argv[])
    }
 
    //Get the path to the folder where the input file is.
-   size_t pos_end;
-   pos_end = fname.find_last_of('\\');
-   //
-   if(pos_end != std::string::npos)
-   {
-      fpath = fname.substr(0, pos_end) + "\\";
-   }
-   else
-   {
-      pos_end = fname.find_last_of('/');
-      if(pos_end != std::string::npos)
-         fpath = fname.substr(0, pos_end) + "/";
-   }
+   const std::string fpath = getFilePath(fname);
 
    cout<<"File name is: "<<fname<<endl;
    if(fpath.size()>0)
@@ -261,7 +255,6 @@ int main(int argc, char* argv[])
 
    clock_t elp_time;
    elp_time = -clock();
-
 
    Mesh_Group::Mesh *a_mesh = new Mesh(quad);
 
@@ -284,34 +277,25 @@ int main(int argc, char* argv[])
          break;
       case metis2ogs:
          // Partition mesh if metis source is include
-         if (nparts>1)
+         if (nparts>1 && system_call)
          {
-#ifdef USE_METIS_SOURCE
-            int argc_m;
-            argc_m = 4;
-            char *argv_m[4];
-            string unsc = "-";	 // Avoid compilation warning by argv_m[0] = "-";
-            argv_m[0] = &unsc[0];
+            std::cout << "METIS is running ..." << std::endl;
+            const std::string exe_name = argv[0];
+            const std::string exe_path = getFilePath(exe_name);
+            std::cout << "Path to mpmetis is: \n\t" << exe_path;
 
-            std::string option = "-gtype=dual";
-            if ( part_type == by_node )
-               option = "-gtype=nodal";
-            argv_m[1] = &option[0];
+            const std::string mpmetis_com =
+                exe_path + "/mpmetis " + " -gtype=nodal " + fname +
+                ".mesh " + str_nparts;
 
-            std::string part_mesh_file = fname + ".mesh";
-            argv_m[2] = &part_mesh_file[0];
-            argv_m[3] = &str_nparts[0];
-
-            metis_main(argc_m, argv_m);
-//#else
-//         s_buff = fpath+"mpmetis "  + fname + ".mesh " + str_nparts;
-
-//         if(!system(s_buff.c_str()))
-//         {
-//            cout<<"METIS executable file may not be found "<<endl;
-//            exit(1);
-//         }
-#endif
+            const int status = system(mpmetis_com.c_str());
+            if (status != 0)
+            {
+                std::cout << "Failed in system calling." << std::endl;
+                std::cout << "Return value of system call %d " << status
+                          << std::endl;
+                return EXIT_FAILURE;
+            }
          }
 
          cout<<"\n***Prepare subdomain mesh"<<endl;
@@ -359,5 +343,16 @@ int main(int argc, char* argv[])
        <<(double)elp_time / CLOCKS_PER_SEC<<"s"<<endl;
 
    return EXIT_SUCCESS;
-
 }
+
+std::string getFilePath(const std::string& fname)
+{
+#ifdef WIN32
+   static const char* path_seperator = "\\";
+#else
+   static const char* path_seperator = "/";
+#endif
+   const std::size_t pos_end = fname.find_last_of(path_seperator);
+   return fname.substr(0, pos_end) + path_seperator;
+}
+
